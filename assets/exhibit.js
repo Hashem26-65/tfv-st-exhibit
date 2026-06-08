@@ -762,7 +762,7 @@
 
   function audioSrc(i) {
     const file = ACTS[i].audio.split("/").pop();       // שם הקובץ בלבד
-    const dir = (SOT.AUDIO_DIR && SOT.AUDIO_DIR[lang]) || "אודיו מצגת סכומי אלפים";
+    const dir = (SOT.AUDIO_DIR && SOT.AUDIO_DIR[lang]) || "audio-he";
     return encodeURI(dir + "/" + file);
   }
   function loadAudio(i) {

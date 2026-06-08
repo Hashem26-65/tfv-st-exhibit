@@ -30,8 +30,8 @@ assets/
   exhibit.js                    — מנוע: ניגון אודיו, סנכרון cue, אנימציות,
                                   כתוביות, פס-זמן, בורר שפה, הגדרות
   logo.png / logo-full.png      — לוגו TFV
-אודיו מצגת סכומי אלפים/         — קריינות עברית (5 חלקים)
-אודיו אנגלית/                   — English narration (5 parts)
+audio-he/                       — קריינות עברית (5 חלקים)
+audio-en/                       — English narration (5 parts)
 ```
 
 ## תכונות · Features
