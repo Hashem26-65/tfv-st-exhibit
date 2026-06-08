@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>סכומי אלפים · מצגת — The First Verse</title>
+<meta name="description" content="מערכת סכומי האלפים בפסוק הראשון בתורה — מצגת אינטראקטיבית עם קריינות מסונכרנת.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+
+<!-- ===================== מסך פתיחה ===================== -->
+<div class="intro" id="intro">
+  <a class="intro-brand" id="intro-brand-link" href="https://thefirstverse.com" target="_blank" rel="noopener" title="כניסה לאתר The First Verse">
+    <img src="assets/logo.png" alt="The First Verse" class="intro-logo">
+    <div class="intro-sitename">אֲתַר הַפָּסוּק הָרִאשׁוֹן</div>
+  </a>
+  <div class="intro-card">
+    <div class="intro-kicker">תערוכה</div>
+    <div class="intro-title">סְכוּמֵי אֲלָפִים</div>
+    <div class="intro-sub">חתימה מתמטית בפסוק הראשון בתורה</div>
+    <div class="intro-divider">✦</div>
+    <div class="intro-verse">
+      <span class="vline">בְּרֵאשִׁית בָּרָא אֱלֹהִים</span>
+      <span class="vline">אֵת הַשָּׁמַיִם וְאֵת הָאָרֶץ</span>
+    </div>
+    <div class="intro-verse-en">“In the beginning God created the heavens and the earth.”</div>
+    <p class="intro-para">
+      שבע מילים פותחות את התורה. מה מסתתר מתחת לערכיהן?
+      צאו למסע קצר — ותגלו בעצמכם.
+    </p>
+    <button class="intro-cta" id="btn-enter" type="button">הַתְחֵל אֶת הַמַּסָּע</button>
+    <p class="intro-para" style="font-size:15px;color:var(--muted);margin-top:18px">
+      המצגת מלווה בקריינות. לחצו להתחלה.
+    </p>
+  </div>
+</div>
+
+<!-- ===================== כותרת עליונה ===================== -->
+<div class="top-chrome">
+  <a class="brand-mark" id="brand-link" href="https://thefirstverse.com" target="_blank" rel="noopener" title="כניסה לאתר The First Verse">
+    <img src="assets/logo.png" alt="The First Verse" class="brand-logo">
+  </a>
+  <div class="chrome-controls" id="chrome-controls">
+    <button class="btn-replay" id="btn-replay" type="button">⟲ נגן שוב</button>
+    <div class="audio-pill" aria-label="קריינות">
+      <button class="audio-btn" id="btn-audio" type="button" aria-label="השהה / נגן">
+        <svg id="ico-pause" viewBox="0 0 12 14" aria-hidden="true"><rect x="1" y="1" width="3.4" height="12"/><rect x="7.6" y="1" width="3.4" height="12"/></svg>
+        <svg id="ico-play" viewBox="0 0 12 14" style="display:none" aria-hidden="true"><path d="M1 1 L11 7 L1 13 Z"/></svg>
+      </button>
+    </div>
+    <button class="cc-btn" id="btn-cc" type="button" aria-label="כתוביות" aria-pressed="false" title="כתוביות">כתוביות</button>
+    <div class="lang-picker">
+      <button class="lang-trigger" id="lang-trigger" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="בחירת שפה">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="2" y1="12" x2="22" y2="12"></line>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+        </svg>
+        <span>שפה</span>
+      </button>
+      <div class="lang-menu" id="lang-menu" role="listbox">
+        <button type="button" class="lang-opt active" role="option" data-lang="he">עברית</button>
+        <button type="button" class="lang-opt" role="option" data-lang="en">English</button>
+      </div>
+    </div>
+    <div class="settings-wrap">
+      <button class="settings-btn" id="btn-settings" type="button" aria-label="הגדרות" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65a.5.5 0 00.12-.64l-2-3.46a.5.5 0 00-.61-.22l-2.49 1a7.3 7.3 0 00-1.69-.98l-.38-2.65A.49.49 0 0014.1 2h-4a.49.49 0 00-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1a.5.5 0 00-.61.22l-2 3.46a.5.5 0 00.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65a.5.5 0 00-.12.64l2 3.46c.14.24.43.34.69.22l2.49-1c.52.39 1.08.73 1.69.98l.38 2.65c.04.24.25.42.49.42h4c.24 0 .45-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.26.12.55.02.69-.22l2-3.46a.5.5 0 00-.12-.64l-2.11-1.65zM12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z"/></svg>
+      </button>
+      <div class="settings-panel" id="settings-panel" role="menu" aria-hidden="true">
+        <div class="settings-title">מהירות הקריינות</div>
+        <div class="speed-opts" id="speed-opts">
+          <button type="button" data-rate="0.75">0.75×</button>
+          <button type="button" data-rate="1" class="active">רגיל</button>
+          <button type="button" data-rate="1.25">1.25×</button>
+          <button type="button" data-rate="1.5">1.5×</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== במה ===================== -->
+<div class="stage" id="stage">
+
+  <!-- אקט 1 -->
+  <section class="act" id="act1" data-act="0">
+    <h2>הַפָּסוּק הָרִאשׁוֹן</h2>
+    <p class="lede">לכל אחת משבע מילות הפסוק יש ערך גימטרי.</p>
+    <div class="verse-row" id="verse-row"></div>
+  </section>
+
+  <!-- אקט 2 -->
+  <section class="act" id="act2" data-act="1">
+    <h2 id="act2-title">חִיבּוּר · 2701</h2>
+    <p class="lede" id="act2-lede">סכום ערכי שבע המילים.</p>
+    <div class="sum-pill" id="sum-pill">
+      <span class="op">∑</span>
+      <span class="num" id="sum-num">—</span>
+      <span class="note" id="sum-note"></span>
+    </div>
+    <div class="bignum" id="product-num"></div>
+    <div class="running" id="run2" style="display:none">0</div>
+    <div class="groups-line" id="groups2" style="display:none"></div>
+  </section>
+
+  <!-- אקט 3 -->
+  <section class="act" id="act3" data-act="2">
+    <h2>גִּימַטְרִיָּה קְטַנָּה · 82</h2>
+    <p class="lede" id="act3-lede">בגימטריה קטנה כל אות מקבלת את ערכה ללא האפסים.</p>
+    <div class="small-ex" id="small-ex"></div>
+    <div class="sum-pill" id="pill82" style="display:none">
+      <span class="op">גימטריה קטנה</span>
+      <span class="num">82</span>
+    </div>
+    <div class="fail-row" id="fail-row" style="display:none"></div>
+    <div class="bignum" id="x82-num"></div>
+    <div class="running" id="run3" style="display:none">0</div>
+    <div class="groups-line" id="groups3" style="display:none"></div>
+  </section>
+
+  <!-- אקט 4 -->
+  <section class="act" id="act4" data-act="3">
+    <h2>כֶּפֶל נוֹסָף בְּ־82</h2>
+    <p class="lede" id="act4-lede">הכפלה נוספת ב־82 — והתופעה חוזרת.</p>
+    <div class="fail-row" id="fail-row4" style="display:none"></div>
+    <div class="bignum" id="x82-2-num"></div>
+    <div class="running" id="run4" style="display:none">0</div>
+    <div class="groups-line" id="groups4" style="display:none"></div>
+  </section>
+
+  <!-- אקט 5 -->
+  <section class="act" id="act5" data-act="4">
+    <h2 id="act5-title">סְגִירַת הַמַּעְגָּל</h2>
+    <p class="lede" id="act5-lede">חברו את כל ספרות המספר העצום — ספרה אחר ספרה.</p>
+    <div class="running" id="digit-sum" style="font-size:clamp(40px,9vw,72px)">0</div>
+    <div class="circle-close" id="circle-close">
+      <div class="cc-node"><div><div class="big">2701</div><div class="cap">ערך הפסוק</div></div></div>
+      <div class="cc-link">⟳</div>
+      <div class="cc-node"><div><div class="big">82</div><div class="cap">גימטריה קטנה</div></div></div>
+    </div>
+    <button class="continue-btn" id="continue-btn" type="button">לְהַמְשִׁיךְ ←</button>
+    <div class="gate" id="gate">
+      <h2>חֲבֵרִים</h2>
+      <p>
+        חמשת השלבים שלמעלה הם החלק הציבורי. ההמשך — קשרים נוספים למבנים
+        מתמטיים, גיאומטריים ופיזיקליים — שמור לחברים.
+      </p>
+      <p style="font-size:14px;color:var(--muted)">
+        חברים מקבלים גישה לסרטונים, מצגות, מאמרים, מחקרים וחומרי העשרה נוספים.
+      </p>
+      <div class="gate-actions">
+        <button class="btn-primary" id="btn-member" type="button">אֲנִי חָבֵר</button>
+        <button class="btn-ghost" id="btn-join" type="button">לְהִצְטָרֵף</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ===================== חלון הסבר (לחיצה על מספר) ===================== -->
+<div class="pop" id="pop" aria-hidden="true">
+  <div class="pop-back" id="pop-back"></div>
+  <div class="pop-card">
+    <button class="pop-close" id="pop-close" aria-label="סגור">×</button>
+    <div class="pop-num" id="pop-num"></div>
+    <div class="pop-body" id="pop-body"></div>
+  </div>
+</div>
+
+<!-- ===================== כתוביות ===================== -->
+<div class="subs" id="subs" aria-live="polite"><span class="subs-text" id="subs-text"></span></div>
+
+<!-- ===================== פס התקדמות (נקודות אקטים) ===================== -->
+<div class="progress" id="progress"></div>
+
+<!-- ===================== פס-זמן נגרר (סרגל הסרט) ===================== -->
+<div class="scrubber" id="scrubber" role="slider" aria-label="ציר זמן" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0">
+  <div class="scrub-track"></div>
+  <div class="scrub-fill" id="scrub-fill"></div>
+  <div class="scrub-handle" id="scrub-handle"></div>
+</div>
+<div class="scrub-time" id="scrub-time">0:00 / 0:00</div>
+<div class="colophon">כל הטענות המספריות מאומתות לשוויון מדויק · TFV</div>
+
+<script src="assets/cues.js"></script>
+<script src="assets/exhibit.js"></script>
+</body>
+</html>

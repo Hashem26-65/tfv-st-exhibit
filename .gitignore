@@ -1,0 +1,15 @@
+# OS
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Dev tooling & transcription artifacts (not needed for the exhibit)
+_tools/
+
+# Source materials (not part of the deployed exhibit)
+*.docx
+*.zip
+
+# Editors
+.vscode/
+.idea/
