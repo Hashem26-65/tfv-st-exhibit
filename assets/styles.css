@@ -254,7 +254,7 @@ body:not(.started) .brand-mark{ display:none; }
 
 /* ---------- במה ---------- */
 .stage{
-  position:relative; min-height:100vh;
+  position:relative; min-height:100vh; min-height:100dvh;
   display:grid; grid-template-rows:1fr;
   padding:96px 20px 120px;
 }
@@ -564,29 +564,56 @@ body.lang-en .subs-text{ direction:ltr; }
 
 /* ---- נייד ---- */
 @media (max-width:600px){
-  .top-chrome{ padding:10px 12px; }
-  .btn-replay{ padding:5px 10px; font-size:12px; margin-inline-start:6px; }
-  .stage{ padding:104px 12px 118px; }
-  .act{ inset:104px 12px 118px; gap:14px; }
-  .act h2{ font-size:clamp(20px,5.4vw,26px); }
-  .word{ min-width:66px; padding:10px 8px; }
-  .word .he{ font-size:clamp(17px,5vw,22px); }
-  .verse-row{ gap:10px; }
-  .verse-line{ gap:8px; }
-  .cc-node{ width:130px; height:130px; }
-  .cc-node .big{ font-size:32px; }
-  .circle-close{ gap:14px; }
-  .cc-link{ font-size:28px; }
-  .sum-pill{ padding:12px 20px; gap:10px; }
-  .bignum{ font-size:clamp(16px,5.8vw,28px); }
-  .running{ font-size:clamp(28px,9vw,48px); }
-  .groups-line{ font-size:14px; gap:6px; }
-  .grp-chip{ padding:5px 8px; }
-  .gate{ padding:26px 18px; }
-  .pop-card{ padding:28px 18px; }
-  .progress{ bottom:16px; }
+  .top-chrome{ padding:8px 10px; }
+  .btn-replay{ padding:5px 9px; font-size:12px; margin-inline-start:6px; }
+
+  /* ---- מסך הפתיחה: קומפקטי, ממורכז, בלי גלילה ---- */
+  .intro{ padding:2vh 16px; justify-content:center; }
+  .intro-brand{ margin-bottom:.4vh; }
+  .intro-logo{ width:clamp(62px,15vw,90px); margin-bottom:8px; }
+  .intro-sitename{ font-size:clamp(17px,4.4vw,22px); margin-bottom:8px; }
+  .intro-card{ padding:6px 16px 10px; margin:0; }
+  .intro-kicker{ margin-bottom:7px; letter-spacing:.32em; }
+  .intro-title{ font-size:clamp(25px,7vw,38px); }
+  .intro-sub{ font-size:14px; margin-top:5px; }
+  .intro-divider{ margin:11px 0; }
+  .intro-verse{ margin:7px 0 11px; }
+  .intro-verse .vline{ font-size:clamp(23px,6.8vw,38px); }
+  .intro-verse-en{ font-size:clamp(13px,3.4vw,17px); margin:-2px 0 8px; }
+  .intro-para{ font-size:14px; line-height:1.6; }
+  .intro-cta{ margin-top:15px; padding:11px 28px; font-size:16px; }
+
+  /* ---- אקטים: קומפקטיים כדי שייכנסו בלי גלילה ---- */
+  .stage{ padding:74px 12px 88px; }
+  .act{ inset:74px 12px 88px; gap:11px; }
+  .act h2{ font-size:clamp(19px,5vw,24px); }
+  .act .lede{ font-size:clamp(14px,3.4vw,16px); line-height:1.55; }
+  .word{ min-width:60px; padding:8px 7px; gap:3px; }
+  .word .he{ font-size:clamp(16px,4.6vw,21px); }
+  .word .val{ font-size:clamp(14px,4vw,18px); }
+  .word-en{ font-size:clamp(11px,2.8vw,13px); }
+  .verse-row{ gap:8px; }
+  .verse-line{ gap:7px; }
+  .cc-node{ width:116px; height:116px; }
+  .cc-node .big{ font-size:30px; }
+  .circle-close{ gap:12px; }
+  .cc-link{ font-size:26px; }
+  .sum-pill{ padding:10px 18px; gap:8px; }
+  .sum-pill .num{ font-size:clamp(26px,9vw,40px); }
+  .bignum{ font-size:clamp(15px,5.4vw,26px); }
+  .running{ font-size:clamp(26px,8vw,44px); }
+  .groups-line{ font-size:13px; gap:5px; }
+  .grp-chip{ padding:4px 7px; }
+  .gate{ padding:22px 16px; }
+  .pop-card{ padding:26px 16px; }
+
+  /* ---- פס תחתון קומפקטי ---- */
+  .subs{ bottom:60px; max-width:96%; }
+  .subs-text{ font-size:clamp(14px,4.2vw,18px); line-height:1.55; }
+  .progress{ bottom:40px; }
   .progress .label{ display:none; }
-  .intro-para{ font-size:16px; }
+  .scrubber{ width:92%; bottom:22px; }
+  .scrub-time{ bottom:7px; }
 }
 
 /* ---- נייד צר מאוד ---- */

@@ -765,20 +765,23 @@
     const dir = (SOT.AUDIO_DIR && SOT.AUDIO_DIR[lang]) || "audio-he";
     return encodeURI(dir + "/" + file);
   }
-  function loadAudio(i) {
-    if (audio) {
-      audio.pause();
-      audio.removeEventListener("timeupdate", fireDueCues);
-      audio.removeEventListener("ended", onEnded);
-      audio.removeEventListener("error", onAudioError);
-    }
-    audio = new Audio(audioSrc(i));
+  // אלמנט אודיו יחיד לכל המצגת — נשאר „פתוח” אחרי הלחיצה הראשונה,
+  // כך שמעבר אוטומטי בין חלקים עובד גם בנייד (iOS/Safari).
+  function ensureAudio() {
+    if (audio) return;
+    audio = new Audio();
     audio.preload = "auto";
-    audio.playbackRate = playbackRate;
     audio.addEventListener("timeupdate", fireDueCues);
     audio.addEventListener("ended", onEnded);
     audio.addEventListener("error", onAudioError);
     audio.addEventListener("loadedmetadata", updateScrubber);
+  }
+  function loadAudio(i) {
+    ensureAudio();
+    audio.pause();
+    audio.src = audioSrc(i);
+    audio.playbackRate = playbackRate;
+    audio.load();
   }
   function onAudioError() {
     console.warn("[SOT] audio failed to load:", ACTS[actIndex] && ACTS[actIndex].audio);
