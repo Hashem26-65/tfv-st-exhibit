@@ -149,7 +149,7 @@ body.started .chrome-controls{ opacity:1; pointer-events:auto; }
 .settings-btn svg{ width:19px; height:19px; fill:currentColor; transition:transform .4s; }
 .settings-btn[aria-expanded="true"] svg{ transform:rotate(60deg); }
 .settings-panel{
-  position:absolute; top:46px; inset-inline-end:0; min-width:188px;
+  position:absolute; top:46px; inset-inline-end:0; min-width:212px;
   background:rgba(28,15,23,.96); border:1px solid var(--gold-soft);
   border-radius:14px; padding:14px; backdrop-filter:blur(10px);
   box-shadow:0 12px 34px rgba(0,0,0,.5);
@@ -180,6 +180,27 @@ body.started .chrome-controls{ opacity:1; pointer-events:auto; }
 .speed-opts button.active{
   color:#1a0c12; background:linear-gradient(180deg,var(--gold),var(--gold-soft));
   border-color:var(--gold); font-weight:700;
+}
+
+/* ---- עוצמת קריינות ---- */
+.vol-row{ display:flex; align-items:center; gap:10px; }
+.vol-mute{
+  flex:0 0 auto; width:30px; height:30px; display:grid; place-items:center;
+  background:none; border:none; color:var(--gold); cursor:pointer; padding:0;
+  border-radius:8px; transition:.2s;
+}
+.vol-mute:hover{ color:var(--ink); }
+.vol-mute svg{ width:20px; height:20px; fill:currentColor; }
+.vol-mute.muted{ color:var(--muted); }
+.vol-mute.muted #vol-wave1,
+.vol-mute.muted #vol-wave2{ display:none; }
+.vol-range{
+  flex:1 1 auto; min-width:0; height:4px; cursor:pointer;
+  accent-color:var(--gold);
+}
+.vol-pct{
+  flex:0 0 auto; min-width:40px; text-align:start;
+  font-family:var(--mono); font-size:12px; color:var(--ink-dim);
 }
 
 /* ---------- מסך פתיחה ---------- */

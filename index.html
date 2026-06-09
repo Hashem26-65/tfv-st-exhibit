@@ -68,12 +68,21 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65a.5.5 0 00.12-.64l-2-3.46a.5.5 0 00-.61-.22l-2.49 1a7.3 7.3 0 00-1.69-.98l-.38-2.65A.49.49 0 0014.1 2h-4a.49.49 0 00-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1a.5.5 0 00-.61.22l-2 3.46a.5.5 0 00.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65a.5.5 0 00-.12.64l2 3.46c.14.24.43.34.69.22l2.49-1c.52.39 1.08.73 1.69.98l.38 2.65c.04.24.25.42.49.42h4c.24 0 .45-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.26.12.55.02.69-.22l2-3.46a.5.5 0 00-.12-.64l-2.11-1.65zM12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z"/></svg>
       </button>
       <div class="settings-panel" id="settings-panel" role="menu" aria-hidden="true">
-        <div class="settings-title">מהירות הקריינות</div>
+        <div class="settings-title" id="settings-title-speed">מהירות הקריינות</div>
         <div class="speed-opts" id="speed-opts">
           <button type="button" data-rate="0.75">0.75×</button>
           <button type="button" data-rate="1" class="active">רגיל</button>
           <button type="button" data-rate="1.25">1.25×</button>
           <button type="button" data-rate="1.5">1.5×</button>
+        </div>
+        <div class="settings-sep"></div>
+        <div class="settings-title" id="settings-title-vol">עוצמת הקריינות</div>
+        <div class="vol-row">
+          <button class="vol-mute" id="vol-mute" type="button" aria-label="השתק / בטל השתקה">
+            <svg id="ico-vol" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3z"/><path id="vol-wave1" d="M16 8.5a5 5 0 0 1 0 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path id="vol-wave2" d="M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </button>
+          <input type="range" id="vol-range" class="vol-range" min="0" max="100" value="100" aria-label="עוצמת הקריינות">
+          <span class="vol-pct" id="vol-pct">100%</span>
         </div>
       </div>
     </div>

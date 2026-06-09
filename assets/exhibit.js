@@ -19,6 +19,9 @@
   let paused = false;
   let popResume = false;   // האם להמשיך לנגן אחרי סגירת חלון הסבר
   let playbackRate = parseFloat(localStorage.getItem("sot-rate")) || 1;
+  let volume = parseFloat(localStorage.getItem("sot-vol"));
+  if (isNaN(volume) || volume < 0 || volume > 1) volume = 1;
+  let muted = false;          // השתקה זמנית (אינה מאפסת את ערך העוצמה)
   let lang = localStorage.getItem("sot-lang") || "he";
   if (lang !== "en") lang = "he";
   let firedKey = "";       // "actIndex:cueIndex" של ה-cue האחרון שהופעל
@@ -714,6 +717,9 @@
   function setHTMLSel(sel, he, en) { const el = $(sel); if (el) el.innerHTML = L(he, en); }
   function localizeUI() {
     document.body.classList.toggle("lang-en", lang === "en");
+    // תפריט ההגדרות
+    setTextSel("#settings-title-speed", "מהירות הקריינות", "Narration speed");
+    setTextSel("#settings-title-vol", "עוצמת הקריינות", "Narration volume");
     // כותרות אקטים סטטיות (אקט 2/5 נקבעות ע"י cues)
     setTextSel("#act1 h2", "הַפָּסוּק הָרִאשׁוֹן", "The First Verse");
     setTextSel("#act1 .lede", "לכל אחת משבע מילות הפסוק יש ערך גימטרי.",
@@ -768,6 +774,7 @@
     if (audio) return;
     audio = new Audio();
     audio.preload = "auto";
+    audio.volume = muted ? 0 : volume;
     audio.addEventListener("timeupdate", fireDueCues);
     audio.addEventListener("ended", onEnded);
     audio.addEventListener("error", onAudioError);
@@ -888,6 +895,38 @@
     const b = e.target.closest("button[data-rate]");
     if (b) applyRate(parseFloat(b.dataset.rate));
   });
+
+  // ---- עוצמת הקריינות ----
+  const volRange = $("#vol-range");
+  const volPct = $("#vol-pct");
+  const volMute = $("#vol-mute");
+  function paintVolume() {
+    const shown = muted ? 0 : volume;
+    if (volRange) volRange.value = String(Math.round(shown * 100));
+    if (volPct) volPct.textContent = Math.round(shown * 100) + "%";
+    if (volMute) volMute.classList.toggle("muted", shown === 0);
+  }
+  function applyVolume() {
+    if (audio) audio.volume = muted ? 0 : volume;
+    try { localStorage.setItem("sot-vol", String(volume)); } catch (e) {}
+    paintVolume();
+  }
+  if (volRange) {
+    volRange.addEventListener("input", () => {
+      volume = Math.max(0, Math.min(1, (parseFloat(volRange.value) || 0) / 100));
+      muted = false;
+      applyVolume();
+    });
+  }
+  if (volMute) {
+    volMute.addEventListener("click", () => {
+      // אם העוצמה כבר 0 — שחרור מעלה ל-100%; אחרת מתג השתקה
+      if (!muted && volume === 0) { volume = 1; muted = false; }
+      else muted = !muted;
+      applyVolume();
+    });
+  }
+  paintVolume();   // סנכרון מצב התחלתי לפי ההעדפה השמורה
 
   // סגירה בלחיצה מחוץ לפאנל
   document.addEventListener("click", (e) => {
