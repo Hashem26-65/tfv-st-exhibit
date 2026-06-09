@@ -725,8 +725,6 @@
     setTextSel("#settings-title-bright", "בהירות הרקע", "Background brightness");
     // כותרות אקטים סטטיות (אקט 2/5 נקבעות ע"י cues)
     setTextSel("#act1 h2", "הַפָּסוּק הָרִאשׁוֹן", "The First Verse");
-    setTextSel("#act1 .lede", "לכל אחת משבע מילות הפסוק יש ערך גימטרי.",
-      "Each of the verse's seven words has a gematria value.");
     setTextSel("#act3 h2", "גִּימַטְרִיָּה קְטַנָּה · 82", "Reduced Gematria · 82");
     setTextSel("#act4 h2", "כֶּפֶל נוֹסָף בְּ־82", "Another ×82");
     // עיגולי סגירת המעגל
