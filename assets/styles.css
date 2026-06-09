@@ -568,21 +568,22 @@ body.lang-en .subs-text{ direction:ltr; }
   .top-chrome{ padding:2px 10px 8px; }
   .btn-replay{ padding:5px 9px; font-size:12px; margin-inline-start:6px; }
 
-  /* ---- מסך הפתיחה: קומפקטי, הלוגו גבוה בראש המסך, בלי גלילה ---- */
-  .intro{ padding:0.8vh 16px 2vh; justify-content:flex-start; }
-  .intro-brand{ margin-bottom:.4vh; }
-  .intro-logo{ width:clamp(62px,15vw,90px); margin-bottom:8px; }
-  .intro-sitename{ font-size:clamp(17px,4.4vw,22px); margin-bottom:8px; }
-  .intro-card{ padding:6px 16px 10px; margin:0; }
-  .intro-kicker{ margin-bottom:7px; letter-spacing:.32em; }
+  /* ---- מסך הפתיחה: לוגו גבוה + רווחים נדיבים בין כל אלמנט ---- */
+  .intro{ padding:2vh 16px 3vh; justify-content:flex-start; }
+  /* הרווחים ביחידות vh — אווריריים במסך גבוה, מתכווצים אוטומטית במסך נמוך */
+  .intro-brand{ margin-bottom:3.6vh; }
+  .intro-logo{ width:clamp(62px,15vw,90px); margin-bottom:2.6vh; }
+  .intro-sitename{ font-size:clamp(17px,4.4vw,22px); margin-bottom:0; }
+  .intro-card{ padding:0 16px; margin:0; }
+  .intro-kicker{ margin-bottom:3.6vh; letter-spacing:.32em; }
   .intro-title{ font-size:clamp(25px,7vw,38px); }
-  .intro-sub{ font-size:14px; margin-top:5px; }
-  .intro-divider{ margin:11px 0; }
-  .intro-verse{ margin:7px 0 11px; }
+  .intro-sub{ font-size:14px; margin-top:2.6vh; }
+  .intro-divider{ margin:3.6vh 0; }
+  .intro-verse{ margin:3.6vh 0 0; }
   .intro-verse .vline{ font-size:clamp(23px,6.8vw,38px); }
-  .intro-verse-en{ font-size:clamp(13px,3.4vw,17px); margin:-2px 0 8px; }
-  .intro-para{ font-size:14px; line-height:1.6; }
-  .intro-cta{ margin-top:9vh; padding:15px 42px; font-size:20px; }
+  .intro-verse-en{ font-size:clamp(13px,3.4vw,17px); margin:2.2vh 0 0; }
+  .intro-para{ font-size:14px; line-height:1.6; margin-top:2.6vh; }
+  .intro-cta{ margin-top:6vh; padding:15px 42px; font-size:20px; }
 
   /* ---- אקטים: קומפקטיים כדי שייכנסו בלי גלילה ---- */
   .stage{ padding:74px 12px 88px; }
