@@ -320,6 +320,17 @@ body:not(.started) .brand-mark{ display:none; }
   opacity:.6; transition:.2s;
 }
 .tap:hover::after{ opacity:1; color:var(--gold); }
+/* ללא סימן ⓘ ליד 2701 (כדור-הסכום) */
+#sum-num.tap::after{ content:none; }
+
+/* ---------- מקור הפסוק + כותרת אקט 1 ---------- */
+.verse-ref{
+  font-family:var(--serif); color:var(--gold-soft);
+  font-size:clamp(15px,2.6vw,21px); letter-spacing:.14em; font-weight:500;
+  opacity:.95; text-shadow:0 0 18px rgba(216,180,106,.25); margin:0;
+}
+/* 10px נוספים מתחת לכותרת „הפסוק הראשון” */
+.act1-title{ margin-bottom:10px; }
 
 /* ---------- הצגת הפסוק ומילים ---------- */
 .verse-row{

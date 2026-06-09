@@ -216,8 +216,10 @@
   const ACTIONS = {
     // ---------- אקט 1 ----------
     showVerse() {
-      $$(".word", verseRow).forEach((el, i) =>
-        setTimeout(() => el.classList.add("in"), i * 120));
+      $$(".word", verseRow).forEach((el, i) => {
+        if (instant) el.classList.add("in");            // קפיצת-זמן: מיד, ללא אנימציה חוזרת
+        else setTimeout(() => el.classList.add("in"), i * 120);
+      });
     },
     primeValues() {
       $$(".word", verseRow).forEach((el) => el.classList.remove("hot"));
@@ -323,7 +325,10 @@
          <div class="arrow">↓</div>
          <div><span class="from">${d.from}</span> → <span class="to">${d.to}</span></div></div>`
       ).join("");
-      $$(".cell", ex).forEach((c, i) => setTimeout(() => c.classList.add("in"), i * 500));
+      $$(".cell", ex).forEach((c, i) => {
+        if (instant) c.classList.add("in");
+        else setTimeout(() => c.classList.add("in"), i * 500);
+      });
     },
     reveal82() {
       const p = $("#pill82");
@@ -344,7 +349,8 @@
         c.className = "fail-chip";
         c.textContent = t;
         row.appendChild(c);
-        setTimeout(() => { c.classList.add("in", "shake"); }, i * 350);
+        if (instant) c.classList.add("in");
+        else setTimeout(() => { c.classList.add("in", "shake"); }, i * 350);
       });
     },
     applyTimes82() {
@@ -737,6 +743,7 @@
     setTextSel("#settings-title-bright", "בהירות הרקע", "Background brightness");
     // כותרות אקטים סטטיות (אקט 2/5 נקבעות ע"י cues)
     setTextSel("#act1 h2", "הַפָּסוּק הָרִאשׁוֹן", "The First Verse");
+    setTextSel("#verse-ref", "בְּרֵאשִׁית א׳, א׳", "Genesis 1:1");
     setTextSel("#act3 h2", "גִּימַטְרִיָּה קְטַנָּה · 82", "Reduced Gematria · 82");
     setTextSel("#act4 h2", "כֶּפֶל נוֹסָף בְּ־82", "Another ×82");
     // עיגולי סגירת המעגל
