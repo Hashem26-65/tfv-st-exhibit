@@ -377,6 +377,20 @@ body.lang-en .subs-text{ direction:ltr; }
 }
 .word .val.show{ opacity:1; transform:none; }
 
+/* ---------- פסוק קומפקטי בראש שקופית 2 ---------- */
+.verse-mini{ gap:8px; margin-bottom:4px; }
+.verse-mini .verse-line{ gap:8px; }
+.verse-mini .word{ padding:7px 11px; min-width:auto; gap:2px; }
+.verse-mini .word .he{ font-size:clamp(14px,2.4vw,19px); }
+.verse-mini .word .val{ font-size:clamp(12px,2.1vw,16px); }
+.verse-mini .word-en{ font-size:clamp(10px,1.8vw,12px); }
+@media (max-width:600px){
+  .verse-mini .word{ padding:5px 6px; }
+  .verse-mini .word .he{ font-size:clamp(12px,3.4vw,15px); }
+  .verse-mini .word .val{ font-size:clamp(10px,3vw,13px); }
+  .verse-mini{ gap:6px; } .verse-mini .verse-line{ gap:5px; }
+}
+
 /* ---------- כדור-סכום ---------- */
 .sum-pill{
   display:inline-flex; align-items:center; gap:14px; max-width:100%; flex-wrap:wrap;

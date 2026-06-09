@@ -93,6 +93,33 @@
     if (card) { e.preventDefault(); openWordPop(parseInt(card.dataset.i, 10)); }
   });
 
+  // עותק קומפקטי של הפסוק בראש שקופית 2 (עולה למעלה, התוצאה נבנית מתחתיו)
+  const verseRow2 = $("#verse-row-2");
+  const wordEls2 = [];
+  if (verseRow2) {
+    const w2line1 = document.createElement("div"); w2line1.className = "verse-line";
+    const w2line2 = document.createElement("div"); w2line2.className = "verse-line";
+    verseRow2.appendChild(w2line1);
+    verseRow2.appendChild(w2line2);
+    SOT.WORDS.forEach((w, i) => {
+      const el = document.createElement("div");
+      el.className = "word";
+      el.innerHTML = `<span class="word-en">${w.en}</span><span class="he">${w.he}</span><span class="val">${w.val}</span>`;
+      (i < 3 ? w2line1 : w2line2).appendChild(el);
+      wordEls2.push(el);
+    });
+  }
+  function showVerse2(stagger) {
+    wordEls2.forEach((el, i) => {
+      const reveal = () => { el.classList.add("in"); const v = $(".val", el); if (v) v.classList.add("show"); };
+      if (!stagger) reveal();
+      else setTimeout(reveal, i * 90);
+    });
+  }
+  function hideVerse2() {
+    wordEls2.forEach((el) => { el.classList.remove("in"); const v = $(".val", el); if (v) v.classList.remove("show"); });
+  }
+
   // ============================================================
   //  חלון הסבר — לחיצה על מספר מרכזי
   // ============================================================
@@ -244,6 +271,8 @@
 
     // ---------- אקט 2 ----------
     act2Begin() {
+      // הפסוק עולה לראש השקופית מיד עם תחילת חלק 2, עם ערכיו
+      showVerse2(!instant);
       $("#act2-title").textContent = L("חִיבּוּר · 2701", "Addition · 2701");
       $("#act2-lede").textContent = L("סכום ערכי שבע המילים.", "The sum of the seven word-values.");
       const pill = $("#sum-pill");
@@ -258,6 +287,7 @@
       makeTap($("#sum-num"), "2701");
     },
     switchToProduct() {
+      hideVerse2();   // סיימנו את שלב החיבור (2701) — מפנים מקום לשלב הכפל
       $("#act2-title").textContent = L("וְאִם נַכְפִּיל?", "And if we multiply?");
       $("#act2-lede").innerHTML = L("במקום לחבר — נכפיל את שבע המילים זו בזו.",
         "Instead of adding — we multiply the seven words together.");
@@ -597,6 +627,7 @@
       const v = $(".val", el); if (v) v.classList.remove("show");
     });
     // אקט 2
+    hideVerse2();
     const sp = $("#sum-pill");
     sp.classList.remove("in", "flash"); sp.style.display = "";
     sp.querySelector(".op").textContent = "∑";
