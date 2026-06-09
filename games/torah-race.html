@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>מרוץ הפסוקים · The First Verse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0e1116; --ink:#f4e9d8; --ink-dim:#c9b79c; --muted:#94a0ad;
+  --gold:#d8b46a; --gold-soft:#b9924a; --green:#5fd081; --red:#e8736b; --amber:#f0b542;
+  --asphalt:#1c2128; --asphalt2:#262d36; --line:rgba(216,180,106,.22); --glow:rgba(216,180,106,.45);
+  --mono:"Roboto Mono",monospace; --serif:"Frank Ruhl Libre",serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:var(--serif); color:var(--ink); direction:rtl; overflow:hidden; user-select:none;
+  -webkit-user-select:none; -webkit-font-smoothing:antialiased;
+  background:
+    radial-gradient(1200px 600px at 50% -10%, rgba(63,90,140,.35), transparent 60%),
+    linear-gradient(to bottom, #11151c, #0b0e13);
+}
+
+/* ---------- HUD ---------- */
+.hud{ position:fixed; top:0; left:0; right:0; z-index:30; display:flex; align-items:center;
+  justify-content:space-between; gap:10px; padding:10px 16px;
+  background:linear-gradient(to bottom, rgba(11,14,19,.95), transparent); }
+.hud .title{ color:var(--gold); font-weight:700; font-size:18px; }
+.hud .stat{ font-family:var(--mono); font-size:14px; color:var(--ink-dim); }
+.hud .stat b{ color:var(--gold); font-size:20px; }
+.timer.low b{ color:var(--red); }
+.btn-restart{ background:none; border:1px solid var(--line); color:var(--ink-dim);
+  font-family:var(--serif); font-size:13px; border-radius:999px; padding:6px 14px; cursor:pointer;}
+.btn-restart:hover{ border-color:var(--gold-soft); color:var(--ink); }
+
+/* ---------- מסלול ---------- */
+.track{ position:absolute; left:0; right:0; top:50px; height:46%;
+  background:linear-gradient(to bottom, var(--asphalt2), var(--asphalt));
+  border-top:3px solid rgba(216,180,106,.25); border-bottom:3px solid rgba(216,180,106,.25);
+  overflow:hidden; }
+.lane{ position:absolute; left:0; right:0; }
+.lane::after{ content:""; position:absolute; left:0; right:0; bottom:0; height:2px;
+  background:repeating-linear-gradient(to left, rgba(255,255,255,.35) 0 26px, transparent 26px 52px); opacity:.5;}
+.finish{ position:absolute; top:0; bottom:0; right:7%; width:16px; z-index:2;
+  background:
+    repeating-conic-gradient(#fff 0 25%, #111 0 50%) 0 0/16px 16px;
+  box-shadow:0 0 16px rgba(255,255,255,.4); opacity:.92;}
+.flag{ position:absolute; right:5.5%; top:-2px; z-index:3; font-size:13px; color:#fff;
+  background:rgba(0,0,0,.5); padding:2px 6px; border-radius:5px; }
+
+/* מכונית (תצוגת-צד) */
+.car{ position:absolute; transform:translateY(-50%); transition:left .45s cubic-bezier(.3,.7,.3,1);
+  height:30px; z-index:1; }
+.car svg{ height:100%; width:auto; display:block; filter:drop-shadow(0 4px 5px rgba(0,0,0,.5)); }
+.car.you{ z-index:4; height:36px; }
+.car .tag{ position:absolute; top:-15px; right:50%; transform:translateX(50%); font-size:10px;
+  font-family:var(--mono); color:var(--gold); white-space:nowrap; text-shadow:0 0 6px #000; }
+.car.boost svg{ filter:drop-shadow(0 4px 5px rgba(0,0,0,.5)) drop-shadow(-8px 0 10px var(--amber)); }
+.dust{ position:absolute; width:5px;height:5px;border-radius:50%;background:rgba(216,180,106,.6);z-index:1;pointer-events:none;}
+
+/* ---------- רמזור ---------- */
+.signal{ position:fixed; top:58px; left:16px; z-index:25;
+  background:#0a0d12; border:2px solid #333a44; border-radius:12px; padding:8px 6px;
+  display:flex; flex-direction:column; gap:7px; box-shadow:0 6px 18px rgba(0,0,0,.5); }
+.signal .bulb{ width:26px; height:26px; border-radius:50%; background:#20262e; transition:.2s; }
+.signal .bulb.r.on{ background:var(--red); box-shadow:0 0 16px var(--red); }
+.signal .bulb.a.on{ background:var(--amber); box-shadow:0 0 16px var(--amber); }
+.signal .bulb.g.on{ background:var(--green); box-shadow:0 0 18px var(--green); }
+
+/* ---------- פאנל שאלה ---------- */
+.panel{ position:fixed; left:0; right:0; bottom:0; z-index:20;
+  background:linear-gradient(to top, #11151c 70%, rgba(17,21,28,.9) 90%, transparent);
+  border-top:2px solid var(--gold-soft); padding:14px 16px 18px;
+  display:flex; flex-direction:column; gap:12px; align-items:center; min-height:42%; }
+.qbar{ width:min(680px,96%); height:6px; border-radius:3px; background:rgba(216,180,106,.15); overflow:hidden; }
+.qbar > i{ display:block; height:100%; width:100%; background:linear-gradient(90deg,var(--green),var(--amber),var(--red));
+  transform-origin:right; transition:transform .25s linear; }
+.q{ font-size:clamp(18px,3.4vw,24px); color:var(--ink); text-align:center; max-width:760px; line-height:1.5; }
+.q b{ color:var(--gold); }
+.opts{ display:grid; grid-template-columns:1fr 1fr; gap:10px; width:min(720px,98%); }
+.opt{ font-family:var(--serif); font-size:clamp(15px,2.6vw,19px); color:var(--ink);
+  background:linear-gradient(180deg, rgba(63,90,140,.18), rgba(20,26,34,.85));
+  border:1px solid var(--line); border-radius:12px; padding:14px 12px; cursor:pointer;
+  transition:.15s; line-height:1.45; text-align:center; }
+.opt:hover{ border-color:var(--gold-soft); transform:translateY(-2px); box-shadow:0 6px 16px rgba(0,0,0,.4); }
+.opt.correct{ background:linear-gradient(180deg, rgba(95,208,129,.3), rgba(20,26,34,.9)); border-color:var(--green); color:#dffbe6;}
+.opt.wrong{ background:linear-gradient(180deg, rgba(232,115,107,.3), rgba(20,26,34,.9)); border-color:var(--red); }
+.opt:disabled{ cursor:default; }
+.feedback{ font-family:var(--mono); font-size:15px; min-height:20px; }
+.feedback.good{ color:var(--green); } .feedback.bad{ color:var(--red); }
+
+/* ---------- שכבות ---------- */
+.overlay{ position:fixed; inset:0; z-index:60; display:grid; place-items:center; text-align:center; padding:24px;
+  background:radial-gradient(900px 600px at 50% 28%, rgba(63,90,140,.4), rgba(11,14,19,.97)); transition:opacity .5s;}
+.overlay.hide{ opacity:0; pointer-events:none; }
+.card{ max-width:560px; }
+.kicker{ color:var(--gold); letter-spacing:.4em; font-size:13px; margin-bottom:12px; }
+.card h1{ font-size:clamp(30px,8vw,52px); color:var(--ink); font-weight:900; margin-bottom:12px; }
+.card p{ color:var(--ink-dim); line-height:1.85; font-size:17px; margin-bottom:8px; }
+.card .how{ color:var(--muted); font-size:15px; line-height:1.9; margin:16px 0; }
+.cta{ margin-top:18px; font-family:var(--serif); font-size:20px; font-weight:700; color:#10141a;
+  background:linear-gradient(180deg,var(--gold),var(--gold-soft)); border:none; border-radius:999px;
+  padding:15px 50px; cursor:pointer; box-shadow:0 6px 26px rgba(216,180,106,.35); animation:pulse 1.6s infinite;}
+.cta:hover{ transform:translateY(-2px); }
+@keyframes pulse{ 0%,100%{ box-shadow:0 6px 22px rgba(216,180,106,.3); transform:scale(1);} 50%{ box-shadow:0 8px 40px rgba(216,180,106,.7); transform:scale(1.04);} }
+.countdown{ font-family:var(--mono); font-size:120px; font-weight:700; color:var(--gold); text-shadow:0 0 40px var(--glow);}
+.result-place{ font-size:64px; font-weight:900; color:var(--gold); margin:6px 0; text-shadow:0 0 30px var(--glow);}
+.brand{ position:fixed; bottom:4px; left:10px; z-index:31; color:var(--muted); font-size:11px; opacity:.55;}
+
+@media (max-width:600px){
+  .track{ height:38%; } .panel{ min-height:48%; }
+  .opts{ grid-template-columns:1fr; }
+  .signal{ top:54px; left:8px; padding:6px 5px; } .signal .bulb{ width:20px;height:20px; }
+}
+</style>
+</head>
+<body>
+
+<div class="hud">
+  <div class="stat timer" id="timerWrap">זמן <b id="timer">1:00</b></div>
+  <div class="title">מרוץ הפסוקים</div>
+  <div class="stat">מקום <b id="place">1</b>/6</div>
+  <button class="btn-restart" id="btn-restart" type="button">⟲ מחדש</button>
+</div>
+
+<!-- רמזור -->
+<div class="signal" id="signal">
+  <div class="bulb r" id="b-r"></div>
+  <div class="bulb a" id="b-a"></div>
+  <div class="bulb g" id="b-g"></div>
+</div>
+
+<!-- מסלול -->
+<div class="track" id="track">
+  <div class="finish"></div>
+  <div class="flag">🏁 סיום</div>
+</div>
+
+<!-- פאנל שאלה -->
+<div class="panel" id="panel">
+  <div class="qbar"><i id="qbar-fill"></i></div>
+  <div class="q" id="q">…</div>
+  <div class="opts" id="opts"></div>
+  <div class="feedback" id="feedback"></div>
+</div>
+
+<div class="brand">The First Verse · מרוץ הפסוקים</div>
+
+<!-- פתיחה -->
+<div class="overlay" id="intro">
+  <div class="card">
+    <div class="kicker">משחק · TFV</div>
+    <h1>מֵרוֹץ הַפְּסוּקִים</h1>
+    <p>אתה הנהג. רמזור אדום עוצר אותך — <b style="color:var(--gold)">תשובה נכונה מדליקה ירוק</b> ומזניקה את המכונית קדימה.</p>
+    <div class="how">
+      🚦 ענה נכון → המכונית שלך מזנקת קדימה<br>
+      🏎️ 6 מכוניות מתחרות — היה ראשון לקו הסיום<br>
+      ⏱️ יש לך <b style="color:var(--gold)">דקה</b>. כל שנייה קובעת!
+    </div>
+    <button class="cta" id="btn-start" type="button">לְזִינּוּק!</button>
+  </div>
+</div>
+
+<!-- ספירה לאחור -->
+<div class="overlay hide" id="cd"><div class="card"><div class="countdown" id="cd-num">3</div></div></div>
+
+<!-- סיום -->
+<div class="overlay hide" id="end">
+  <div class="card">
+    <div class="kicker" id="end-kicker">סיום המרוץ</div>
+    <h1 id="end-title">הַתּוֹצָאָה</h1>
+    <div class="result-place" id="end-place">—</div>
+    <p id="end-msg"></p>
+    <button class="cta" id="btn-again" type="button">מֵרוֹץ חָדָשׁ</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $=function(s){return document.querySelector(s);};
+
+  // ----- מאגר שאלות -----
+  var QUESTIONS=[
+    {q:'איזה מהפסוקים הוא <b>הפסוק הראשון</b> בתורה?',
+     o:['בְּרֵאשִׁית בָּרָא אֱלֹהִים אֵת הַשָּׁמַיִם וְאֵת הָאָרֶץ',
+        'וַיֹּאמֶר אֱלֹהִים יְהִי אוֹר וַיְהִי אוֹר',
+        'שְׁמַע יִשְׂרָאֵל ה׳ אֱלֹהֵינוּ ה׳ אֶחָד',
+        'וַיְכֻלּוּ הַשָּׁמַיִם וְהָאָרֶץ וְכָל צְבָאָם'], a:0},
+    {q:'מה הגימטריה של המילה <b>בְּרֵאשִׁית</b>?', o:['913','903','86','401'], a:0},
+    {q:'כמה מילים יש בפסוק הראשון בתורה?', o:['7','6','8','5'], a:0},
+    {q:'מה <b>סכום</b> ערכי שבע מילות הפסוק?', o:['2701','1820','82','304'], a:0},
+    {q:'מה ערך הפסוק הראשון ב<b>גימטריה קטנה</b>?', o:['82','28','100','19'], a:0},
+    {q:'איזו מילה בפסוק פירושה <b>“יָצַר / בָּרָא”</b>?', o:['בָּרָא','אֱלֹהִים','אֵת','הָאָרֶץ'], a:0},
+    {q:'מה הגימטריה של <b>אֱלֹהִים</b>?', o:['86','91','120','65'], a:0},
+    {q:'מה הגימטריה של <b>הָאָרֶץ</b>?', o:['296','291','385','300'], a:0},
+    {q:'2701 הוא גם <b>המספר המשולשי</b> ה־?', o:['73','37','82','100'], a:0},
+    {q:'איזו מילה היא <b>האחרונה</b> בפסוק הראשון?', o:['הָאָרֶץ','הַשָּׁמַיִם','בָּרָא','וְאֵת'], a:0}
+  ];
+
+  // ----- מכוניות -----
+  var COLORS=["#d8b46a","#e8736b","#5aa9e6","#5fd081","#b07be0","#f0a23a"];
+  var NAMES=["אַתָּה","יָרִיב 1","יָרִיב 2","יָרִיב 3","יָרִיב 4","יָרִיב 5"];
+  function carSVG(color){
+    return '<svg viewBox="0 0 96 42">'+
+      '<g stroke="#0c0f14" stroke-width="1.5" stroke-linejoin="round">'+
+      '<path d="M4 30 q0 -3 4 -4 l14 -2 q6 -9 16 -10 l16 0 q10 1 16 10 l14 3 q6 1 6 6 l0 3 q0 2 -3 2 l-86 0 q-3 0 -3 -2 z" fill="'+color+'"/>'+
+      '<path d="M30 15 q4 -7 12 -7 l10 0 q8 1 12 8 l-6 4 -28 0 z" fill="rgba(255,255,255,.65)" stroke="none"/>'+
+      '</g>'+
+      '<circle cx="26" cy="34" r="8" fill="#16191f" stroke="#d8b46a" stroke-width="2.5"/>'+
+      '<circle cx="70" cy="34" r="8" fill="#16191f" stroke="#d8b46a" stroke-width="2.5"/>'+
+      '<circle cx="90" cy="26" r="2.4" fill="#fff3c0"/>'+
+      '</svg>';
+  }
+
+  var track=$("#track"), cars=[], TICK=140, FINISH=1.0;
+  var elTimer=$("#timer"), elPlace=$("#place"), elTimerWrap=$("#timerWrap");
+  var qEl=$("#q"), optsEl=$("#opts"), fbEl=$("#feedback"), qbar=$("#qbar-fill");
+  var bR=$("#b-r"), bA=$("#b-a"), bG=$("#b-g");
+
+  var state={running:false, timeLeft:60, qIndex:0, queue:[], streak:0, locked:false, loopT:null, clockT:null};
+
+  // ----- שמע -----
+  var actx=null; function ac(){ if(!actx){ try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}} return actx; }
+  function tone(f,d,t,v){ var c=ac(); if(!c)return; var o=c.createOscillator(),g=c.createGain();
+    o.type=t||"sine"; o.frequency.value=f; g.gain.setValueAtTime(v||.25,c.currentTime);
+    g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+(d||.2)); o.connect(g); g.connect(c.destination);
+    o.start(); o.stop(c.currentTime+(d||.2)+.02); }
+  function sweepUp(){ var c=ac(); if(!c)return; var o=c.createOscillator(),g=c.createGain();
+    o.type="sawtooth"; o.frequency.setValueAtTime(180,c.currentTime); o.frequency.exponentialRampToValueAtTime(620,c.currentTime+.4);
+    g.gain.setValueAtTime(.22,c.currentTime); g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+.45);
+    o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime+.5); }
+  function good(){ tone(660,.1,"triangle",.3); setTimeout(function(){tone(990,.16,"triangle",.3);},80); sweepUp(); }
+  function bad(){ tone(150,.25,"sawtooth",.22); }
+  function beep(f){ tone(f||440,.15,"square",.25); }
+
+  // ----- רמזור -----
+  function light(c){ bR.classList.toggle("on",c==="r"); bA.classList.toggle("on",c==="a"); bG.classList.toggle("on",c==="g"); }
+
+  // ----- בניית מכוניות -----
+  function buildCars(){
+    Array.prototype.slice.call(track.querySelectorAll(".car,.dust")).forEach(function(e){e.remove();});
+    cars=[];
+    var laneH=100/6;
+    for(var i=0;i<6;i++){
+      var lane=document.createElement("div"); lane.className="lane";
+      lane.style.top=(laneH*i)+"%"; lane.style.height=laneH+"%"; track.appendChild(lane);
+      var car=document.createElement("div"); car.className="car"+(i===0?" you":"");
+      car.innerHTML=carSVG(COLORS[i])+'<span class="tag">'+(i===0?"אַתָּה ▸":NAMES[i])+'</span>';
+      car.style.top="50%"; car.style.left="3%";
+      lane.appendChild(car);
+      cars.push({prog:0, el:car, isYou:i===0, speed:0.004+Math.random()*0.0045, finished:false});
+    }
+  }
+  function placeCar(c){ c.el.style.left=(3+c.prog*85)+"%"; }
+  function dustBurst(carEl){
+    var r=carEl.getBoundingClientRect(), tr=track.getBoundingClientRect();
+    for(var i=0;i<6;i++){ var d=document.createElement("div"); d.className="dust";
+      d.style.left=(r.left-tr.left)+"px"; d.style.top=(r.top-tr.top+r.height/2)+"px"; track.appendChild(d);
+      var dx=20+Math.random()*30, dy=Math.random()*16-8;
+      d.animate([{transform:"translate(0,0)",opacity:.8},{transform:"translate("+dx+"px,"+dy+"px)",opacity:0}],{duration:500});
+      setTimeout((function(el){return function(){el.remove();};})(d),520);
+    }
+  }
+
+  // ----- מהלך המשחק -----
+  function shuffle(a){ for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;} return a; }
+
+  function updatePlace(){
+    var sorted=cars.slice().sort(function(a,b){return b.prog-a.prog;});
+    var p=sorted.indexOf(cars[0])+1; elPlace.textContent=p;
+  }
+
+  function loop(){
+    for(var i=1;i<cars.length;i++){ // יריבים מתקדמים אוטומטית
+      if(cars[i].finished) continue;
+      cars[i].prog=Math.min(FINISH,cars[i].prog+cars[i].speed);
+      placeCar(cars[i]);
+      if(cars[i].prog>=FINISH){ cars[i].finished=true; endRace(cars[i]); return; }
+    }
+    updatePlace();
+  }
+
+  function clock(){
+    state.timeLeft--;
+    var m=Math.floor(state.timeLeft/60), s=state.timeLeft%60;
+    elTimer.textContent=m+":"+(s<10?"0":"")+s;
+    elTimerWrap.classList.toggle("low",state.timeLeft<=10);
+    if(state.timeLeft<=10 && state.timeLeft>0) beep(880);
+    if(state.timeLeft<=0) endRace(null,true);
+  }
+
+  function nextQuestion(){
+    if(!state.running) return;
+    state.locked=false;
+    if(state.queue.length===0) state.queue=shuffle(QUESTIONS.map(function(_,i){return i;}));
+    var q=QUESTIONS[state.queue.shift()];
+    state.current=q;
+    light("r");
+    qEl.innerHTML=q.q;
+    fbEl.textContent=""; fbEl.className="feedback";
+    qbar.style.transform="scaleX(1)";
+    // ערבוב תשובות
+    var idx=shuffle(q.o.map(function(_,i){return i;}));
+    optsEl.innerHTML="";
+    idx.forEach(function(oi){
+      var b=document.createElement("button"); b.className="opt"; b.type="button"; b.innerHTML=q.o[oi];
+      b.addEventListener("click",function(){ answer(oi===q.a, b); });
+      optsEl.appendChild(b);
+    });
+  }
+
+  function answer(correct, btn){
+    if(state.locked || !state.running) return;
+    state.locked=true;
+    var you=cars[0];
+    if(correct){
+      btn.classList.add("correct"); light("g"); good();
+      state.streak++;
+      var boost=0.15 + Math.min(0.06, (state.streak-1)*0.02);  // בונוס רצף
+      you.prog=Math.min(FINISH, you.prog+boost);
+      placeCar(you); you.el.classList.add("boost"); dustBurst(you.el);
+      setTimeout(function(){ you.el.classList.remove("boost"); },450);
+      fbEl.textContent=(state.streak>1?("רצף "+state.streak+"! "):"")+"+"+Math.round(boost*100)+" מהירות"; fbEl.className="feedback good";
+      updatePlace();
+      if(you.prog>=FINISH){ you.finished=true; setTimeout(function(){endRace(you);},300); return; }
+      setTimeout(nextQuestion, 600);
+    } else {
+      btn.classList.add("wrong"); bad(); state.streak=0;
+      // סימון התשובה הנכונה
+      Array.prototype.forEach.call(optsEl.children,function(b){ if(b.innerHTML===state.current.o[state.current.a]) b.classList.add("correct"); b.disabled=true; });
+      fbEl.textContent="טעות — היריבים מתקרבים!"; fbEl.className="feedback bad";
+      setTimeout(nextQuestion, 1100);
+    }
+  }
+
+  // ----- ניהול -----
+  function startRace(){
+    state.running=true; state.timeLeft=60; state.queue=[]; state.streak=0; state.locked=false;
+    elTimer.textContent="1:00"; elTimerWrap.classList.remove("low");
+    buildCars();
+    nextQuestion();
+    clearInterval(state.loopT); state.loopT=setInterval(loop,TICK);
+    clearInterval(state.clockT); state.clockT=setInterval(clock,1000);
+  }
+  function endRace(winner, timeout){
+    if(!state.running) return;
+    state.running=false; state.locked=true;
+    clearInterval(state.loopT); clearInterval(state.clockT);
+    light("r");
+    var sorted=cars.slice().sort(function(a,b){return b.prog-a.prog;});
+    var place=sorted.indexOf(cars[0])+1;
+    var you=cars[0];
+    var won = winner && winner.isYou;
+    $("#end-kicker").textContent = timeout ? "נגמר הזמן!" : "סיום המרוץ";
+    $("#end-title").textContent = won ? "נִצַּחְתָּ! 🏆" : (place<=3?"כָּל הַכָּבוֹד!":"סִיּוּם");
+    $("#end-place").textContent = "מקום "+place+"/6";
+    $("#end-msg").textContent = won
+      ? "חצית ראשון את קו הסיום!"
+      : (timeout ? "הזמן נגמר — סיימת במקום "+place+". נסה שוב מהר יותר!"
+                 : "מכונית אחרת הגיעה ראשונה. מקום "+place+" — נסה שוב!");
+    $("#end").classList.remove("hide");
+  }
+
+  // ----- ספירה לאחור והפעלה -----
+  function countdownThenStart(){
+    $("#intro").classList.add("hide"); $("#end").classList.add("hide");
+    var cd=$("#cd"), num=$("#cd-num"); cd.classList.remove("hide");
+    var seq=["3","2","1","צֵא!"], i=0;
+    light("r");
+    num.textContent=seq[0]; beep(440);
+    var t=setInterval(function(){
+      i++;
+      if(i<seq.length){ num.textContent=seq[i]; if(i<3){ light("r"); beep(440);} else { light("g"); beep(880);} }
+      else { clearInterval(t); cd.classList.add("hide"); startRace(); }
+    },800);
+  }
+
+  $("#btn-start").addEventListener("click",function(){ ac(); countdownThenStart(); });
+  $("#btn-again").addEventListener("click",function(){ ac(); countdownThenStart(); });
+  $("#btn-restart").addEventListener("click",function(){ ac(); countdownThenStart(); });
+
+  buildCars(); // תצוגה מקדימה ברקע
+})();
+</script>
+</body>
+</html>
