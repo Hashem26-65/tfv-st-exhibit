@@ -25,7 +25,7 @@ html,body{ margin:0; padding:0; height:100%; }
 body{
   background:
     radial-gradient(1200px 700px at 50% -10%, rgba(122,28,63,.35), transparent 60%),
-    radial-gradient(900px 600px at 50% 110%, rgba(216,180,106,.08), transparent 55%),
+    radial-gradient(1200px 700px at 50% 110%, rgba(122,28,63,.35), transparent 60%),
     var(--bg);
   color:var(--ink);
   font-family:var(--serif);
@@ -188,7 +188,8 @@ body.started .chrome-controls{ opacity:1; pointer-events:auto; }
   display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
   padding:4vh 20px 5vh; overflow-y:auto;
   background:
-    radial-gradient(1000px 700px at 50% 20%, rgba(122,28,63,.45), transparent 60%),
+    radial-gradient(1000px 700px at 50% 16%, rgba(122,28,63,.45), transparent 60%),
+    radial-gradient(1000px 700px at 50% 100%, rgba(122,28,63,.42), transparent 60%),
     var(--bg);
   transition:opacity .8s ease;
 }
@@ -237,9 +238,9 @@ body:not(.started) .brand-mark{ display:none; }
 .intro-para{ color:var(--ink-dim); line-height:1.9; font-size:17px; }
 .intro-para b{ color:var(--gold); }
 .intro-cta{
-  margin-top:30px; font-family:var(--serif); font-size:18px;
+  margin-top:30px; font-family:var(--serif); font-size:23px; font-weight:700;
   color:#1a0c12; background:linear-gradient(180deg,var(--gold),var(--gold-soft));
-  border:none; border-radius:999px; padding:14px 38px; cursor:pointer;
+  border:none; border-radius:999px; padding:18px 54px; cursor:pointer;
   box-shadow:0 6px 26px rgba(216,180,106,.3); transition:transform .2s;
   animation:cta-pulse 1.6s ease-in-out infinite;
 }
@@ -568,7 +569,7 @@ body.lang-en .subs-text{ direction:ltr; }
   .btn-replay{ padding:5px 9px; font-size:12px; margin-inline-start:6px; }
 
   /* ---- מסך הפתיחה: קומפקטי, הלוגו גבוה בראש המסך, בלי גלילה ---- */
-  .intro{ padding:3vh 16px 2vh; justify-content:flex-start; }
+  .intro{ padding:0.8vh 16px 2vh; justify-content:flex-start; }
   .intro-brand{ margin-bottom:.4vh; }
   .intro-logo{ width:clamp(62px,15vw,90px); margin-bottom:8px; }
   .intro-sitename{ font-size:clamp(17px,4.4vw,22px); margin-bottom:8px; }
@@ -581,7 +582,7 @@ body.lang-en .subs-text{ direction:ltr; }
   .intro-verse .vline{ font-size:clamp(23px,6.8vw,38px); }
   .intro-verse-en{ font-size:clamp(13px,3.4vw,17px); margin:-2px 0 8px; }
   .intro-para{ font-size:14px; line-height:1.6; }
-  .intro-cta{ margin-top:15px; padding:11px 28px; font-size:16px; }
+  .intro-cta{ margin-top:16px; padding:15px 42px; font-size:20px; }
 
   /* ---- אקטים: קומפקטיים כדי שייכנסו בלי גלילה ---- */
   .stage{ padding:74px 12px 88px; }
@@ -625,7 +626,7 @@ body.lang-en .subs-text{ direction:ltr; }
 
 /* ---- מסך נמוך (כל אוריינטציה): דחיסה כדי שלעולם לא יידרש גלילה ---- */
 @media (max-height:680px){
-  .intro{ padding:1.4vh 14px; justify-content:flex-start; }
+  .intro{ padding:0.5vh 14px 1.4vh; justify-content:flex-start; }
   .intro-brand{ margin-bottom:.2vh; }
   .intro-logo{ width:clamp(46px,9vh,68px); margin-bottom:4px; }
   .intro-sitename{ font-size:clamp(14px,3.2vh,19px); margin-bottom:4px; }
@@ -638,7 +639,7 @@ body.lang-en .subs-text{ direction:ltr; }
   .intro-verse .vline{ font-size:clamp(19px,4.6vh,32px); }
   .intro-verse-en{ font-size:clamp(11px,2.8vh,15px); margin:0 0 4px; }
   .intro-para{ font-size:12px; line-height:1.4; }
-  .intro-cta{ margin-top:8px; padding:8px 24px; font-size:14px; }
+  .intro-cta{ margin-top:9px; padding:12px 36px; font-size:18px; }
   /* ההערה שמתחת לכפתור מיותרת במסך נמוך — הכפתור עצמו ברור */
   .intro-cta ~ .intro-para{ display:none; }
 
