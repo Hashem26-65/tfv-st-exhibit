@@ -136,8 +136,20 @@ body.aiming .crosshair{ opacity:1; }
   border:1px dashed var(--line); border-radius:999px; padding:7px 18px; min-width:200px; text-align:center;
 }
 .chamber b{ color:var(--gold); }
-.gun{ font-size:30px; filter:drop-shadow(0 2px 6px rgba(0,0,0,.5)); transition:transform .08s; }
-.gun.recoil{ transform:translateX(10px) rotate(-6deg); }
+.gun{ position:relative; display:inline-block; line-height:0;
+  filter:drop-shadow(0 3px 8px rgba(0,0,0,.55)) drop-shadow(0 0 6px rgba(216,180,106,.25));
+  transition:transform .08s ease-out; }
+.gun svg{ display:block; height:auto; }
+.gun.recoil{ transform:translateX(12px) rotate(-5deg); }
+/* הבזק-קנה (קצה הקנה בצד שמאל) */
+.muzzle{
+  position:absolute; left:-10px; top:46%; width:34px; height:34px; transform:translate(-50%,-50%) scale(0);
+  background:radial-gradient(circle, #fff 8%, #ffe49a 30%, #f0a83a 55%, transparent 70%);
+  border-radius:50%; pointer-events:none; opacity:0; z-index:2;
+}
+.muzzle.flash{ animation:muzzleFlash .14s ease-out; }
+@keyframes muzzleFlash{ 0%{ opacity:1; transform:translate(-50%,-50%) scale(.3);} 100%{ opacity:0; transform:translate(-50%,-50%) scale(1.4);} }
+@media (max-width:600px){ .gun svg{ width:150px; } }
 
 /* ---------- שכבות פתיחה/ניצחון ---------- */
 .overlay{
@@ -201,7 +213,33 @@ body.aiming .crosshair{ opacity:1; }
 <!-- מזח: רובה + מחסניות -->
 <div class="dock">
   <div class="rifle">
-    <span class="gun" id="gun">🔫</span>
+    <span class="gun" id="gun" aria-hidden="true">
+      <i class="muzzle" id="muzzle"></i>
+      <svg viewBox="0 0 250 86" width="210">
+        <g fill="#d2ad62" stroke="#241019" stroke-width="1.5" stroke-linejoin="round">
+          <!-- קנה -->
+          <rect x="6" y="36" width="104" height="8" rx="2"/>
+          <!-- כוונת קדמית -->
+          <rect x="30" y="27" width="5" height="9"/>
+          <!-- גוף הרובה (receiver) -->
+          <rect x="108" y="30" width="74" height="22" rx="4"/>
+          <!-- כוונת אופטית -->
+          <rect x="116" y="14" width="50" height="10" rx="5"/>
+          <rect x="124" y="23" width="4" height="9"/>
+          <rect x="154" y="23" width="4" height="9"/>
+          <!-- מחסנית מעוקלת -->
+          <path d="M132 52 q2 16 -4 26 l14 4 q8 -16 6 -30 z"/>
+          <!-- ידית אחיזה -->
+          <path d="M166 52 l16 0 l-5 26 l-13 0 z"/>
+          <!-- קת -->
+          <path d="M182 32 l58 -7 l0 15 l-20 5 l-38 0 z"/>
+          <!-- לחי הקת -->
+          <path d="M182 31 l52 -6 l0 6 l-52 4 z" fill="#b9924a"/>
+        </g>
+        <!-- הדק -->
+        <path d="M166 52 q-3 11 9 12" fill="none" stroke="#d2ad62" stroke-width="3.5" stroke-linecap="round"/>
+      </svg>
+    </span>
     <span class="chamber" id="chamber">בחר מחסנית כדי לטעון…</span>
   </div>
   <div class="dock-label">טען <b>מילה</b>, ופגע בלוח עם <b>הגימטריה</b> שלה</div>
@@ -332,7 +370,11 @@ body.aiming .crosshair{ opacity:1; }
   }
 
   // ---------- ירי ----------
-  function recoil(){ gun.classList.add("recoil"); setTimeout(function(){gun.classList.remove("recoil");},90); }
+  var muzzle=$("#muzzle");
+  function recoil(){
+    gun.classList.add("recoil"); setTimeout(function(){gun.classList.remove("recoil");},90);
+    if(muzzle){ muzzle.classList.remove("flash"); void muzzle.offsetWidth; muzzle.classList.add("flash"); }
+  }
   function sparks(x,y,color){
     for(var i=0;i<10;i++){
       var s=document.createElement("div"); s.className="spark";
