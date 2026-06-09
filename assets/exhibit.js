@@ -22,6 +22,8 @@
   let volume = parseFloat(localStorage.getItem("sot-vol"));
   if (isNaN(volume) || volume < 0 || volume > 1) volume = 1;
   let muted = false;          // השתקה זמנית (אינה מאפסת את ערך העוצמה)
+  let bright = parseFloat(localStorage.getItem("sot-bright"));   // 0..100, 50 = ניטרלי
+  if (isNaN(bright) || bright < 0 || bright > 100) bright = 50;
   let lang = localStorage.getItem("sot-lang") || "he";
   if (lang !== "en") lang = "he";
   let firedKey = "";       // "actIndex:cueIndex" של ה-cue האחרון שהופעל
@@ -720,6 +722,7 @@
     // תפריט ההגדרות
     setTextSel("#settings-title-speed", "מהירות הקריינות", "Narration speed");
     setTextSel("#settings-title-vol", "עוצמת הקריינות", "Narration volume");
+    setTextSel("#settings-title-bright", "בהירות הרקע", "Background brightness");
     // כותרות אקטים סטטיות (אקט 2/5 נקבעות ע"י cues)
     setTextSel("#act1 h2", "הַפָּסוּק הָרִאשׁוֹן", "The First Verse");
     setTextSel("#act1 .lede", "לכל אחת משבע מילות הפסוק יש ערך גימטרי.",
@@ -927,6 +930,27 @@
     });
   }
   paintVolume();   // סנכרון מצב התחלתי לפי ההעדפה השמורה
+
+  // ---- בהירות הרקע ----
+  const bgBright = $("#bg-bright");
+  const brightRange = $("#bright-range");
+  const brightPct = $("#bright-pct");
+  const brightReset = $("#bright-reset");
+  function applyBright() {
+    let color = "#fff", op = 0;
+    if (bright > 50) { color = "#fff"; op = ((bright - 50) / 50) * 0.34; }   // מבהיר
+    else if (bright < 50) { color = "#000"; op = ((50 - bright) / 50) * 0.5; } // מכהה
+    if (bgBright) { bgBright.style.background = color; bgBright.style.opacity = String(op); }
+    try { localStorage.setItem("sot-bright", String(bright)); } catch (e) {}
+    if (brightRange) brightRange.value = String(bright);
+    if (brightPct) { const d = Math.round(bright - 50); brightPct.textContent = (d > 0 ? "+" : "") + d; }
+  }
+  if (brightRange) brightRange.addEventListener("input", () => {
+    bright = parseFloat(brightRange.value); if (isNaN(bright)) bright = 50;
+    applyBright();
+  });
+  if (brightReset) brightReset.addEventListener("click", () => { bright = 50; applyBright(); });
+  applyBright();   // החלת ההעדפה השמורה בטעינה
 
   // סגירה בלחיצה מחוץ לפאנל
   document.addEventListener("click", (e) => {

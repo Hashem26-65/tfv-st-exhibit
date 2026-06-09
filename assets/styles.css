@@ -34,6 +34,14 @@ body{
   -webkit-font-smoothing:antialiased;
 }
 
+/* ---------- שכבת בהירות רקע ---------- */
+/* מעל הרקעים (intro/stage) אך מתחת לבקרות (top-chrome z65) ולחלונות.
+   שקופה לחלוטין כברירת מחדל; pointer-events:none כדי לא לחסום לחיצות. */
+.bg-bright{
+  position:fixed; inset:0; z-index:64; pointer-events:none;
+  background:#fff; opacity:0; transition:opacity .25s ease;
+}
+
 /* ---------- כותרת עליונה ---------- */
 .top-chrome{
   position:fixed; inset:0 0 auto 0; z-index:65;
