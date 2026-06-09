@@ -623,12 +623,37 @@ body.lang-en .subs-text{ direction:ltr; }
   .intro-verse .vline{ font-size:clamp(26px,9vw,40px); }
 }
 
-/* ---- מסך נמוך / לרוחב ---- */
+/* ---- מסך נמוך (כל אוריינטציה): דחיסה כדי שלעולם לא יידרש גלילה ---- */
+@media (max-height:680px){
+  .intro{ padding:1.4vh 14px; justify-content:flex-start; }
+  .intro-brand{ margin-bottom:.2vh; }
+  .intro-logo{ width:clamp(46px,9vh,68px); margin-bottom:4px; }
+  .intro-sitename{ font-size:clamp(14px,3.2vh,19px); margin-bottom:4px; }
+  .intro-card{ padding:2px 14px 6px; }
+  .intro-kicker{ margin-bottom:4px; letter-spacing:.28em; }
+  .intro-title{ font-size:clamp(21px,5vh,34px); line-height:1.1; }
+  .intro-sub{ font-size:12px; margin-top:2px; }
+  .intro-divider{ margin:4px 0; }
+  .intro-verse{ margin:3px 0 5px; }
+  .intro-verse .vline{ font-size:clamp(19px,4.6vh,32px); }
+  .intro-verse-en{ font-size:clamp(11px,2.8vh,15px); margin:0 0 4px; }
+  .intro-para{ font-size:12px; line-height:1.4; }
+  .intro-cta{ margin-top:8px; padding:8px 24px; font-size:14px; }
+  /* ההערה שמתחת לכפתור מיותרת במסך נמוך — הכפתור עצמו ברור */
+  .intro-cta ~ .intro-para{ display:none; }
+
+  /* אקטים קומפקטיים יותר במסך נמוך */
+  .stage{ padding:64px 12px 78px; }
+  .act{ inset:64px 12px 78px; gap:8px; }
+  .act h2{ font-size:clamp(17px,4.4vh,24px); }
+}
+
+/* ---- מסך נמוך מאוד / לרוחב ---- */
 @media (max-height:560px) and (orientation:landscape){
-  .stage{ padding:74px 16px 58px; }
-  .act{ inset:74px 16px 58px; gap:10px; }
-  .intro{ padding:2vh 16px; justify-content:flex-start; }
-  .intro-logo{ width:clamp(64px,12vh,90px); }
-  .intro-divider{ margin:12px 0; }
+  .stage{ padding:64px 16px 52px; }
+  .act{ inset:64px 16px 52px; gap:8px; }
+  .intro{ padding:1.4vh 16px; justify-content:flex-start; }
+  .intro-logo{ width:clamp(44px,10vh,64px); }
+  .intro-divider{ margin:4px 0; }
   .progress{ bottom:10px; }
 }
