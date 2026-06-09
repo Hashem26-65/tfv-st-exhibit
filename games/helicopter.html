@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>מסוק הפסוקים · The First Verse</title>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#fff; --gold:#e8c873; --gold-soft:#b9924a; --green:#37c06a; --red:#ff453a; --amber:#ffcf3a;
+  --mono:"Roboto Mono",monospace; --serif:"Frank Ruhl Libre",serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{ font-family:var(--serif); color:#143; direction:rtl; user-select:none; -webkit-user-select:none;
+  -webkit-font-smoothing:antialiased; background:#bfe3f5; }
+
+/* ===== שמיים ===== */
+.scene{ position:fixed; inset:0; overflow:hidden; z-index:1;
+  background:linear-gradient(to bottom, #4aa3e8 0%, #7ec2f0 38%, #b7e3f7 64%, #e7f6ff 100%); }
+.sun{ position:absolute; top:7%; left:14%; width:90px; height:90px; border-radius:50%;
+  background:radial-gradient(circle, #fff6c8 30%, #ffe27a 60%, rgba(255,220,110,.25) 75%, transparent); filter:blur(1px);}
+.clouds{ position:absolute; inset:0; transition:transform .12s linear; pointer-events:none; }
+.cloud{ position:absolute; background:#fff; border-radius:50%; opacity:.9;
+  box-shadow:38px 12px 0 -4px #fff, 78px 4px 0 -8px #fff, -34px 12px 0 -6px #fff; }
+/* אזור חילוץ למעלה */
+.rescue{ position:absolute; top:3%; left:50%; transform:translateX(-50%); z-index:2; text-align:center; color:#0a5; }
+.rescue .pad{ width:140px; height:14px; border-radius:8px; background:repeating-linear-gradient(90deg,#1c8 0 14px,#fff 14px 28px); box-shadow:0 4px 10px rgba(0,0,0,.2);}
+.rescue .lbl{ font-weight:700; color:#0a6; font-size:15px; margin-bottom:5px; text-shadow:0 1px 2px #fff;}
+/* קרקע */
+.ground{ position:absolute; left:0; right:0; bottom:0; height:12%; z-index:3;
+  background:linear-gradient(to bottom, #8bbf5a, #5e8f3a); border-top:4px solid #4d7d2f; }
+.ground::before{ content:""; position:absolute; inset:0;
+  background:repeating-linear-gradient(90deg, rgba(0,0,0,.05) 0 30px, transparent 30px 60px);}
+.rocks{ position:absolute; bottom:11%; left:0; right:0; height:30px; z-index:3;
+  background:repeating-linear-gradient(120deg,#6e6a5e 0 18px,#5a5750 18px 36px);
+  -webkit-mask-image:linear-gradient(to top,#000,transparent); mask-image:linear-gradient(to top,#000,transparent); opacity:.5;}
+
+/* ===== מסוק ===== */
+.heli{ position:absolute; left:46%; z-index:6; width:150px; transition:top .12s linear, transform .25s ease;
+  transform-origin:center; }
+.heli.climb{ transform:rotate(-12deg); }
+.heli.fall{ transform:rotate(8deg); }
+.heli .rotor{ position:absolute; top:-4px; left:50%; transform:translateX(-50%); width:170px; height:14px; z-index:2;}
+.heli .rotor .blade{ position:absolute; top:5px; left:0; right:0; height:4px; border-radius:3px;
+  background:linear-gradient(90deg, transparent, #333 20%, #555 50%, #333 80%, transparent);
+  animation:spin .12s linear infinite; transform-origin:center; }
+@keyframes spin{ 0%{ transform:scaleX(1);} 50%{ transform:scaleX(.15);} 100%{ transform:scaleX(1);} }
+.heli .mast{ position:absolute; top:6px; left:50%; transform:translateX(-50%); width:5px; height:14px; background:#444; z-index:1;}
+.heli .smoke{ position:absolute; top:30%; right:-6px; width:10px; height:10px; border-radius:50%; background:rgba(80,80,80,.6); opacity:0;}
+.heli.danger .smoke{ animation:smoke 1s ease-out infinite; }
+@keyframes smoke{ 0%{opacity:.6; transform:translate(0,0) scale(.6);} 100%{opacity:0; transform:translate(16px,-22px) scale(1.6);} }
+
+/* פיצוץ */
+.boom{ position:absolute; z-index:8; width:120px; height:120px; transform:translate(-50%,-50%) scale(0);
+  background:radial-gradient(circle, #fff 10%, #ffd23a 30%, #ff7a1a 55%, #d83a1a 70%, transparent 78%);
+  border-radius:50%; pointer-events:none; }
+.boom.go{ animation:boom .6s ease-out forwards; }
+@keyframes boom{ 0%{transform:translate(-50%,-50%) scale(0); opacity:1;} 100%{transform:translate(-50%,-50%) scale(2.4); opacity:0;} }
+
+/* ===== מד גובה ===== */
+.alti{ position:fixed; top:56px; left:14px; z-index:20; width:20px; height:46%;
+  background:rgba(255,255,255,.55); border:2px solid #2a7; border-radius:12px; overflow:hidden; box-shadow:0 4px 10px rgba(0,0,0,.15);}
+.alti > i{ position:absolute; left:0; right:0; bottom:0; height:55%; transition:height .12s linear;
+  background:linear-gradient(to top,#1c8,#4ad); }
+.alti.low > i{ background:linear-gradient(to top,#e8736b,#ff9a3a); }
+.alti-lbl{ position:fixed; top:52px; left:8px; z-index:20; font-family:var(--mono); font-size:10px; color:#0a6; }
+
+/* ===== HUD ===== */
+.hud{ position:fixed; top:0; left:0; right:0; z-index:21; display:flex; justify-content:space-between;
+  align-items:center; padding:10px 16px; background:linear-gradient(to bottom, rgba(120,194,240,.9), transparent);}
+.hud .title{ color:#fff; font-weight:700; font-size:18px; text-shadow:0 2px 4px rgba(0,0,0,.3);}
+.hud .stat{ font-family:var(--mono); color:#0a5; font-weight:700; background:rgba(255,255,255,.7); padding:4px 12px; border-radius:999px;}
+.btn-restart{ background:rgba(255,255,255,.8); border:1px solid #2a7; color:#0a6; font-family:var(--serif);
+  font-size:13px; border-radius:999px; padding:6px 14px; cursor:pointer;}
+
+/* ===== פאנל שאלה ===== */
+.panel{ position:fixed; left:0; right:0; bottom:0; z-index:18; padding:14px 16px 18px;
+  background:linear-gradient(to top, rgba(255,255,255,.96) 72%, rgba(255,255,255,.7) 90%, transparent);
+  border-top:3px solid var(--gold-soft); display:flex; flex-direction:column; gap:10px; align-items:center;}
+.q{ font-size:clamp(17px,3.2vw,23px); color:#143; text-align:center; line-height:1.45; max-width:760px;}
+.q b{ color:var(--gold-soft); }
+.opts{ display:grid; grid-template-columns:1fr 1fr; gap:10px; width:min(720px,98%);}
+.opt{ font-family:var(--serif); font-size:clamp(15px,2.6vw,19px); color:#143;
+  background:linear-gradient(180deg,#fff,#eaf4ff); border:2px solid #bcd; border-radius:12px;
+  padding:13px 10px; cursor:pointer; transition:.13s; line-height:1.4; text-align:center;}
+.opt:hover{ border-color:var(--gold); transform:translateY(-2px); box-shadow:0 6px 14px rgba(0,0,0,.12);}
+.opt.correct{ background:linear-gradient(180deg,#dff7e6,#bff0cf); border-color:var(--green); }
+.opt.wrong{ background:linear-gradient(180deg,#ffe2df,#ffd0cb); border-color:var(--red); }
+.feedback{ font-family:var(--mono); font-size:15px; min-height:18px; font-weight:700;}
+.feedback.good{ color:#0a6; } .feedback.bad{ color:#c33; }
+
+/* ===== שכבות ===== */
+.overlay{ position:fixed; inset:0; z-index:60; display:grid; place-items:center; text-align:center; padding:24px;
+  background:radial-gradient(900px 600px at 50% 30%, rgba(120,194,240,.6), rgba(20,60,100,.92)); transition:opacity .5s;}
+.overlay.hide{ opacity:0; pointer-events:none;}
+.card{ max-width:540px; color:#fff;}
+.kicker{ color:var(--gold); letter-spacing:.4em; font-size:13px; margin-bottom:12px;}
+.card h1{ font-size:clamp(30px,8vw,52px); font-weight:900; margin-bottom:12px; text-shadow:0 3px 10px rgba(0,0,0,.3);}
+.card p{ color:#dff; line-height:1.85; font-size:17px; margin-bottom:8px;}
+.card .how{ color:#cfe8ff; font-size:15px; line-height:1.9; margin:14px 0;}
+.cta{ margin-top:16px; font-family:var(--serif); font-size:20px; font-weight:700; color:#0c2a40;
+  background:linear-gradient(180deg,var(--gold),var(--gold-soft)); border:none; border-radius:999px;
+  padding:14px 48px; cursor:pointer; box-shadow:0 6px 26px rgba(232,200,115,.4); animation:pulse 1.6s infinite;}
+.cta:hover{ transform:translateY(-2px);}
+@keyframes pulse{ 0%,100%{ box-shadow:0 6px 22px rgba(232,200,115,.3); transform:scale(1);} 50%{ box-shadow:0 8px 40px rgba(232,200,115,.7); transform:scale(1.04);} }
+.big-num{ font-family:var(--mono); font-size:46px; font-weight:700; color:var(--gold); margin:6px 0;}
+.brand{ position:fixed; bottom:3px; left:8px; z-index:22; color:rgba(255,255,255,.7); font-size:10px;}
+
+@media (max-width:600px){ .opts{ grid-template-columns:1fr;} .heli{ width:118px;} .panel{ padding-bottom:14px;} }
+</style>
+</head>
+<body>
+
+<div class="scene" id="scene">
+  <div class="sun"></div>
+  <div class="clouds" id="clouds"></div>
+  <div class="rescue"><div class="lbl">🚁 אֵזוֹר חִילּוּץ</div><div class="pad"></div></div>
+  <div class="rocks"></div>
+  <div class="ground"></div>
+
+  <!-- מסוק -->
+  <div class="heli" id="heli">
+    <div class="mast"></div>
+    <div class="rotor"><div class="blade"></div></div>
+    <div class="smoke"></div>
+    <svg viewBox="0 0 160 90" width="150">
+      <ellipse cx="70" cy="84" rx="46" ry="5" fill="rgba(0,0,0,.18)"/>
+      <!-- זנב -->
+      <path d="M96 44 L150 36 L150 44 L100 52 Z" fill="#c9302c"/>
+      <circle cx="150" cy="40" r="11" fill="#e0453f" stroke="#7a1a16" stroke-width="2"/>
+      <rect x="146" y="30" width="3" height="20" rx="1.5" fill="#333"/>
+      <!-- גוף -->
+      <path d="M20 50 q-6 -30 30 -32 l24 0 q30 2 36 26 q2 10 -8 14 l-74 0 q-10 -2 -8 -8 z" fill="#e0453f" stroke="#7a1a16" stroke-width="2"/>
+      <!-- חלון תא טייס -->
+      <path d="M24 46 q-2 -20 24 -22 l14 0 q4 14 2 24 z" fill="#bfe6ff" stroke="#2a4a66" stroke-width="1.5"/>
+      <!-- ילד בפנים -->
+      <circle cx="40" cy="34" r="7" fill="#f3c89a" stroke="#7a5a3a" stroke-width="1"/>
+      <path d="M33 34 q7 -10 14 0 z" fill="#5a3a22"/>
+      <!-- מגלשי נחיתה -->
+      <rect x="22" y="70" width="70" height="4" rx="2" fill="#444"/>
+      <rect x="34" y="64" width="4" height="8" fill="#444"/><rect x="78" y="64" width="4" height="8" fill="#444"/>
+    </svg>
+  </div>
+
+  <div class="boom" id="boom"></div>
+</div>
+
+<div class="alti-lbl">גובה</div>
+<div class="alti" id="alti"><i id="alti-fill"></i></div>
+
+<div class="hud">
+  <div class="title">מְסוֹק הַפְּסוּקִים</div>
+  <div class="stat" id="score">✔ 0</div>
+  <button class="btn-restart" id="btn-restart" type="button">⟲ מחדש</button>
+</div>
+
+<div class="panel" id="panel">
+  <div class="q" id="q">…</div>
+  <div class="opts" id="opts"></div>
+  <div class="feedback" id="feedback"></div>
+</div>
+
+<div class="brand">The First Verse · מסוק הפסוקים</div>
+
+<!-- פתיחה -->
+<div class="overlay" id="intro"><div class="card">
+  <div class="kicker">משחק · TFV</div>
+  <h1>מְסוֹק הַפְּסוּקִים 🚁</h1>
+  <p>המסוק <b style="color:var(--gold)">צולל כל הזמן!</b> כל תשובה נכונה מעלה אותו גובה — תשובה שגויה והוא צונח.</p>
+  <div class="how">⬆️ ענה נכון → המסוק מטפס<br>⬇️ אל תיתן לו להתרסק על הקרקע<br>🏁 הגע לאזור החילוץ למעלה ותנצח!</div>
+  <button class="cta" id="btn-start" type="button">הַמְרֵא!</button>
+</div></div>
+
+<!-- סיום -->
+<div class="overlay hide" id="end"><div class="card">
+  <div class="kicker" id="end-kicker">סיום</div>
+  <h1 id="end-title">הַתּוֹצָאָה</h1>
+  <div class="big-num" id="end-num">0</div>
+  <p id="end-msg"></p>
+  <button class="cta" id="btn-again" type="button">שׁוּב!</button>
+</div></div>
+
+<script>
+(function(){
+  "use strict";
+  var $=function(s){return document.querySelector(s);};
+  var QUESTIONS=[
+    {q:'איזה הוא <b>הפסוק הראשון</b> בתורה?',
+     o:['בְּרֵאשִׁית בָּרָא אֱלֹהִים אֵת הַשָּׁמַיִם וְאֵת הָאָרֶץ','וַיֹּאמֶר אֱלֹהִים יְהִי אוֹר','שְׁמַע יִשְׂרָאֵל','וַיְכֻלּוּ הַשָּׁמַיִם'], a:0},
+    {q:'הגימטריה של <b>בְּרֵאשִׁית</b>?', o:['913','903','86','401'], a:0},
+    {q:'כמה מילים בפסוק הראשון?', o:['7','6','8','5'], a:0},
+    {q:'<b>סכום</b> ערכי שבע המילים?', o:['2701','1820','82','304'], a:0},
+    {q:'ערך הפסוק ב<b>גימטריה קטנה</b>?', o:['82','28','100','19'], a:0},
+    {q:'איזו מילה פירושה <b>“בָּרָא”</b>?', o:['בָּרָא','אֱלֹהִים','אֵת','הָאָרֶץ'], a:0},
+    {q:'הגימטריה של <b>אֱלֹהִים</b>?', o:['86','91','120','65'], a:0},
+    {q:'הגימטריה של <b>הָאָרֶץ</b>?', o:['296','291','385','300'], a:0},
+    {q:'המילה <b>האחרונה</b> בפסוק?', o:['הָאָרֶץ','הַשָּׁמַיִם','בָּרָא','וְאֵת'], a:0},
+    {q:'2701 הוא המספר ה<b>משולשי</b> ה־?', o:['73','37','82','100'], a:0}
+  ];
+
+  var heli=$("#heli"), altiFill=$("#alti-fill"), alti=$("#alti"), clouds=$("#clouds");
+  var qEl=$("#q"), optsEl=$("#opts"), fbEl=$("#feedback"), scoreEl=$("#score");
+  var GRAV=0.5, BOOST=22, PEN=9;
+  var state={running:false, alt:55, score:0, queue:[], locked:false, loop:null, cur:null};
+
+  // עננים
+  (function makeClouds(){
+    for(var i=0;i<7;i++){ var c=document.createElement("div"); c.className="cloud";
+      var w=40+Math.random()*40; c.style.width=w+"px"; c.style.height=(w*0.5)+"px";
+      c.style.left=(Math.random()*90)+"%"; c.style.top=(8+Math.random()*70)+"%";
+      clouds.appendChild(c); }
+  })();
+
+  function heliPos(){
+    var a=Math.max(0,Math.min(100,state.alt));
+    var top=80-(a/100)*68;          // 100=12% , 0=80%
+    heli.style.top=top+"%";
+    altiFill.style.height=a+"%";
+    alti.classList.toggle("low", a<25);
+    heli.classList.toggle("danger", a<25);
+    clouds.style.transform="translateY("+((a-55)*0.5)+"px)";  // פרלקס קל
+  }
+
+  // ----- שמע -----
+  var actx=null; function ac(){ if(!actx){try{actx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}} return actx; }
+  function tone(f,d,t,v){var c=ac();if(!c)return;var o=c.createOscillator(),g=c.createGain();o.type=t||"sine";o.frequency.value=f;g.gain.setValueAtTime(v||.25,c.currentTime);g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+(d||.2));o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+(d||.2)+.02);}
+  function up(){var c=ac();if(!c)return;var o=c.createOscillator(),g=c.createGain();o.type="triangle";o.frequency.setValueAtTime(330,c.currentTime);o.frequency.exponentialRampToValueAtTime(880,c.currentTime+.35);g.gain.setValueAtTime(.25,c.currentTime);g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+.4);o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+.45);}
+  function good(){up();} function bad(){tone(150,.25,"sawtooth",.22);}
+  function alarm(){tone(880,.1,"square",.2);}
+  function boomSound(){var c=ac();if(!c)return;var dur=.5,sr=c.sampleRate,b=c.createBuffer(1,sr*dur,sr),d=b.getChannelData(0);for(var i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2);var s=c.createBufferSource();s.buffer=b;var g=c.createGain();g.gain.value=.5;s.connect(g);g.connect(c.destination);s.start();}
+
+  // ----- שאלות -----
+  function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+  function nextQuestion(){
+    if(!state.running)return; state.locked=false;
+    if(state.queue.length===0) state.queue=shuffle(QUESTIONS.map(function(_,i){return i;}));
+    var q=QUESTIONS[state.queue.shift()]; state.cur=q;
+    qEl.innerHTML=q.q; fbEl.textContent=""; fbEl.className="feedback";
+    var idx=shuffle(q.o.map(function(_,i){return i;})); optsEl.innerHTML="";
+    idx.forEach(function(oi){ var b=document.createElement("button"); b.className="opt"; b.type="button"; b.innerHTML=q.o[oi];
+      b.addEventListener("click",function(){answer(oi===q.a,b);}); optsEl.appendChild(b); });
+  }
+  function answer(correct,btn){
+    if(state.locked||!state.running)return; state.locked=true;
+    if(correct){
+      btn.classList.add("correct"); good(); state.score++; scoreEl.textContent="✔ "+state.score;
+      state.alt=Math.min(100,state.alt+BOOST);
+      heli.classList.remove("fall"); heli.classList.add("climb"); setTimeout(function(){heli.classList.remove("climb");},500);
+      fbEl.textContent="טַיֵּס מַעְלָה! +"+BOOST+" גובה"; fbEl.className="feedback good";
+      heliPos();
+      if(state.alt>=100){ setTimeout(function(){endGame(true);},300); return; }
+      setTimeout(nextQuestion,600);
+    } else {
+      btn.classList.add("wrong"); bad();
+      Array.prototype.forEach.call(optsEl.children,function(b){ if(b.innerHTML===state.cur.o[state.cur.a])b.classList.add("correct"); b.disabled=true; });
+      state.alt=Math.max(0,state.alt-PEN); heliPos();
+      fbEl.textContent="אוֹי! המסוק צונח…"; fbEl.className="feedback bad";
+      setTimeout(nextQuestion,1000);
+    }
+  }
+
+  function loop(){
+    state.alt-=GRAV; if(state.alt<25 && state.alt>0 && Math.random()<0.3) alarm();
+    if(state.alt<=0){ state.alt=0; heliPos(); return crash(); }
+    if(state.alt<40 && !heli.classList.contains("climb")) heli.classList.add("fall");
+    heliPos();
+  }
+  function crash(){
+    if(!state.running)return; state.running=false; state.locked=true; clearInterval(state.loop);
+    var boom=$("#boom"); var r=heli.getBoundingClientRect(), s=$("#scene").getBoundingClientRect();
+    boom.style.left=(r.left-s.left+r.width/2)+"px"; boom.style.top=(r.top-s.top+r.height*0.6)+"px";
+    boom.classList.remove("go"); void boom.offsetWidth; boom.classList.add("go"); boomSound();
+    heli.style.opacity="0";
+    setTimeout(function(){ endGame(false); },650);
+  }
+
+  function startGame(){
+    state.running=true; state.alt=55; state.score=0; state.queue=[]; state.locked=false;
+    scoreEl.textContent="✔ 0"; heli.style.opacity="1"; heli.classList.remove("fall","climb");
+    heliPos(); nextQuestion();
+    clearInterval(state.loop); state.loop=setInterval(loop,100);
+    $("#intro").classList.add("hide"); $("#end").classList.add("hide");
+  }
+  function endGame(won){
+    state.running=false; clearInterval(state.loop);
+    $("#end-kicker").textContent=won?"הגעת לחילוץ!":"התרסקת";
+    $("#end-title").textContent=won?"נִיצַּחְתָּ! 🚁🏁":"בּוּם! 💥";
+    $("#end-num").textContent="✔ "+state.score+" תשובות נכונות";
+    $("#end-msg").textContent=won?"הגעת בשלום לאזור החילוץ!":"המסוק התרסק — נסה שוב להגיע לחילוץ!";
+    $("#end").classList.remove("hide");
+  }
+
+  $("#btn-start").addEventListener("click",function(){ac();startGame();});
+  $("#btn-again").addEventListener("click",function(){ac();startGame();});
+  $("#btn-restart").addEventListener("click",function(){ac();startGame();});
+  heliPos();
+})();
+</script>
+</body>
+</html>
