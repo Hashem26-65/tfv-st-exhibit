@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>מטווח הגימטריה · The First Verse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#120a10; --bg2:#1c0f17; --ink:#f4e9d8; --ink-dim:#c9b79c; --muted:#9a8772;
+  --gold:#d8b46a; --gold-soft:#b9924a; --burgundy:#5c1530; --burgundy2:#7a1c3f;
+  --green:#7bd88f; --red:#e8736b; --line:rgba(216,180,106,.22); --glow:rgba(216,180,106,.45);
+  --mono:"Roboto Mono",ui-monospace,monospace; --serif:"Frank Ruhl Libre",serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:var(--serif); color:var(--ink); direction:rtl; overflow:hidden;
+  background:
+    radial-gradient(1200px 700px at 50% -10%, rgba(122,28,63,.4), transparent 60%),
+    radial-gradient(1200px 700px at 50% 115%, rgba(122,28,63,.35), transparent 60%),
+    var(--bg);
+  -webkit-font-smoothing:antialiased; user-select:none; -webkit-user-select:none;
+}
+
+/* ---------- HUD ---------- */
+.hud{
+  position:fixed; top:0; left:0; right:0; z-index:30;
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:12px 18px;
+  background:linear-gradient(to bottom, rgba(18,10,16,.92), rgba(18,10,16,0));
+}
+.hud .stat{ display:flex; align-items:center; gap:8px; font-family:var(--mono); font-size:14px; color:var(--ink-dim);}
+.hud .stat b{ color:var(--gold); font-size:18px; }
+.hud .title{ font-family:var(--serif); color:var(--gold); font-weight:700; font-size:18px; letter-spacing:.02em;}
+.btn-restart{
+  background:none; border:1px solid var(--line); color:var(--ink-dim);
+  font-family:var(--serif); font-size:13px; border-radius:999px; padding:6px 14px; cursor:pointer; transition:.2s;
+}
+.btn-restart:hover{ border-color:var(--gold-soft); color:var(--ink); }
+
+/* ---------- המטווח ---------- */
+.range{
+  position:absolute; inset:60px 0 168px 0; overflow:hidden;
+  cursor:none;
+  background:
+    radial-gradient(1000px 500px at 50% 120%, rgba(216,180,106,.08), transparent 60%);
+}
+/* פסי-עומק של המטווח */
+.range::before{
+  content:""; position:absolute; inset:0;
+  background:
+    repeating-linear-gradient(to top, rgba(216,180,106,.05) 0 1px, transparent 1px 64px);
+  -webkit-mask-image:linear-gradient(to top, #000, transparent 80%);
+  mask-image:linear-gradient(to top, #000, transparent 80%);
+  pointer-events:none;
+}
+
+/* ---------- לוחות מטרה ---------- */
+.target{
+  position:absolute; transform:translate(-50%,-50%);
+  width:var(--sz,92px); height:var(--sz,92px); border-radius:50%;
+  display:grid; place-items:center; cursor:none;
+  border:3px solid var(--gold-soft);
+  background:
+    radial-gradient(circle at 50% 38%, rgba(216,180,106,.22), rgba(26,16,22,.92) 70%);
+  box-shadow:0 0 0 6px rgba(122,28,63,.35), 0 8px 26px rgba(0,0,0,.5);
+  transition:transform .12s, opacity .35s, filter .2s;
+  animation:sway 3.4s ease-in-out infinite;
+}
+.target .ring{ position:absolute; inset:10px; border-radius:50%; border:1px solid rgba(216,180,106,.35);}
+.target .ring2{ position:absolute; inset:20px; border-radius:50%; border:1px solid rgba(216,180,106,.22);}
+.target .val{
+  font-family:var(--mono); font-weight:700; color:var(--gold);
+  font-size:clamp(20px,4.4vw,30px); text-shadow:0 0 14px var(--glow); z-index:2;
+}
+.target.hit{ animation:none; opacity:0; transform:translate(-50%,40vh) rotate(28deg) scale(.7); filter:saturate(0); }
+.target.wrong{ animation:wrongShake .4s; border-color:var(--red); box-shadow:0 0 0 6px rgba(232,115,107,.4),0 0 24px rgba(232,115,107,.6);}
+.target.matchable:hover{ filter:brightness(1.15); }
+@keyframes sway{ 0%,100%{ transform:translate(-50%,-50%) translateX(-5px);} 50%{ transform:translate(-50%,-50%) translateX(5px);} }
+@keyframes wrongShake{ 0%,100%{ transform:translate(-50%,-50%);} 25%{ transform:translate(-54%,-50%);} 75%{ transform:translate(-46%,-50%);} }
+
+/* פתיתי פגיעה */
+.spark{ position:absolute; width:7px; height:7px; border-radius:50%; background:var(--gold); pointer-events:none; z-index:25;
+  box-shadow:0 0 10px var(--glow); }
+.hole{ position:absolute; width:12px; height:12px; border-radius:50%; transform:translate(-50%,-50%);
+  background:radial-gradient(circle, #000 40%, rgba(0,0,0,.4) 70%, transparent); pointer-events:none; z-index:20;}
+
+/* ---------- כוונת ---------- */
+.crosshair{
+  position:fixed; width:54px; height:54px; z-index:40; pointer-events:none;
+  transform:translate(-50%,-50%); opacity:0; transition:opacity .2s;
+}
+.crosshair::before,.crosshair::after{ content:""; position:absolute; background:var(--gold); box-shadow:0 0 6px var(--glow);}
+.crosshair::before{ left:50%; top:0; width:2px; height:100%; transform:translateX(-50%);}
+.crosshair::after{ top:50%; left:0; height:2px; width:100%; transform:translateY(-50%);}
+.crosshair i{ position:absolute; inset:18px; border:2px solid var(--gold); border-radius:50%; box-shadow:0 0 8px var(--glow);}
+.range:hover ~ .crosshair{ opacity:1; }
+body.aiming .crosshair{ opacity:1; }
+
+/* ---------- אזור הרובה + מחסניות ---------- */
+.dock{
+  position:fixed; left:0; right:0; bottom:0; z-index:30; height:168px;
+  background:linear-gradient(to top, rgba(18,10,16,.96), rgba(18,10,16,.55) 70%, transparent);
+  display:flex; flex-direction:column; gap:8px; padding:10px 16px 14px;
+}
+.dock-label{ font-size:13px; color:var(--muted); text-align:center; letter-spacing:.04em;}
+.dock-label b{ color:var(--gold); }
+.mag-rack{
+  display:flex; gap:10px; justify-content:center; flex-wrap:wrap; align-items:flex-end;
+}
+.mag{
+  position:relative; cursor:pointer; min-width:74px;
+  padding:10px 12px 14px; border-radius:10px 10px 6px 6px;
+  border:1px solid var(--gold-soft);
+  background:linear-gradient(180deg, rgba(122,28,63,.5), rgba(26,16,22,.85));
+  box-shadow:0 6px 16px rgba(0,0,0,.45); transition:transform .18s, box-shadow .18s, opacity .3s;
+  text-align:center;
+}
+.mag::after{ /* "שפת" המחסנית */
+  content:""; position:absolute; left:14%; right:14%; bottom:-5px; height:5px; border-radius:0 0 4px 4px;
+  background:var(--gold-soft); opacity:.7;
+}
+.mag:hover{ transform:translateY(-6px); box-shadow:0 12px 24px rgba(0,0,0,.55), 0 0 16px var(--glow);}
+.mag.loaded{ border-color:var(--gold); box-shadow:0 0 0 2px var(--gold), 0 0 22px var(--glow); transform:translateY(-10px);}
+.mag.used{ opacity:.25; pointer-events:none; filter:grayscale(.6);}
+.mag .w{ font-size:clamp(16px,3.6vw,21px); color:var(--ink); display:block; }
+.mag .tag{ font-family:var(--mono); font-size:10px; color:var(--muted); letter-spacing:.1em; }
+
+/* הרובה + תא הטעינה */
+.rifle{ display:flex; align-items:center; justify-content:center; gap:14px; }
+.chamber{
+  font-family:var(--serif); font-size:15px; color:var(--ink-dim);
+  border:1px dashed var(--line); border-radius:999px; padding:7px 18px; min-width:200px; text-align:center;
+}
+.chamber b{ color:var(--gold); }
+.gun{ font-size:30px; filter:drop-shadow(0 2px 6px rgba(0,0,0,.5)); transition:transform .08s; }
+.gun.recoil{ transform:translateX(10px) rotate(-6deg); }
+
+/* ---------- שכבות פתיחה/ניצחון ---------- */
+.overlay{
+  position:fixed; inset:0; z-index:60; display:grid; place-items:center; text-align:center; padding:24px;
+  background:radial-gradient(900px 600px at 50% 30%, rgba(122,28,63,.5), rgba(18,10,16,.96));
+  transition:opacity .5s;
+}
+.overlay.hide{ opacity:0; pointer-events:none; }
+.card{ max-width:520px; }
+.kicker{ color:var(--gold); letter-spacing:.4em; font-size:13px; margin-bottom:14px;}
+.card h1{ font-size:clamp(30px,8vw,52px); color:var(--ink); font-weight:900; margin-bottom:10px; text-shadow:0 0 30px rgba(216,180,106,.2);}
+.card p{ color:var(--ink-dim); line-height:1.85; font-size:17px; margin-bottom:10px;}
+.card .how{ color:var(--muted); font-size:15px; line-height:1.9; margin:18px 0 6px;}
+.cta{
+  margin-top:22px; font-family:var(--serif); font-size:19px; font-weight:700; color:#1a0c12;
+  background:linear-gradient(180deg,var(--gold),var(--gold-soft)); border:none; border-radius:999px;
+  padding:15px 46px; cursor:pointer; box-shadow:0 6px 26px rgba(216,180,106,.35);
+  animation:pulse 1.6s ease-in-out infinite;
+}
+.cta:hover{ transform:translateY(-2px); }
+@keyframes pulse{ 0%,100%{ box-shadow:0 6px 22px rgba(216,180,106,.3); transform:scale(1);} 50%{ box-shadow:0 8px 40px rgba(216,180,106,.7); transform:scale(1.04);} }
+.win-score{ font-family:var(--mono); color:var(--gold); font-size:42px; font-weight:700; margin:10px 0; text-shadow:0 0 24px var(--glow);}
+
+/* טוסט הנחיה */
+.toast{
+  position:fixed; top:64px; left:50%; transform:translateX(-50%) translateY(-8px); z-index:50;
+  background:rgba(28,15,23,.96); border:1px solid var(--gold-soft); color:var(--ink);
+  padding:9px 18px; border-radius:999px; font-size:14px; box-shadow:0 10px 30px rgba(0,0,0,.5);
+  opacity:0; pointer-events:none; transition:.25s;
+}
+.toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+.toast.good{ border-color:var(--green); color:var(--green); }
+.toast.bad{ border-color:var(--red); color:var(--red); }
+
+.brand{ position:fixed; bottom:6px; left:12px; z-index:31; color:var(--muted); font-size:11px; opacity:.6; }
+@media (max-width:600px){
+  .range{ inset:56px 0 200px 0; cursor:auto; }
+  .target{ cursor:auto; }
+  .dock{ height:200px; }
+  .crosshair{ display:none; }
+  .chamber{ min-width:auto; font-size:13px; padding:6px 12px;}
+}
+</style>
+</head>
+<body>
+
+<!-- HUD -->
+<div class="hud">
+  <div class="stat">ניקוד <b id="score">0</b></div>
+  <div class="title">מטווח הגימטריה</div>
+  <div class="stat">נותרו <b id="left">7</b></div>
+  <button class="btn-restart" id="btn-restart" type="button">⟲ מחדש</button>
+</div>
+
+<!-- המטווח -->
+<div class="range" id="range"></div>
+
+<!-- כוונת -->
+<div class="crosshair" id="crosshair"><i></i></div>
+
+<!-- מזח: רובה + מחסניות -->
+<div class="dock">
+  <div class="rifle">
+    <span class="gun" id="gun">🔫</span>
+    <span class="chamber" id="chamber">בחר מחסנית כדי לטעון…</span>
+  </div>
+  <div class="dock-label">טען <b>מילה</b>, ופגע בלוח עם <b>הגימטריה</b> שלה</div>
+  <div class="mag-rack" id="rack"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="brand">The First Verse · מטווח הגימטריה</div>
+
+<!-- פתיחה -->
+<div class="overlay" id="intro">
+  <div class="card">
+    <div class="kicker">משחק · TFV</div>
+    <h1>מַטְוַוח הַגִּימַטְרִיָּה</h1>
+    <p>לכל מילה בפסוק הראשון יש ערך גימטרי. <b style="color:var(--gold)">טען מחסנית</b> עם מילה — וירה בלוח-המטרה שמציג את הערך הנכון שלה.</p>
+    <div class="how">
+      1 · לחץ על מחסנית למטה כדי לטעון מילה<br>
+      2 · כוון וירה (לחיצה) על הלוח עם הגימטריה הנכונה<br>
+      3 · פגיעה מדויקת = ניקוד. החטאה = ניסיון נוסף
+    </div>
+    <button class="cta" id="btn-start" type="button">טְעַן וְיָרֵה!</button>
+  </div>
+</div>
+
+<!-- ניצחון -->
+<div class="overlay hide" id="win">
+  <div class="card">
+    <div class="kicker">כל הכבוד!</div>
+    <h1>פָּגַעְתָּ בַּכֹּל</h1>
+    <div class="win-score" id="win-score">0</div>
+    <p id="win-msg">השלמת את כל שבע המילים של הפסוק הראשון.</p>
+    <button class="cta" id="btn-again" type="button">לְשַׂחֵק שׁוּב</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $=function(s){return document.querySelector(s);};
+
+  // שבע מילות הפסוק + ערך גימטרי
+  var WORDS=[
+    {he:"בְּרֵאשִׁית",val:913},
+    {he:"בָּרָא",val:203},
+    {he:"אֱלֹהִים",val:86},
+    {he:"אֵת",val:401},
+    {he:"הַשָּׁמַיִם",val:395},
+    {he:"וְאֵת",val:407},
+    {he:"הָאָרֶץ",val:296}
+  ];
+
+  var range=$("#range"), rack=$("#rack"), chamber=$("#chamber"), gun=$("#gun"),
+      crosshair=$("#crosshair"), toast=$("#toast"),
+      elScore=$("#score"), elLeft=$("#left");
+
+  var loaded=-1, score=0, left=WORDS.length, shots=0, hits=0, targets=[];
+
+  // ---------- שמע (WebAudio) ----------
+  var actx=null;
+  function ac(){ if(!actx){ try{ actx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return actx; }
+  function shotSound(){
+    var c=ac(); if(!c) return;
+    var dur=0.18, sr=c.sampleRate, buf=c.createBuffer(1,sr*dur,sr), d=buf.getChannelData(0);
+    for(var i=0;i<d.length;i++){ d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3); }
+    var s=c.createBufferSource(); s.buffer=buf;
+    var g=c.createGain(); g.gain.value=.35; s.connect(g); g.connect(c.destination); s.start();
+  }
+  function tone(freq,dur,type,vol){
+    var c=ac(); if(!c) return;
+    var o=c.createOscillator(), g=c.createGain();
+    o.type=type||"sine"; o.frequency.value=freq;
+    g.gain.setValueAtTime(vol||.25,c.currentTime);
+    g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+(dur||.2));
+    o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime+(dur||.2)+.02);
+  }
+  function goodSound(){ tone(660,.12,"triangle",.3); setTimeout(function(){tone(990,.18,"triangle",.3);},90); }
+  function badSound(){ tone(150,.22,"sawtooth",.22); }
+
+  // ---------- בניית מחסניות ----------
+  function buildRack(){
+    rack.innerHTML="";
+    WORDS.forEach(function(w,i){
+      var m=document.createElement("button");
+      m.className="mag"; m.type="button"; m.dataset.i=i;
+      m.innerHTML='<span class="w">'+w.he+'</span><span class="tag">מחסנית</span>';
+      m.addEventListener("click",function(){ loadMag(i); });
+      rack.appendChild(m);
+    });
+  }
+  function loadMag(i){
+    if(rack.children[i].classList.contains("used")) return;
+    loaded=i;
+    Array.prototype.forEach.call(rack.children,function(el,idx){ el.classList.toggle("loaded",idx===i); });
+    chamber.innerHTML='טעון: <b>'+WORDS[i].he+'</b> — פגע בערך שלו';
+    tone(440,.08,"square",.18);
+  }
+
+  // ---------- בניית מטרות ----------
+  function shuffle(a){ for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i];a[i]=a[j];a[j]=t;} return a; }
+  function buildTargets(){
+    Array.prototype.slice.call(range.querySelectorAll(".target,.hole,.spark")).forEach(function(e){e.remove();});
+    targets=[];
+    var order=shuffle(WORDS.map(function(w,i){return i;}));
+    var n=order.length;
+    var isM=window.innerWidth<600;
+    var cols=isM?3:n;                       // מובייל: רשת 3 עמודות; דסקטופ: שורה אחת
+    var rows=Math.ceil(n/cols);
+    var top=16, bottom=82, bandH=bottom-top;
+    order.forEach(function(wi,k){
+      var t=document.createElement("div");
+      t.className="target matchable";
+      var sz=(isM?50+Math.round(Math.random()*14):72+Math.round(Math.random()*36));
+      t.style.setProperty("--sz",sz+"px");
+      // פיזור ברשת עם רעידה קלה, מוגבל לשוליים
+      var col=k%cols, row=Math.floor(k/cols);
+      var colW=100/cols;
+      var x=colW*(col+0.5)+(Math.random()*colW*0.24-colW*0.12);
+      x=Math.max(16,Math.min(84,x));
+      var y=top+(rows>1?(row+0.5)/rows*bandH:0.5*bandH)+(Math.random()*10-5);
+      t.style.left=x+"%"; t.style.top=y+"%";
+      t.style.animationDelay=(Math.random()*-3)+"s";
+      t.innerHTML='<span class="ring"></span><span class="ring2"></span><span class="val">'+WORDS[wi].val+'</span>';
+      t.dataset.val=WORDS[wi].val; t.dataset.wi=wi;
+      t.addEventListener("click",function(ev){ ev.stopPropagation(); fireAt(t,ev); });
+      range.appendChild(t);
+      targets.push(t);
+    });
+  }
+
+  // ---------- ירי ----------
+  function recoil(){ gun.classList.add("recoil"); setTimeout(function(){gun.classList.remove("recoil");},90); }
+  function sparks(x,y,color){
+    for(var i=0;i<10;i++){
+      var s=document.createElement("div"); s.className="spark";
+      if(color) s.style.background=color, s.style.boxShadow="0 0 10px "+color;
+      s.style.left=x+"px"; s.style.top=y+"px"; range.appendChild(s);
+      var ang=Math.random()*Math.PI*2, dist=20+Math.random()*46;
+      var dx=Math.cos(ang)*dist, dy=Math.sin(ang)*dist;
+      s.animate([{transform:"translate(0,0)",opacity:1},{transform:"translate("+dx+"px,"+dy+"px)",opacity:0}],
+        {duration:420+Math.random()*200,easing:"cubic-bezier(.2,.8,.3,1)"});
+      setTimeout((function(el){return function(){el.remove();};})(s),650);
+    }
+  }
+  function hole(x,y){ var h=document.createElement("div"); h.className="hole"; h.style.left=x+"px"; h.style.top=y+"px"; range.appendChild(h);
+    setTimeout(function(){h.remove();},2500); }
+
+  function fireAt(t,ev){
+    if(loaded<0){ showToast("טען קודם מחסנית!","bad"); badSound(); return; }
+    shots++; recoil(); shotSound();
+    var r=range.getBoundingClientRect();
+    var x=ev.clientX-r.left, y=ev.clientY-r.top;
+    hole(x,y);
+    var correct = (+t.dataset.val === WORDS[loaded].val);
+    if(correct){
+      hits++;
+      sparks(x,y);
+      goodSound();
+      score+=100; left--;
+      elScore.textContent=score; elLeft.textContent=left;
+      t.classList.remove("matchable"); t.classList.add("hit");
+      rack.children[loaded].classList.add("used");
+      rack.children[loaded].classList.remove("loaded");
+      showToast(WORDS[loaded].he+" = "+WORDS[loaded].val+" ✓","good");
+      loaded=-1; chamber.innerHTML="בחר מחסנית כדי לטעון…";
+      setTimeout(function(){ if(left<=0) winGame(); },350);
+    } else {
+      sparks(x,y,"#e8736b");
+      badSound();
+      score=Math.max(0,score-20); elScore.textContent=score;
+      t.classList.add("wrong"); setTimeout(function(){t.classList.remove("wrong");},420);
+      showToast("לא הערך של "+WORDS[loaded].he,"bad");
+    }
+  }
+
+  var toastT;
+  function showToast(msg,kind){
+    toast.textContent=msg; toast.className="toast show "+(kind||"");
+    clearTimeout(toastT); toastT=setTimeout(function(){ toast.className="toast "+(kind||""); },1400);
+  }
+
+  // ---------- כוונת ----------
+  document.addEventListener("mousemove",function(e){
+    crosshair.style.left=e.clientX+"px"; crosshair.style.top=e.clientY+"px";
+    var r=range.getBoundingClientRect();
+    var inside=e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom;
+    document.body.classList.toggle("aiming",inside);
+  });
+  // ירי גם בלחיצה על רקע המטווח (החטאה אם אין מטרה)
+  range.addEventListener("click",function(e){
+    if(e.target===range){
+      if(loaded<0){ showToast("טען קודם מחסנית!","bad"); badSound(); return; }
+      shots++; recoil(); shotSound();
+      var r=range.getBoundingClientRect(); hole(e.clientX-r.left,e.clientY-r.top);
+      sparks(e.clientX-r.left,e.clientY-r.top,"#e8736b");
+      showToast("החטאה","bad");
+    }
+  });
+
+  // ---------- ניהול משחק ----------
+  function start(){
+    score=0; left=WORDS.length; shots=0; hits=0; loaded=-1;
+    elScore.textContent=0; elLeft.textContent=left;
+    chamber.innerHTML="בחר מחסנית כדי לטעון…";
+    buildRack(); buildTargets();
+    $("#intro").classList.add("hide"); $("#win").classList.add("hide");
+  }
+  function winGame(){
+    var acc = shots? Math.round(hits/shots*100):100;
+    $("#win-score").textContent=score+" נק׳";
+    $("#win-msg").textContent="השלמת את כל שבע מילות הפסוק הראשון · דיוק "+acc+"%";
+    $("#win").classList.remove("hide");
+  }
+
+  $("#btn-start").addEventListener("click",function(){ ac(); start(); });
+  $("#btn-again").addEventListener("click",start);
+  $("#btn-restart").addEventListener("click",start);
+
+  buildRack(); // תצוגה מקדימה ברקע הפתיחה
+})();
+</script>
+</body>
+</html>
