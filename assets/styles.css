@@ -571,19 +571,19 @@ body.lang-en .subs-text{ direction:ltr; }
   /* ---- מסך הפתיחה: לוגו גבוה + רווחים נדיבים בין כל אלמנט ---- */
   .intro{ padding:2vh 16px 3vh; justify-content:flex-start; }
   /* הרווחים ביחידות vh — אווריריים במסך גבוה, מתכווצים אוטומטית במסך נמוך */
-  .intro-brand{ margin-bottom:3.6vh; }
-  .intro-logo{ width:clamp(62px,15vw,90px); margin-bottom:2.6vh; }
+  .intro-brand{ margin-bottom:5.5vh; }
+  .intro-logo{ width:clamp(62px,15vw,90px); margin-bottom:4vh; }
   .intro-sitename{ font-size:clamp(17px,4.4vw,22px); margin-bottom:0; }
   .intro-card{ padding:0 16px; margin:0; }
-  .intro-kicker{ margin-bottom:3.6vh; letter-spacing:.32em; }
+  .intro-kicker{ margin-bottom:5.5vh; letter-spacing:.32em; }
   .intro-title{ font-size:clamp(25px,7vw,38px); }
-  .intro-sub{ font-size:14px; margin-top:2.6vh; }
-  .intro-divider{ margin:3.6vh 0; }
-  .intro-verse{ margin:3.6vh 0 0; }
+  .intro-sub{ font-size:14px; margin-top:4vh; }
+  .intro-divider{ margin:5.5vh 0; }
+  .intro-verse{ margin:5.5vh 0 0; }
   .intro-verse .vline{ font-size:clamp(23px,6.8vw,38px); }
-  .intro-verse-en{ font-size:clamp(13px,3.4vw,17px); margin:2.2vh 0 0; }
-  .intro-para{ font-size:14px; line-height:1.6; margin-top:2.6vh; }
-  .intro-cta{ margin-top:6vh; padding:15px 42px; font-size:20px; }
+  .intro-verse-en{ font-size:clamp(13px,3.4vw,17px); margin:3.4vh 0 0; }
+  .intro-para{ font-size:14px; line-height:1.6; margin-top:4vh; }
+  .intro-cta{ margin-top:8vh; padding:15px 42px; font-size:20px; }
 
   /* ---- אקטים: קומפקטיים כדי שייכנסו בלי גלילה ---- */
   .stage{ padding:74px 12px 88px; }
