@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>תפוס את הנכון · The First Verse</title>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#120a10; --gold:#d8b46a; --gold-soft:#b9924a; --burgundy:#5c1530;
+  --ink:#f4e9d8; --red:#ff453a; --green:#37e07a;
+  --serif:"Frank Ruhl Libre",serif; --mono:"Roboto Mono",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg)}
+body{font-family:var(--serif);color:var(--ink);user-select:none;-webkit-user-select:none;-webkit-font-smoothing:antialiased;touch-action:none}
+
+/* ── CANVAS WRAPPER ── */
+#wrap{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;overflow:hidden}
+canvas{display:block;touch-action:none}
+
+/* ── HUD ── */
+#hud{width:100%;max-width:520px;display:flex;justify-content:space-between;align-items:center;padding:8px 14px 4px;flex-shrink:0;z-index:10}
+#hud-score{font-family:var(--mono);font-size:clamp(15px,4vw,20px);color:var(--gold);letter-spacing:.04em}
+#hud-lives{font-size:clamp(18px,5vw,24px);letter-spacing:2px}
+#hud-target-wrap{position:absolute;top:0;left:0;right:0;pointer-events:none;display:flex;justify-content:center;padding-top:50px;z-index:9}
+#target-box{text-align:center;background:rgba(18,10,16,.85);border:1px solid var(--gold-soft);border-radius:10px;padding:6px 20px 8px;backdrop-filter:blur(4px)}
+#target-label{font-size:11px;color:var(--gold-soft);letter-spacing:.12em;margin-bottom:2px}
+#target-word{font-size:clamp(26px,8vw,42px);font-weight:700;color:var(--gold);line-height:1.1}
+
+/* ── RESTART BTN ── */
+#restart-btn{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(92,21,48,.75);border:1px solid var(--gold-soft);color:var(--gold);font-family:var(--serif);font-size:14px;padding:6px 18px;border-radius:20px;cursor:pointer;z-index:20;opacity:.7;transition:opacity .2s}
+#restart-btn:hover{opacity:1}
+
+/* ── OVERLAYS ── */
+.overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:30;background:rgba(18,10,16,.92);backdrop-filter:blur(6px);padding:24px;text-align:center}
+.overlay h1{font-size:clamp(28px,8vw,52px);font-weight:900;color:var(--gold);margin-bottom:8px;line-height:1.1}
+.overlay .sub{font-size:clamp(14px,3.5vw,18px);color:var(--ink);opacity:.85;margin-bottom:6px;max-width:360px;line-height:1.5}
+.overlay .how{font-size:clamp(12px,3vw,15px);color:var(--ink);opacity:.65;max-width:340px;line-height:1.7;margin-bottom:24px}
+.overlay .final-score{font-family:var(--mono);font-size:clamp(36px,10vw,64px);color:var(--gold);font-weight:700;margin:12px 0}
+.overlay .final-label{font-size:clamp(13px,3.5vw,16px);color:var(--gold-soft);margin-bottom:24px}
+.btn-gold{background:var(--burgundy);border:2px solid var(--gold);color:var(--gold);font-family:var(--serif);font-size:clamp(16px,4.5vw,22px);font-weight:700;padding:12px 42px;border-radius:32px;cursor:pointer;letter-spacing:.05em;transition:background .2s,transform .1s;box-shadow:0 2px 18px rgba(216,180,106,.18)}
+.btn-gold:hover{background:#7a1e40;transform:scale(1.03)}
+.btn-gold:active{transform:scale(.97)}
+
+/* ── FOOTER ── */
+#footer{position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:var(--gold-soft);opacity:.45;z-index:5;pointer-events:none}
+
+/* ── ANIMATIONS ── */
+@keyframes pop{0%{transform:scale(.5);opacity:0}60%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
+@keyframes shake{0%,100%{transform:translateX(-50%)}20%{transform:translateX(calc(-50% - 8px))}40%{transform:translateX(calc(-50% + 8px))}60%{transform:translateX(calc(-50% - 5px))}80%{transform:translateX(calc(-50% + 5px))}}
+</style>
+</head>
+<body>
+
+<!-- HUD (lives + score at top, target word below) -->
+<div id="wrap">
+  <div id="hud">
+    <div id="hud-score">ניקוד: <span id="score-val">0</span></div>
+    <div id="hud-lives">❤️❤️❤️</div>
+  </div>
+  <canvas id="c"></canvas>
+</div>
+<div id="hud-target-wrap">
+  <div id="target-box">
+    <div id="target-label">אסוף את הגמטריה של:</div>
+    <div id="target-word">—</div>
+  </div>
+</div>
+
+<!-- Restart -->
+<button id="restart-btn" onclick="startGame()">⟲ מחדש</button>
+
+<!-- Footer -->
+<div id="footer">The First Verse · תפוס את הנכון</div>
+
+<!-- Intro overlay -->
+<div class="overlay" id="intro-overlay">
+  <h1>תפוס את הנכון</h1>
+  <div class="sub">משחק גמטריה · פסוק הבריאה</div>
+  <div class="how">
+    ● בראש המסך תופיע מילה מהפסוק<br>
+    ● תפוס עם הסל את ערך הגמטריה הנכון<br>
+    ● מספר שגוי — מאבד לב אחד ♥<br>
+    ● חצים / גרירה / עכבר להזזת הסל<br>
+    ● 3 לבבות · מהירות עולה עם הזמן
+  </div>
+  <button class="btn-gold" onclick="startGame()">התחל משחק</button>
+</div>
+
+<!-- Game-over overlay -->
+<div class="overlay" id="end-overlay" style="display:none">
+  <h1>המשחק נגמר</h1>
+  <div class="final-score" id="final-score">0</div>
+  <div class="final-label">נקודות</div>
+  <button class="btn-gold" onclick="startGame()">שחק שוב</button>
+</div>
+
+<script>
+// ── DATA ──
+const WORDS = [
+  {w:"בְּרֵאשִׁית", g:913},
+  {w:"בָּרָא",       g:203},
+  {w:"אֱלֹהִים",    g:86},
+  {w:"אֵת",         g:401},
+  {w:"הַשָּׁמַיִם", g:395},
+  {w:"וְאֵת",       g:407},
+  {w:"הָאָרֶץ",     g:296}
+];
+const ALL_G = WORDS.map(x=>x.g); // [913,203,86,401,395,407,296]
+
+// ── CANVAS ──
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+
+// ── STATE ──
+let state = 'intro'; // 'intro' | 'play' | 'over'
+let lives, score, targetIdx, fallers, basket, animId;
+let baseSpeed, speedTimer;
+let lastTouch = null;
+let keys = {};
+
+// ── AUDIO ──
+let audioCtx = null;
+function getAudioCtx(){
+  if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+  return audioCtx;
+}
+function playTone(freq, type, dur, vol=0.3){
+  try{
+    const ac = getAudioCtx();
+    if(ac.state==='suspended') ac.resume();
+    const o = ac.createOscillator();
+    const g = ac.createGain();
+    o.connect(g); g.connect(ac.destination);
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime+dur);
+    o.start(); o.stop(ac.currentTime+dur);
+  }catch(e){}
+}
+function ding(){
+  playTone(660,'sine',.18,.35);
+  setTimeout(()=>playTone(880,'sine',.18,.3),90);
+  setTimeout(()=>playTone(1100,'sine',.22,.25),190);
+}
+function buzz(){
+  playTone(120,'sawtooth',.08,.4);
+  setTimeout(()=>playTone(90,'sawtooth',.12,.35),60);
+}
+
+// ── SIZING ──
+const MAX_W = 520;
+let cw, ch;
+function resize(){
+  cw = Math.min(window.innerWidth, MAX_W);
+  ch = window.innerHeight;
+  canvas.width  = cw;
+  canvas.height = ch;
+  canvas.style.width  = cw+'px';
+  canvas.style.height = ch+'px';
+  if(basket) basket.w = Math.min(90, cw*0.22);
+}
+window.addEventListener('resize', ()=>{ resize(); });
+resize();
+
+// ── BASKET ──
+const BASKET_H = 28;
+function makeBasket(){
+  const w = Math.min(90, cw*0.22);
+  return {x: cw/2, y: ch - 50, w, h: BASKET_H, flash:0, flashCol:'#ff453a'};
+}
+
+// ── FALLERS ──
+function pickDistractors(correct, n){
+  // Distractors: nearby numbers + random from all gematria
+  const pool = new Set();
+  for(const v of ALL_G) if(v!==correct) pool.add(v);
+  // Add some near-misses
+  for(let d of [-10,-5,5,10,-50,50,-100,100,-20,20]){
+    const v = correct+d;
+    if(v>0 && v<1000 && v!==correct) pool.add(v);
+  }
+  // Add some random plausible values
+  const extras = [12,15,19,26,31,44,52,72,100,111,120,150,200,210,215,230,250,280,300,320,350,370,400,410,420,430,450,460,480,500,510,520,550,600,610,620,650,700,710,750,800,820,850,900,910,920,950];
+  for(const v of extras) if(v!==correct) pool.add(v);
+  const arr = Array.from(pool);
+  // shuffle
+  for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}
+  return arr.slice(0,n);
+}
+
+function spawnFaller(){
+  const word = WORDS[targetIdx];
+  const correct = word.g;
+  // 45% chance the correct value spawns
+  const isCorrect = Math.random() < 0.45;
+  const val = isCorrect ? correct : pickDistractors(correct, 20)[Math.floor(Math.random()*20)];
+  const margin = 22;
+  const x = margin + Math.random()*(cw - margin*2);
+  const speed = baseSpeed + Math.random()*1.2;
+  return {x, y:-22, val, isCorrect: val===correct, speed, size: 20, alpha:1};
+}
+
+// ── GAME INIT ──
+function startGame(){
+  getAudioCtx(); // unlock audio
+  document.getElementById('intro-overlay').style.display='none';
+  document.getElementById('end-overlay').style.display='none';
+  document.getElementById('restart-btn').style.display='block';
+
+  lives = 3;
+  score = 0;
+  baseSpeed = 1.8;
+  speedTimer = 0;
+  fallers = [];
+  basket = makeBasket();
+  targetIdx = Math.floor(Math.random()*WORDS.length);
+
+  updateHUD();
+  updateTargetDisplay();
+
+  // Spawn first faller immediately
+  fallers.push(spawnFaller());
+
+  state = 'play';
+  if(animId) cancelAnimationFrame(animId);
+  loop();
+}
+
+function updateHUD(){
+  document.getElementById('score-val').textContent = score;
+  const h = '❤️'.repeat(lives) + (lives<3?'🖤'.repeat(3-lives):'');
+  document.getElementById('hud-lives').textContent = h;
+}
+
+function updateTargetDisplay(){
+  document.getElementById('target-word').textContent = WORDS[targetIdx].w;
+}
+
+// ── PARTICLES ──
+let particles = [];
+function spawnParticles(x, y, col){
+  for(let i=0;i<10;i++){
+    const a = Math.random()*Math.PI*2;
+    const s = 2+Math.random()*3;
+    particles.push({x, y, vx:Math.cos(a)*s, vy:Math.sin(a)*s-2, alpha:1, col, r:3+Math.random()*3});
+  }
+}
+
+// ── FALLER SPAWN TIMER ──
+let spawnTimer = 0;
+function spawnInterval(){ return Math.max(55, 120 - score*2); } // frames between spawns
+
+// ── MAIN LOOP ──
+let lastTime = 0;
+function loop(ts=0){
+  if(state!=='play'){return;}
+  animId = requestAnimationFrame(loop);
+
+  ctx.clearRect(0,0,cw,ch);
+
+  // BG gradient
+  const grad = ctx.createLinearGradient(0,0,0,ch);
+  grad.addColorStop(0,'#1e0e1c');
+  grad.addColorStop(1,'#0a040a');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,0,cw,ch);
+
+  // Stars (static, drawn from seed each frame—cheap)
+  ctx.fillStyle='rgba(244,233,216,0.18)';
+  const starSeed=[0.12,0.27,0.41,0.55,0.68,0.73,0.83,0.92,0.05,0.35,0.62,0.78,0.9,0.18,0.47];
+  for(let i=0;i<starSeed.length;i++){
+    ctx.beginPath();
+    ctx.arc(starSeed[i]*cw, (starSeed[(i+3)%starSeed.length]*0.45)*ch, .8, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  // Speed ramp
+  speedTimer++;
+  if(speedTimer%360===0) baseSpeed = Math.min(5.5, baseSpeed+0.25);
+
+  // Spawn
+  spawnTimer++;
+  if(spawnTimer >= spawnInterval()){
+    spawnTimer = 0;
+    // Always ensure at least one correct is in the pool sometimes
+    fallers.push(spawnFaller());
+    // Occasionally add a second faller
+    if(score>3 && Math.random()<0.4) fallers.push(spawnFaller());
+  }
+
+  // Update & draw fallers
+  const correct = WORDS[targetIdx].g;
+  for(let i=fallers.length-1;i>=0;i--){
+    const f = fallers[i];
+    f.y += f.speed;
+
+    // Fell off bottom
+    if(f.y > ch+30){
+      fallers.splice(i,1);
+      continue;
+    }
+
+    // Collision with basket
+    const bx = basket.x - basket.w/2;
+    const by = basket.y - basket.h/2;
+    if(f.x > bx && f.x < bx+basket.w && f.y > by && f.y < by+basket.h){
+      fallers.splice(i,1);
+      if(f.isCorrect || f.val===correct){
+        // Correct catch
+        score += 10 + Math.max(0, lives-1)*2;
+        ding();
+        spawnParticles(basket.x, basket.y, '#d8b46a');
+        basket.flash = 12; basket.flashCol='#37e07a';
+        // New target
+        let prev = targetIdx;
+        do{ targetIdx = Math.floor(Math.random()*WORDS.length); }while(WORDS.length>1 && targetIdx===prev);
+        updateTargetDisplay();
+        fallers = []; spawnTimer = spawnInterval()-10; // clear old fallers, spawn new soon
+      } else {
+        // Wrong catch
+        loseLife();
+      }
+      updateHUD();
+      continue;
+    }
+
+    // Draw number
+    const glow = f.isCorrect ? 'rgba(216,180,106,0.25)' : 'rgba(92,21,48,0.15)';
+    ctx.save();
+    ctx.globalAlpha = f.alpha;
+    // Pill bg
+    ctx.fillStyle = f.isCorrect ? 'rgba(40,25,10,0.82)' : 'rgba(25,10,20,0.78)';
+    ctx.strokeStyle = f.isCorrect ? 'rgba(216,180,106,0.7)' : 'rgba(92,21,48,0.55)';
+    ctx.lineWidth = f.isCorrect ? 1.5 : 1;
+    const tw = ctx.measureText(String(f.val)).width + 18;
+    const th = 28;
+    roundRect(ctx, f.x - tw/2, f.y - th/2, tw, th, 6);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = f.isCorrect ? '#d8b46a' : '#cdbfa8';
+    ctx.font = `600 ${f.isCorrect?17:15}px var(--mono, "Roboto Mono", monospace)`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(String(f.val), f.x, f.y);
+    ctx.restore();
+  }
+
+  // Particles
+  for(let i=particles.length-1;i>=0;i--){
+    const p=particles[i];
+    p.x+=p.vx; p.y+=p.vy; p.vy+=0.15; p.alpha-=0.04;
+    if(p.alpha<=0){particles.splice(i,1);continue;}
+    ctx.save();
+    ctx.globalAlpha=p.alpha;
+    ctx.fillStyle=p.col;
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Draw basket
+  drawBasket();
+  if(basket.flash>0) basket.flash--;
+}
+
+function roundRect(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);
+  ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();
+}
+
+function drawBasket(){
+  const bw = basket.w;
+  const bh = basket.h;
+  const bx = basket.x - bw/2;
+  const by = basket.y - bh/2;
+  const col = basket.flash > 0 ? basket.flashCol : '#b9924a';
+  const fillCol = basket.flash > 0
+    ? (basket.flashCol==='#37e07a' ? 'rgba(55,224,122,0.18)' : 'rgba(255,69,58,0.2)')
+    : 'rgba(92,21,48,0.65)';
+
+  ctx.save();
+  // Shadow
+  ctx.shadowColor='rgba(216,180,106,0.3)';
+  ctx.shadowBlur=12;
+  // Body
+  ctx.beginPath();
+  ctx.moveTo(bx+6, by);
+  ctx.lineTo(bx+bw-6, by);
+  ctx.lineTo(bx+bw, by+bh);
+  ctx.lineTo(bx, by+bh);
+  ctx.closePath();
+  ctx.fillStyle = fillCol;
+  ctx.strokeStyle = col;
+  ctx.lineWidth = 2.5;
+  ctx.fill();
+  ctx.stroke();
+  // Rim
+  ctx.shadowBlur=0;
+  ctx.beginPath();
+  ctx.moveTo(bx-3, by);
+  ctx.lineTo(bx+bw+3, by);
+  ctx.strokeStyle = col;
+  ctx.lineWidth = 3.5;
+  ctx.lineCap='round';
+  ctx.stroke();
+  // Weave lines
+  ctx.strokeStyle='rgba(216,180,106,0.18)';
+  ctx.lineWidth=1;
+  for(let i=1;i<3;i++){
+    const ry = by + (bh/3)*i;
+    ctx.beginPath();
+    ctx.moveTo(bx + (i*2), ry);
+    ctx.lineTo(bx+bw - (i*2), ry);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function loseLife(){
+  lives--;
+  buzz();
+  basket.flash=18; basket.flashCol='#ff453a';
+  // Shake target box
+  const tb = document.getElementById('target-box');
+  tb.style.animation='none';
+  tb.offsetHeight; // reflow
+  tb.style.animation='';
+  if(lives<=0){
+    setTimeout(gameOver, 200);
+  }
+}
+
+function gameOver(){
+  state='over';
+  document.getElementById('final-score').textContent = score;
+  document.getElementById('end-overlay').style.display='flex';
+  playTone(200,'sawtooth',.3,.4);
+  setTimeout(()=>playTone(160,'sawtooth',.3,.35),200);
+  setTimeout(()=>playTone(120,'sawtooth',.5,.3),400);
+}
+
+// ── INPUT ──
+// Mouse
+canvas.addEventListener('mousemove', e=>{
+  if(state!=='play') return;
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  basket.x = Math.max(basket.w/2, Math.min(cw - basket.w/2, x));
+});
+
+// Touch drag
+canvas.addEventListener('touchstart', e=>{
+  if(e.touches.length>0){
+    lastTouch = e.touches[0].clientX;
+    // Unlock audio
+    getAudioCtx();
+  }
+},{passive:true});
+canvas.addEventListener('touchmove', e=>{
+  if(state!=='play') return;
+  if(e.touches.length>0){
+    const tx = e.touches[0].clientX;
+    const rect = canvas.getBoundingClientRect();
+    const x = tx - rect.left;
+    basket.x = Math.max(basket.w/2, Math.min(cw - basket.w/2, x));
+    lastTouch = tx;
+  }
+},{passive:true});
+
+// Keyboard
+window.addEventListener('keydown', e=>{
+  keys[e.key]=true;
+  if(e.key==='ArrowLeft'||e.key==='ArrowRight') e.preventDefault();
+});
+window.addEventListener('keyup', e=>{ keys[e.key]=false; });
+
+// Process keyboard in a separate rAF so it doesn't block
+(function keyLoop(){
+  if(state==='play' && basket){
+    const spd = 10;
+    if(keys['ArrowRight']||keys['ArrowLeft']){
+      // RTL: ArrowRight = towards start (right in visual = left in RTL... let's keep physical direction)
+      if(keys['ArrowLeft'])  basket.x = Math.max(basket.w/2, basket.x - spd);
+      if(keys['ArrowRight']) basket.x = Math.min(cw - basket.w/2, basket.x + spd);
+    }
+  }
+  requestAnimationFrame(keyLoop);
+})();
+
+// ── INIT ──
+// canvas fill immediately
+ctx.fillStyle='#120a10';
+ctx.fillRect(0,0,cw,ch);
+</script>
+</body>
+</html>

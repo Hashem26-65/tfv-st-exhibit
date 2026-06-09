@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>מגדל האלפים · The First Verse</title>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#120a10;
+  --gold:#d8b46a;
+  --gold-soft:#b9924a;
+  --burgundy:#5c1530;
+  --ink:#f4e9d8;
+  --serif:"Frank Ruhl Libre",serif;
+  --mono:"Roboto Mono",monospace;
+  --red:#e05050;
+  --green:#5db87a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{font-family:var(--serif);color:var(--ink);direction:rtl;user-select:none;-webkit-user-select:none;-webkit-font-smoothing:antialiased;overflow:hidden}
+
+/* ===== OVERLAY ===== */
+.overlay{
+  position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
+  background:rgba(10,4,8,.93);backdrop-filter:blur(6px);
+  transition:opacity .4s;
+}
+.overlay.hidden{opacity:0;pointer-events:none}
+.overlay-box{
+  max-width:420px;width:92%;background:linear-gradient(160deg,#1e0f18,#2a1022);
+  border:2px solid var(--gold-soft);border-radius:18px;padding:32px 28px 28px;text-align:center;
+  box-shadow:0 0 60px rgba(216,180,106,.18),0 8px 40px rgba(0,0,0,.7);
+}
+.overlay-box h1{font-size:2.1rem;color:var(--gold);font-weight:900;line-height:1.2;margin-bottom:8px;letter-spacing:.02em}
+.overlay-box h2{font-size:1.35rem;color:var(--gold-soft);margin-bottom:16px;font-weight:500}
+.overlay-box p{font-size:1rem;color:var(--ink);opacity:.88;line-height:1.65;margin-bottom:12px}
+.overlay-box .verse{font-size:1.25rem;color:var(--gold);margin:12px 0 16px;letter-spacing:.04em}
+.btn{
+  display:inline-block;padding:14px 36px;border-radius:50px;border:none;cursor:pointer;
+  font-family:var(--serif);font-size:1.1rem;font-weight:700;letter-spacing:.04em;
+  background:linear-gradient(135deg,var(--gold),var(--gold-soft));color:#120a10;
+  box-shadow:0 4px 18px rgba(216,180,106,.35);transition:transform .12s,box-shadow .12s;
+  -webkit-tap-highlight-color:transparent;
+}
+.btn:hover{transform:translateY(-2px);box-shadow:0 7px 24px rgba(216,180,106,.5)}
+.btn:active{transform:translateY(0)}
+.btn-outline{background:transparent;color:var(--gold);border:2px solid var(--gold-soft);box-shadow:none}
+.btn-outline:hover{background:rgba(216,180,106,.1)}
+
+/* WIN overlay extras */
+#winBox .win-title{font-size:2.4rem;color:var(--gold);font-weight:900;margin-bottom:6px}
+#winBox .win-sub{font-size:1.1rem;color:var(--ink);margin-bottom:14px;opacity:.9}
+#winBox .win-edu{font-size:.95rem;line-height:1.7;color:var(--ink);opacity:.82;margin-bottom:20px;text-align:right}
+#winBox .win-stats{font-family:var(--mono);font-size:.9rem;color:var(--gold-soft);margin-bottom:20px}
+
+/* ===== MAIN LAYOUT ===== */
+#game{
+  position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;
+  padding:8px 10px 0;overflow:hidden;
+}
+
+/* top bar */
+#topbar{
+  width:100%;max-width:560px;display:flex;align-items:center;justify-content:space-between;
+  padding:4px 0 6px;flex-shrink:0;
+}
+#totalDisplay{
+  font-family:var(--mono);font-size:2rem;font-weight:700;color:var(--gold);
+  text-shadow:0 0 18px rgba(216,180,106,.5);letter-spacing:.05em;
+  transition:color .25s,text-shadow .25s;
+}
+#totalDisplay.over{color:var(--red);text-shadow:0 0 18px rgba(224,80,80,.6)}
+#totalDisplay.win{color:#ffe97a;text-shadow:0 0 28px rgba(255,230,80,.9)}
+#targetLabel{font-size:.78rem;color:var(--ink);opacity:.55;text-align:center;line-height:1.3}
+.restart-btn{
+  background:transparent;border:1px solid rgba(216,180,106,.35);color:var(--gold-soft);
+  border-radius:8px;padding:5px 10px;font-size:.8rem;cursor:pointer;font-family:var(--serif);
+  transition:background .15s;-webkit-tap-highlight-color:transparent;
+}
+.restart-btn:hover{background:rgba(216,180,106,.1)}
+
+/* tower area */
+#towerArea{
+  width:100%;max-width:560px;flex:1;min-height:0;position:relative;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+  padding-bottom:6px;overflow:hidden;
+}
+
+/* ground */
+#ground{
+  width:200px;height:14px;border-radius:50%;
+  background:linear-gradient(90deg,transparent,var(--gold-soft),transparent);
+  opacity:.5;flex-shrink:0;margin-bottom:0;position:relative;z-index:2;
+}
+
+/* tower stack container */
+#towerStack{
+  display:flex;flex-direction:column-reverse;align-items:center;
+  position:absolute;bottom:14px;left:50%;transform:translateX(-50%);
+  width:200px;pointer-events:none;
+  transition:filter .4s;
+}
+#towerStack.shaking{animation:shake .55s ease both}
+#towerStack.glowing{filter:drop-shadow(0 0 16px rgba(255,230,80,.9)) drop-shadow(0 0 40px rgba(255,200,50,.5))}
+
+@keyframes shake{
+  0%,100%{transform:translateX(-50%)}
+  10%{transform:translateX(calc(-50% + 9px)) rotate(.8deg)}
+  20%{transform:translateX(calc(-50% - 8px)) rotate(-.7deg)}
+  30%{transform:translateX(calc(-50% + 6px)) rotate(.5deg)}
+  40%{transform:translateX(calc(-50% - 5px)) rotate(-.4deg)}
+  50%{transform:translateX(calc(-50% + 4px)) rotate(.3deg)}
+  60%{transform:translateX(calc(-50% - 3px))}
+  70%{transform:translateX(calc(-50% + 2px))}
+  80%{transform:translateX(calc(-50% - 1px))}
+}
+
+/* tower block */
+.tblock{
+  width:100%;border-radius:7px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-weight:700;color:#120a10;
+  box-shadow:0 3px 10px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.25);
+  transform:translateY(-60px);opacity:0;
+  animation:dropIn .35s cubic-bezier(.22,1.5,.5,1) forwards;
+  flex-shrink:0;margin-bottom:2px;
+  position:relative;
+}
+.tblock.crumble{animation:crumble .4s ease forwards!important}
+
+@keyframes dropIn{
+  to{transform:translateY(0);opacity:1}
+}
+@keyframes crumble{
+  0%{transform:scale(1) rotate(0);opacity:1}
+  40%{transform:scale(1.1) rotate(-3deg);opacity:.8}
+  70%{transform:scale(.9) rotate(5deg) translateY(10px);opacity:.5}
+  100%{transform:scale(.7) rotate(-8deg) translateY(30px);opacity:0}
+}
+
+/* value label inside block */
+.tblock span{font-size:.9rem;pointer-events:none}
+
+/* undo button floats above stack */
+#undoBtn{
+  position:absolute;bottom:calc(14px + var(--stack-h, 0px));left:50%;transform:translateX(-50%);
+  transition:bottom .35s ease;
+  background:rgba(92,21,48,.85);border:1px solid var(--gold-soft);color:var(--gold);
+  border-radius:8px;padding:4px 14px;font-size:.82rem;cursor:pointer;font-family:var(--serif);
+  z-index:10;opacity:0;pointer-events:none;transition:opacity .2s,bottom .35s ease;
+  white-space:nowrap;
+}
+#undoBtn.visible{opacity:1;pointer-events:auto}
+
+/* blocks palette */
+#palette{
+  width:100%;max-width:560px;flex-shrink:0;
+  display:flex;flex-wrap:wrap;justify-content:center;gap:9px;
+  padding:8px 6px 10px;
+}
+
+.pblock{
+  border-radius:10px;padding:10px 14px;font-family:var(--mono);font-size:1rem;font-weight:700;
+  cursor:pointer;border:2px solid transparent;
+  box-shadow:0 4px 14px rgba(0,0,0,.45);
+  transition:transform .12s,box-shadow .12s,opacity .2s;
+  -webkit-tap-highlight-color:transparent;
+  position:relative;overflow:hidden;
+}
+.pblock:hover{transform:translateY(-3px) scale(1.04);box-shadow:0 7px 20px rgba(0,0,0,.5)}
+.pblock:active{transform:scale(.96)}
+.pblock.used{opacity:.3;pointer-events:none}
+.pblock::after{content:'';position:absolute;inset:0;background:rgba(255,255,255,.12);opacity:0;transition:opacity .12s}
+.pblock:active::after{opacity:1}
+
+/* footer */
+#footer{
+  flex-shrink:0;padding:4px 0 6px;font-size:.68rem;color:var(--gold-soft);opacity:.55;
+  letter-spacing:.06em;text-align:center;
+}
+
+/* fireworks canvas */
+#fwCanvas{position:fixed;inset:0;pointer-events:none;z-index:99}
+
+/* progress bar */
+#progressWrap{width:100%;max-width:560px;height:6px;background:rgba(216,180,106,.12);border-radius:3px;flex-shrink:0;margin-bottom:4px}
+#progressBar{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--gold-soft),var(--gold));width:0%;transition:width .3s,background .3s}
+#progressBar.over{background:linear-gradient(90deg,#c03030,var(--red))}
+
+/* attempts */
+#attemptLabel{font-size:.72rem;color:var(--ink);opacity:.45;text-align:left;padding-right:4px;font-family:var(--mono)}
+
+/* mobile tweaks */
+@media(max-width:400px){
+  #totalDisplay{font-size:1.65rem}
+  .pblock{padding:8px 10px;font-size:.88rem}
+  .overlay-box h1{font-size:1.75rem}
+}
+</style>
+</head>
+<body>
+
+<!-- INTRO OVERLAY -->
+<div class="overlay" id="introOverlay">
+  <div class="overlay-box">
+    <h1>מגדל האלפים</h1>
+    <h2>The First Verse · TFV</h2>
+    <p class="verse">בְּרֵאשִׁית בָּרָא אֱלֹהִים אֵת הַשָּׁמַיִם וְאֵת הָאָרֶץ</p>
+    <p>הגימטריה הכוללת של פסוק הבריאה שווה <strong style="color:var(--gold)">2701</strong>.<br>
+    מכפלת שבע ערכי המילים מתפצלת לקבוצות אלפים שסכומן בדיוק <strong style="color:var(--gold)">2701</strong>!</p>
+    <p style="margin-top:8px;font-size:.9rem;opacity:.75">
+      לחץ על לבנות המספרים כדי להוסיפן למגדל.<br>
+      בנה מגדל ששקלו <strong>בדיוק 2701</strong>.<br>
+      אם חרגת — המגדל יתמוטט. לחץ "בטל" לבטל את הלבנה האחרונה.
+    </p>
+    <button class="btn" onclick="startGame()" style="margin-top:20px">▶ התחל</button>
+  </div>
+</div>
+
+<!-- WIN OVERLAY -->
+<div class="overlay hidden" id="winOverlay">
+  <div class="overlay-box" id="winBox">
+    <div class="win-title">🏆 המגדל עמד!</div>
+    <div class="win-sub">הגעת לסכום <span style="color:var(--gold);font-weight:700">2701</span> — בדיוק!</div>
+    <div class="win-edu">
+      <strong style="color:var(--gold)">מה גילינו?</strong><br>
+      שש קבוצות האלפים שמגיעות ממכפלת ערכי שבע מילות הפסוק:
+      <br><span style="font-family:var(--mono);color:var(--gold-soft)">304 + 153 + 525 + 784 + 175 + 760 = 2701</span><br><br>
+      וגם סכום ערכי הגימטריה של שבע המילות עצמן:
+      <br><span style="font-family:var(--mono);color:var(--gold-soft)">913 + 203 + 86 + 401 + 395 + 407 + 296 = 2701</span><br><br>
+      שני חישובים שונים — <strong>אותה תשובה</strong>. 2701 = 37 × 73 — מספר משולש.
+      הגימטריה המצומצמת של הפסוק = <strong>82</strong>.
+    </div>
+    <div class="win-stats" id="winStats"></div>
+    <button class="btn" onclick="resetGame()">▶ שחק שוב</button>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="game">
+  <div id="topbar">
+    <div>
+      <div id="totalDisplay">0</div>
+      <div id="targetLabel">מטרה: 2701</div>
+    </div>
+    <div style="text-align:center;flex:1">
+      <div id="progressWrap"><div id="progressBar"></div></div>
+      <div id="attemptLabel">נסיון #1</div>
+    </div>
+    <button class="restart-btn" onclick="resetGame()">⟲ מחדש</button>
+  </div>
+
+  <div id="towerArea">
+    <div id="towerStack"></div>
+    <button id="undoBtn" onclick="undoLast()">↩ בטל אחרון</button>
+    <div id="ground"></div>
+  </div>
+
+  <div id="palette"></div>
+  <div id="footer">The First Verse &nbsp;·&nbsp; מגדל האלפים</div>
+</div>
+
+<canvas id="fwCanvas"></canvas>
+
+<script>
+'use strict';
+
+/* ===== CONSTANTS ===== */
+const TARGET = 2701;
+const CORRECT_BLOCKS = [304, 153, 525, 784, 175, 760];
+const DISTRACTOR_BLOCKS = [250, 900, 88, 450, 630, 120, 370, 44];
+
+// Block appearance — map value → color gradient
+const BLOCK_COLORS = {
+  304: ['#c8763a','#a05828'],
+  153: ['#7a5caa','#5a3e88'],
+  525: ['#3a8caa','#2a6888'],
+  784: ['#aa5c3a','#883a20'],
+  175: ['#5aaa5c','#3a8840'],
+  760: ['#aa8c3a','#886a20'],
+  250: ['#606060','#404040'],
+  900: ['#505050','#303030'],
+   88: ['#505050','#303030'],
+  450: ['#606060','#404040'],
+  630: ['#505050','#303030'],
+  120: ['#606060','#404040'],
+  370: ['#505050','#303030'],
+   44: ['#505050','#303030'],
+};
+
+const BLOCK_HEIGHT = 38; // px per block in tower
+
+/* ===== AUDIO ===== */
+let _ctx = null;
+function getAudio(){
+  if(!_ctx) _ctx = new (window.AudioContext||window.webkitAudioContext)();
+  return _ctx;
+}
+function playTone(freq, dur, type='sine', vol=0.25, detune=0){
+  try{
+    const a = getAudio();
+    const o = a.createOscillator();
+    const g = a.createGain();
+    o.connect(g); g.connect(a.destination);
+    o.type = type; o.frequency.value = freq; o.detune.value = detune;
+    g.gain.setValueAtTime(vol, a.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, a.currentTime + dur);
+    o.start(a.currentTime); o.stop(a.currentTime + dur);
+  }catch(e){}
+}
+function sfxDrop(){
+  playTone(440, .18, 'triangle', .22);
+  playTone(660, .12, 'sine', .12);
+}
+function sfxUndo(){
+  playTone(330, .15, 'triangle', .18);
+  playTone(220, .2, 'sine', .1);
+}
+function sfxBuzz(){
+  playTone(120, .3, 'sawtooth', .3);
+  playTone(90, .4, 'sawtooth', .2, -20);
+}
+function sfxWin(){
+  const notes=[523,659,784,1047];
+  notes.forEach((f,i)=>setTimeout(()=>playTone(f,.4,'sine',.3),i*90));
+  setTimeout(()=>playTone(1568,.6,'sine',.25),400);
+}
+
+/* ===== STATE ===== */
+let stack = [];       // array of values in tower
+let usedSet = new Set();  // indices into allBlocks that are used
+let total = 0;
+let attempts = 1;
+let gameActive = false;
+let startTime = 0;
+
+let allBlocks = []; // {value, id, el (palette element)}
+
+/* ===== INIT ===== */
+function buildPalette(){
+  const palette = document.getElementById('palette');
+  palette.innerHTML = '';
+  // shuffle all blocks
+  const values = [...CORRECT_BLOCKS, ...DISTRACTOR_BLOCKS];
+  // shuffle
+  for(let i=values.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [values[i],values[j]]=[values[j],values[i]];
+  }
+  allBlocks = values.map((v,i)=>{
+    const col = BLOCK_COLORS[v]||['#555','#333'];
+    const el = document.createElement('button');
+    el.className = 'pblock';
+    el.style.background = `linear-gradient(145deg,${col[0]},${col[1]})`;
+    el.style.color = '#f4e9d8';
+    el.style.borderColor = col[0]+'88';
+    el.textContent = v.toLocaleString('he');
+    el.setAttribute('data-idx', i);
+    el.addEventListener('click', ()=>tapBlock(i));
+    palette.appendChild(el);
+    return {value:v, id:i, el};
+  });
+}
+
+function startGame(){
+  document.getElementById('introOverlay').classList.add('hidden');
+  resetGame(true);
+}
+
+function resetGame(firstTime=false){
+  stack = [];
+  usedSet = new Set();
+  total = 0;
+  gameActive = true;
+  if(!firstTime) attempts++;
+  startTime = Date.now();
+  updateTotal();
+  updateUndoBtn();
+  renderTower(false);
+  buildPalette();
+  document.getElementById('winOverlay').classList.add('hidden');
+  document.getElementById('towerStack').classList.remove('glowing','shaking');
+  document.getElementById('attemptLabel').textContent = `נסיון #${attempts}`;
+  stopFireworks();
+}
+
+/* ===== GAME LOGIC ===== */
+function tapBlock(idx){
+  if(!gameActive) return;
+  const block = allBlocks[idx];
+  const newTotal = total + block.value;
+
+  sfxDrop();
+  stack.push({value:block.value, idx});
+  usedSet.add(idx);
+  block.el.classList.add('used');
+  total = newTotal;
+  updateTotal();
+  renderTower(true);
+  updateUndoBtn();
+
+  if(newTotal > TARGET){
+    setTimeout(()=>triggerCollapse(), 400);
+  } else if(newTotal === TARGET){
+    setTimeout(()=>triggerWin(), 450);
+  }
+}
+
+function undoLast(){
+  if(!gameActive) return;
+  if(stack.length === 0) return;
+  sfxUndo();
+  const last = stack[stack.length-1];
+
+  // crumble top block
+  const towerStack = document.getElementById('towerStack');
+  const topEl = towerStack.querySelector('.tblock:first-child');
+  if(topEl){
+    topEl.classList.add('crumble');
+    setTimeout(()=>{
+      if(topEl.parentNode) topEl.parentNode.removeChild(topEl);
+    }, 420);
+  }
+
+  stack.pop();
+  usedSet.delete(last.idx);
+  allBlocks[last.idx].el.classList.remove('used');
+  total -= last.value;
+  updateTotal();
+  updateUndoBtn();
+}
+
+function triggerCollapse(){
+  if(!gameActive) return;
+  sfxBuzz();
+  const towerStack = document.getElementById('towerStack');
+  towerStack.classList.add('shaking');
+  // mark all blocks as crumbling
+  const blocks = towerStack.querySelectorAll('.tblock');
+  let delay = 0;
+  blocks.forEach(b=>{
+    setTimeout(()=>b.classList.add('crumble'), delay);
+    delay += 60;
+  });
+  setTimeout(()=>{
+    towerStack.classList.remove('shaking');
+    // clear
+    stack = [];
+    usedSet = new Set();
+    total = 0;
+    attempts++;
+    allBlocks.forEach(b=>b.el.classList.remove('used'));
+    towerStack.innerHTML = '';
+    updateTotal();
+    updateUndoBtn();
+    document.getElementById('attemptLabel').textContent = `נסיון #${attempts}`;
+  }, 650);
+}
+
+function triggerWin(){
+  gameActive = false;
+  sfxWin();
+  document.getElementById('towerStack').classList.add('glowing');
+  const elapsed = Math.round((Date.now()-startTime)/1000);
+  const mins = Math.floor(elapsed/60);
+  const secs = elapsed%60;
+  const timeStr = mins > 0 ? `${mins}:${String(secs).padStart(2,'0')} דקות` : `${secs} שניות`;
+  document.getElementById('winStats').textContent = `נסיונות: ${attempts}  ·  זמן: ${timeStr}`;
+  setTimeout(()=>{
+    document.getElementById('winOverlay').classList.remove('hidden');
+    startFireworks();
+  }, 900);
+}
+
+/* ===== UI UPDATES ===== */
+function updateTotal(){
+  const el = document.getElementById('totalDisplay');
+  el.textContent = total.toLocaleString('he');
+  el.classList.remove('over','win');
+  if(total > TARGET) el.classList.add('over');
+  else if(total === TARGET) el.classList.add('win');
+
+  // progress bar
+  const pct = Math.min(100, (total/TARGET)*100);
+  const bar = document.getElementById('progressBar');
+  bar.style.width = pct+'%';
+  bar.classList.toggle('over', total > TARGET);
+}
+
+function updateUndoBtn(){
+  const btn = document.getElementById('undoBtn');
+  btn.classList.toggle('visible', stack.length > 0 && gameActive);
+  // position above stack
+  const h = stack.length * (BLOCK_HEIGHT + 2) + 14;
+  btn.style.bottom = h + 10 + 'px';
+}
+
+function renderTower(animate){
+  const towerStack = document.getElementById('towerStack');
+  if(!animate){
+    towerStack.innerHTML = '';
+    return;
+  }
+  // Just add the latest block on top (prepend since flex-direction:column-reverse means first-child is top)
+  const last = stack[stack.length-1];
+  if(!last) return;
+  const col = BLOCK_COLORS[last.value]||['#666','#444'];
+  const el = document.createElement('div');
+  el.className = 'tblock';
+  // Width proportional to value (larger = wider, within limits)
+  const w = 65 + Math.min(35, Math.round((last.value/TARGET)*100));
+  el.style.width = w+'%';
+  el.style.height = BLOCK_HEIGHT+'px';
+  el.style.background = `linear-gradient(145deg,${col[0]},${col[1]})`;
+  el.style.fontSize = last.value >= 1000 ? '.82rem' : '.9rem';
+  el.style.boxShadow = `0 3px 10px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.18)`;
+  const span = document.createElement('span');
+  span.textContent = last.value.toLocaleString('he');
+  el.appendChild(span);
+  towerStack.insertBefore(el, towerStack.firstChild);
+}
+
+/* ===== FIREWORKS ===== */
+let fwAnimId = null;
+let fwParticles = [];
+
+function startFireworks(){
+  const canvas = document.getElementById('fwCanvas');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  fwParticles = [];
+  let bursts = 0;
+  function burst(){
+    if(bursts > 18) return;
+    bursts++;
+    const cx = 80+Math.random()*(canvas.width-160);
+    const cy = 60+Math.random()*(canvas.height*0.55);
+    const hue = 40+Math.random()*40;
+    for(let i=0;i<55;i++){
+      const angle = (Math.PI*2/55)*i + Math.random()*.12;
+      const speed = 2+Math.random()*5;
+      fwParticles.push({
+        x:cx,y:cy,
+        vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,
+        alpha:1, life:1, decay:0.015+Math.random()*0.015,
+        hue, size:2+Math.random()*2.5
+      });
+    }
+    setTimeout(burst, 280+Math.random()*400);
+  }
+  burst();
+  burst();
+
+  const ctx = canvas.getContext('2d');
+  function frame(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    fwParticles = fwParticles.filter(p=>p.alpha>0.01);
+    fwParticles.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy; p.vy+=0.07; p.vx*=0.98;
+      p.alpha-=p.decay;
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+      ctx.fillStyle=`hsla(${p.hue},90%,70%,${p.alpha})`;
+      ctx.fill();
+    });
+    fwAnimId = requestAnimationFrame(frame);
+  }
+  frame();
+}
+
+function stopFireworks(){
+  if(fwAnimId){cancelAnimationFrame(fwAnimId);fwAnimId=null;}
+  const canvas = document.getElementById('fwCanvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  fwParticles=[];
+}
+
+/* ===== BOOT ===== */
+document.getElementById('introOverlay').classList.remove('hidden');
+</script>
+</body>
+</html>

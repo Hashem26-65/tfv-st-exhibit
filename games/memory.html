@@ -1,0 +1,689 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>זיכרון גימטרי · The First Verse</title>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#120a10;
+  --panel:#1a1016;
+  --gold:#d8b46a;
+  --gold-soft:#b9924a;
+  --burgundy:#5c1530;
+  --ink:#f4e9d8;
+  --muted:#9a8772;
+  --green:#3ecf72;
+  --serif:"Frank Ruhl Libre",serif;
+  --mono:"Roboto Mono",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{
+  min-height:100%;
+  background:var(--bg);
+  font-family:var(--serif);
+  color:var(--ink);
+  direction:rtl;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+
+/* ── BACKGROUND ORNAMENT ── */
+body::before{
+  content:"";
+  position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(92,21,48,.35) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(92,21,48,.2) 0%, transparent 70%);
+  pointer-events:none;
+  z-index:0;
+}
+
+/* ── OVERLAYS ── */
+.overlay{
+  position:fixed;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(18,10,16,.92);
+  backdrop-filter:blur(6px);
+  z-index:100;
+  transition:opacity .35s;
+}
+.overlay.hidden{opacity:0;pointer-events:none;}
+
+.panel{
+  background:var(--panel);
+  border:1px solid rgba(216,180,106,.25);
+  border-radius:18px;
+  padding:36px 32px;
+  max-width:420px;
+  width:90%;
+  text-align:center;
+  box-shadow:0 8px 48px rgba(0,0,0,.7), inset 0 1px 0 rgba(216,180,106,.12);
+  position:relative;
+}
+.panel::before{
+  content:"";
+  position:absolute;top:0;left:0;right:0;height:3px;
+  border-radius:18px 18px 0 0;
+  background:linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+
+.panel-title{
+  font-size:clamp(1.7rem,6vw,2.4rem);
+  font-weight:900;
+  color:var(--gold);
+  line-height:1.2;
+  margin-bottom:6px;
+  text-shadow:0 2px 12px rgba(216,180,106,.4);
+}
+.panel-sub{
+  font-size:.95rem;
+  color:var(--muted);
+  margin-bottom:20px;
+  font-style:italic;
+}
+.panel-verse{
+  font-size:1.1rem;
+  color:var(--ink);
+  background:rgba(255,255,255,.04);
+  border-radius:10px;
+  padding:12px 16px;
+  margin-bottom:20px;
+  line-height:1.9;
+  letter-spacing:.04em;
+}
+.panel-howto{
+  font-size:.9rem;
+  color:var(--muted);
+  line-height:1.7;
+  margin-bottom:26px;
+  text-align:right;
+}
+.panel-howto b{color:var(--ink);}
+
+.btn{
+  display:inline-block;
+  padding:14px 40px;
+  background:linear-gradient(135deg, var(--burgundy), #7a1e40);
+  border:1px solid rgba(216,180,106,.3);
+  border-radius:40px;
+  color:var(--gold);
+  font-family:var(--serif);
+  font-size:1.15rem;
+  font-weight:700;
+  cursor:pointer;
+  transition:transform .15s, box-shadow .15s, background .15s;
+  box-shadow:0 4px 20px rgba(92,21,48,.5);
+}
+.btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 6px 28px rgba(92,21,48,.7);
+  background:linear-gradient(135deg,#7a1e40,#a0284f);
+}
+.btn:active{transform:translateY(0);}
+
+/* win overlay extras */
+.win-score{
+  font-size:1.0rem;
+  color:var(--muted);
+  margin-bottom:8px;
+}
+.win-score span{
+  color:var(--gold);
+  font-weight:700;
+  font-family:var(--mono);
+}
+.win-msg{
+  font-size:1.15rem;
+  color:var(--ink);
+  margin-bottom:24px;
+  line-height:1.6;
+}
+
+/* ── MAIN LAYOUT ── */
+#app{
+  position:relative;
+  z-index:1;
+  min-height:100dvh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:16px 12px 0;
+}
+
+/* ── HUD ── */
+#hud{
+  width:100%;
+  max-width:640px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin-bottom:14px;
+}
+.hud-block{
+  background:var(--panel);
+  border:1px solid rgba(216,180,106,.15);
+  border-radius:10px;
+  padding:8px 14px;
+  text-align:center;
+  flex:1;
+}
+.hud-label{
+  font-size:.7rem;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  margin-bottom:2px;
+}
+.hud-val{
+  font-family:var(--mono);
+  font-size:1.1rem;
+  font-weight:700;
+  color:var(--gold);
+}
+
+#btn-restart{
+  background:rgba(92,21,48,.5);
+  border:1px solid rgba(216,180,106,.25);
+  border-radius:8px;
+  color:var(--gold-soft);
+  font-family:var(--serif);
+  font-size:.85rem;
+  cursor:pointer;
+  padding:6px 12px;
+  transition:background .15s, color .15s;
+  white-space:nowrap;
+}
+#btn-restart:hover{background:var(--burgundy);color:var(--gold);}
+
+/* ── GRID ── */
+#grid{
+  width:100%;
+  max-width:640px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  padding-bottom:16px;
+}
+
+/* ── CARD ── */
+.card{
+  aspect-ratio:3/4;
+  perspective:900px;
+  cursor:pointer;
+  position:relative;
+}
+
+/* prevent extra flip during lock */
+.card.locked{pointer-events:none;}
+.card.matched{pointer-events:none;}
+
+.card-inner{
+  position:absolute;inset:0;
+  transform-style:preserve-3d;
+  transition:transform .45s cubic-bezier(.4,0,.2,1);
+  border-radius:12px;
+}
+.card.flipped .card-inner,
+.card.matched .card-inner{
+  transform:rotateY(180deg);
+}
+
+.card-face{
+  position:absolute;inset:0;
+  border-radius:12px;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+  display:flex;align-items:center;justify-content:center;
+  text-align:center;
+  padding:8px 6px;
+}
+
+/* BACK */
+.card-back{
+  background:linear-gradient(145deg,#2a1620,#1a0e14);
+  border:1px solid rgba(216,180,106,.2);
+  box-shadow:0 3px 12px rgba(0,0,0,.5);
+}
+.card-back::after{
+  content:"";
+  position:absolute;inset:8px;
+  border:1px solid rgba(216,180,106,.12);
+  border-radius:8px;
+  background:
+    repeating-linear-gradient(
+      45deg,
+      transparent,transparent 7px,
+      rgba(216,180,106,.04) 7px,rgba(216,180,106,.04) 8px
+    );
+}
+.card-back-icon{
+  font-size:clamp(1.4rem,4vw,2rem);
+  color:rgba(216,180,106,.35);
+  z-index:1;
+  position:relative;
+}
+
+/* FRONT */
+.card-front{
+  transform:rotateY(180deg);
+  background:linear-gradient(145deg,#221530,#1a1025);
+  border:1px solid rgba(216,180,106,.3);
+  box-shadow:0 3px 12px rgba(0,0,0,.4);
+  flex-direction:column;
+  gap:4px;
+}
+.card.matched .card-front{
+  background:linear-gradient(145deg,#1a3320,#122817);
+  border-color:rgba(62,207,114,.55);
+  box-shadow:0 0 16px rgba(62,207,114,.25), 0 3px 12px rgba(0,0,0,.4);
+}
+
+/* word card text */
+.card-word{
+  font-size:clamp(1.2rem,4.5vw,1.65rem);
+  font-weight:700;
+  color:var(--ink);
+  line-height:1.2;
+  letter-spacing:.04em;
+}
+.card.matched .card-word,
+.card.matched .card-num{
+  color:var(--green);
+}
+
+/* number card text */
+.card-num{
+  font-family:var(--mono);
+  font-size:clamp(1.3rem,4.5vw,1.8rem);
+  font-weight:700;
+  color:var(--gold);
+  letter-spacing:.06em;
+}
+.card-num-label{
+  font-size:.65rem;
+  color:var(--muted);
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+
+/* ── FOOTER ── */
+footer{
+  width:100%;
+  text-align:center;
+  padding:14px 0 18px;
+  color:var(--muted);
+  font-size:.78rem;
+  letter-spacing:.08em;
+  border-top:1px solid rgba(216,180,106,.08);
+  margin-top:auto;
+  position:relative;
+  z-index:1;
+}
+
+/* ── SHAKE ANIMATION ── */
+@keyframes shake{
+  0%,100%{transform:translateX(0);}
+  20%{transform:translateX(-7px);}
+  40%{transform:translateX(7px);}
+  60%{transform:translateX(-5px);}
+  80%{transform:translateX(5px);}
+}
+.card.shake .card-inner{
+  animation:shake .35s ease;
+}
+
+/* ── PULSE FOR MATCHED ── */
+@keyframes pulse-green{
+  0%{box-shadow:0 0 0 0 rgba(62,207,114,.45);}
+  70%{box-shadow:0 0 0 10px rgba(62,207,114,0);}
+  100%{box-shadow:0 0 0 0 rgba(62,207,114,0);}
+}
+.card.matched-anim .card-inner{
+  animation:pulse-green .6s ease;
+}
+
+/* ── RESPONSIVE (2 col on very small) ── */
+@media(max-width:360px){
+  #grid{grid-template-columns:repeat(2,1fr);gap:8px;}
+}
+@media(min-width:500px){
+  #grid{gap:12px;}
+}
+</style>
+</head>
+<body>
+
+<!-- INTRO OVERLAY -->
+<div class="overlay" id="overlay-intro">
+  <div class="panel">
+    <div class="panel-title">זיכרון גימטרי</div>
+    <div class="panel-sub">The First Verse · משחק זיכרון</div>
+    <div class="panel-verse">
+      בְּרֵאשִׁית בָּרָא אֱלֹהִים אֵת הַשָּׁמַיִם וְאֵת הָאָרֶץ
+    </div>
+    <div class="panel-howto">
+      <b>כיצד משחקים:</b><br>
+      לוח ה־14 קלפים מורכב מ־7 מילים וה־7 ערכי הגימטריה שלהן.<br>
+      הפוך שני קלפים בתור — אם <b>מילה ומספרה</b> פנו אליך, הם נשארים גלויים.<br>
+      כדאי לזכור איפה כל קלף!<br>
+      <br>
+      <b>סכום הגימטריה:</b> 2,701 = המספר המשולש ה-73.
+    </div>
+    <button class="btn" id="btn-start">התחל משחק</button>
+  </div>
+</div>
+
+<!-- WIN OVERLAY -->
+<div class="overlay hidden" id="overlay-win">
+  <div class="panel">
+    <div class="panel-title">כל הכבוד! 🎉</div>
+    <div class="panel-sub">השלמת את הזיכרון הגימטרי</div>
+    <div class="win-msg" id="win-msg"></div>
+    <div class="win-score">מהלכים: <span id="win-moves">0</span> &nbsp;|&nbsp; זמן: <span id="win-time">0:00</span></div>
+    <br>
+    <button class="btn" id="btn-play-again">שחק שוב</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- HUD -->
+  <div id="hud">
+    <div class="hud-block">
+      <div class="hud-label">מהלכים</div>
+      <div class="hud-val" id="hud-moves">0</div>
+    </div>
+    <div class="hud-block">
+      <div class="hud-label">זמן</div>
+      <div class="hud-val" id="hud-time">0:00</div>
+    </div>
+    <div class="hud-block">
+      <div class="hud-label">זוגות</div>
+      <div class="hud-val" id="hud-pairs">0/7</div>
+    </div>
+    <button id="btn-restart">⟲ מחדש</button>
+  </div>
+
+  <!-- GRID -->
+  <div id="grid"></div>
+
+  <footer>The First Verse · זיכרון גימטרי</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ── DATA ── */
+var PAIRS = [
+  {word:"בְּרֵאשִׁית", val:913},
+  {word:"בָּרָא",       val:203},
+  {word:"אֱלֹהִים",    val:86},
+  {word:"אֵת",         val:401},
+  {word:"הַשָּׁמַיִם", val:395},
+  {word:"וְאֵת",       val:407},
+  {word:"הָאָרֶץ",     val:296}
+];
+
+/* ── STATE ── */
+var cards = [];
+var flipped = [];       // indices of currently face-up unmatched cards
+var matched = 0;
+var moves = 0;
+var seconds = 0;
+var timerID = null;
+var locked = false;     // true while checking a pair
+
+/* ── AUDIO ── */
+var audioCtx = null;
+function getCtx(){
+  if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+  return audioCtx;
+}
+function playDing(){
+  try{
+    var ctx = getCtx();
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type="triangle";
+    osc.frequency.setValueAtTime(880,ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1200,ctx.currentTime+.12);
+    gain.gain.setValueAtTime(.32,ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.45);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime+.45);
+  }catch(e){}
+}
+function playWin(){
+  try{
+    var ctx = getCtx();
+    var notes=[880,1100,1320,1760];
+    notes.forEach(function(f,i){
+      var osc=ctx.createOscillator();
+      var gain=ctx.createGain();
+      osc.connect(gain);gain.connect(ctx.destination);
+      osc.type="triangle";
+      osc.frequency.value=f;
+      var t=ctx.currentTime+i*.13;
+      gain.gain.setValueAtTime(.28,t);
+      gain.gain.exponentialRampToValueAtTime(.001,t+.4);
+      osc.start(t);osc.stop(t+.4);
+    });
+  }catch(e){}
+}
+function playBuzz(){
+  try{
+    var ctx = getCtx();
+    var osc=ctx.createOscillator();
+    var gain=ctx.createGain();
+    osc.connect(gain);gain.connect(ctx.destination);
+    osc.type="sawtooth";
+    osc.frequency.setValueAtTime(180,ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(80,ctx.currentTime+.18);
+    gain.gain.setValueAtTime(.18,ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.22);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime+.22);
+  }catch(e){}
+}
+
+/* ── TIMER ── */
+function startTimer(){
+  clearInterval(timerID);
+  timerID=setInterval(function(){
+    seconds++;
+    document.getElementById("hud-time").textContent=formatTime(seconds);
+  },1000);
+}
+function stopTimer(){clearInterval(timerID);timerID=null;}
+function formatTime(s){
+  var m=Math.floor(s/60);
+  var ss=s%60;
+  return m+":"+(ss<10?"0":"")+ss;
+}
+
+/* ── SHUFFLE ── */
+function shuffle(arr){
+  var a=arr.slice();
+  for(var i=a.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1));
+    var t=a[i];a[i]=a[j];a[j]=t;
+  }
+  return a;
+}
+
+/* ── BUILD GRID ── */
+function buildGrid(){
+  var grid=document.getElementById("grid");
+  grid.innerHTML="";
+  cards=[];
+  flipped=[];
+  matched=0;
+  moves=0;
+  locked=false;
+  seconds=0;
+  stopTimer();
+  document.getElementById("hud-moves").textContent="0";
+  document.getElementById("hud-time").textContent="0:00";
+  document.getElementById("hud-pairs").textContent="0/7";
+
+  // Create 14 card data objects
+  var raw=[];
+  PAIRS.forEach(function(p,i){
+    raw.push({type:"word",word:p.word,pairId:i});
+    raw.push({type:"num", val:p.val,  pairId:i});
+  });
+  raw=shuffle(raw);
+
+  raw.forEach(function(data,idx){
+    var card=document.createElement("div");
+    card.className="card";
+    card.dataset.idx=idx;
+
+    var inner=document.createElement("div");
+    inner.className="card-inner";
+
+    // BACK
+    var back=document.createElement("div");
+    back.className="card-face card-back";
+    back.innerHTML='<span class="card-back-icon">✡</span>';
+
+    // FRONT
+    var front=document.createElement("div");
+    front.className="card-face card-front";
+    if(data.type==="word"){
+      front.innerHTML='<span class="card-word">'+data.word+'</span>';
+    } else {
+      front.innerHTML=
+        '<span class="card-num">'+data.val+'</span>'+
+        '<span class="card-num-label">גימטריה</span>';
+    }
+
+    inner.appendChild(back);
+    inner.appendChild(front);
+    card.appendChild(inner);
+    grid.appendChild(card);
+
+    card.addEventListener("click",function(){onCardClick(idx);});
+    card.addEventListener("touchend",function(e){e.preventDefault();onCardClick(idx);},{passive:false});
+
+    cards.push({el:card,data:data,faceUp:false,isMatched:false});
+  });
+}
+
+/* ── CARD CLICK ── */
+function onCardClick(idx){
+  var c=cards[idx];
+  if(locked) return;
+  if(c.faceUp) return;
+  if(c.isMatched) return;
+  if(flipped.length>=2) return;
+
+  // Resume audio ctx on first interaction
+  if(audioCtx && audioCtx.state==="suspended") audioCtx.resume();
+
+  // Start timer on first flip
+  if(flipped.length===0 && matched===0 && moves===0 && seconds===0){
+    startTimer();
+  }
+
+  // Flip card face up
+  c.faceUp=true;
+  c.el.classList.add("flipped");
+  flipped.push(idx);
+
+  if(flipped.length===2){
+    locked=true;
+    moves++;
+    document.getElementById("hud-moves").textContent=moves;
+    checkPair();
+  }
+}
+
+/* ── CHECK PAIR ── */
+function checkPair(){
+  var a=cards[flipped[0]];
+  var b=cards[flipped[1]];
+  var match=(a.data.pairId===b.data.pairId && a.data.type!==b.data.type);
+
+  if(match){
+    playDing();
+    a.isMatched=true;
+    b.isMatched=true;
+    a.el.classList.add("matched","matched-anim");
+    b.el.classList.add("matched","matched-anim");
+    // remove anim class after it plays
+    setTimeout(function(){
+      a.el.classList.remove("matched-anim");
+      b.el.classList.remove("matched-anim");
+    },700);
+    matched++;
+    document.getElementById("hud-pairs").textContent=matched+"/7";
+    flipped=[];
+    locked=false;
+    if(matched===7) onWin();
+  } else {
+    playBuzz();
+    a.el.classList.add("shake");
+    b.el.classList.add("shake");
+    setTimeout(function(){
+      a.el.classList.remove("flipped","shake");
+      b.el.classList.remove("flipped","shake");
+      a.faceUp=false;
+      b.faceUp=false;
+      flipped=[];
+      locked=false;
+    },900);
+  }
+}
+
+/* ── WIN ── */
+function onWin(){
+  stopTimer();
+  playWin();
+  var msgs=[
+    "מדהים! שלטת בגימטריה של פסוק הבראשית!",
+    "עבודה נפלאה! זכרון חד כחרב!",
+    "ברכות! שבעת המילים נחשפו בפניך!"
+  ];
+  var msg=msgs[Math.floor(Math.random()*msgs.length)];
+  document.getElementById("win-msg").textContent=msg;
+  document.getElementById("win-moves").textContent=moves;
+  document.getElementById("win-time").textContent=formatTime(seconds);
+  setTimeout(function(){
+    document.getElementById("overlay-win").classList.remove("hidden");
+  },600);
+}
+
+/* ── RESTART ── */
+function restartGame(){
+  document.getElementById("overlay-win").classList.add("hidden");
+  buildGrid();
+}
+
+/* ── EVENT LISTENERS ── */
+document.getElementById("btn-start").addEventListener("click",function(){
+  document.getElementById("overlay-intro").classList.add("hidden");
+  buildGrid();
+});
+document.getElementById("btn-play-again").addEventListener("click",restartGame);
+document.getElementById("btn-restart").addEventListener("click",restartGame);
+
+/* prevent double-tap zoom on iOS */
+document.addEventListener("touchend",function(e){
+  e.preventDefault();
+},{passive:false});
+
+/* ── INIT: build grid immediately so layout is visible behind intro overlay ── */
+buildGrid();
+
+})();
+</script>
+</body>
+</html>

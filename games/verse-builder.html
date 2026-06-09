@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>בנה את הפסוק · The First Verse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#120a10; --panel:#1a1016; --ink:#f4e9d8; --ink-dim:#c9b79c; --muted:#9a8772;
+  --gold:#d8b46a; --gold-soft:#b9924a; --burgundy:#5c1530; --burgundy2:#7a1c3f;
+  --line:rgba(216,180,106,.22); --glow:rgba(216,180,106,.45);
+  --mono:"Roboto Mono",ui-monospace,monospace; --serif:"Frank Ruhl Libre",serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:var(--serif); color:var(--ink); direction:rtl;
+  background:
+    radial-gradient(1200px 700px at 50% -10%, rgba(122,28,63,.4),transparent 60%),
+    radial-gradient(1200px 700px at 50% 115%, rgba(122,28,63,.35),transparent 60%),
+    var(--bg);
+  -webkit-font-smoothing:antialiased; user-select:none; -webkit-user-select:none;
+  display:flex; flex-direction:column;
+}
+
+/* ===== TOP BAR ===== */
+.topbar{
+  flex-shrink:0; display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:10px 16px; border-bottom:1px solid var(--line);
+  background:rgba(18,10,16,.88); backdrop-filter:blur(6px); z-index:20;
+}
+.topbar-title{font-family:var(--serif);font-weight:700;font-size:17px;color:var(--gold);letter-spacing:.02em;}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.timer-box{font-family:var(--mono);font-size:15px;color:var(--ink-dim);}
+.timer-box span{color:var(--gold);font-size:18px;font-weight:700;}
+.btn-hint{
+  background:none; border:1px solid var(--line); color:var(--ink-dim);
+  font-family:var(--serif); font-size:13px; border-radius:999px; padding:5px 13px; cursor:pointer; transition:.2s;
+}
+.btn-hint:hover,.btn-hint.active{border-color:var(--gold-soft);color:var(--gold);}
+.btn-restart{
+  background:none; border:1px solid var(--line); color:var(--ink-dim);
+  font-family:var(--serif); font-size:13px; border-radius:999px; padding:5px 13px; cursor:pointer; transition:.2s;
+}
+.btn-restart:hover{border-color:var(--gold-soft);color:var(--ink);}
+
+/* ===== MAIN AREA ===== */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;padding:14px 12px 8px;}
+
+/* slots row */
+.slots-section{flex-shrink:0;margin-bottom:14px;}
+.slots-label{font-size:12px;color:var(--muted);letter-spacing:.04em;margin-bottom:8px;text-align:center;}
+.slots-row{
+  display:flex;flex-direction:row-reverse;justify-content:center;align-items:stretch;
+  gap:6px; flex-wrap:wrap;
+}
+.slot{
+  min-width:64px; max-width:100px; flex:1 1 64px;
+  min-height:72px;
+  border:2px dashed rgba(216,180,106,.3); border-radius:10px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px; font-family:var(--serif); font-size:clamp(14px,2.8vw,22px);
+  transition:border-color .3s, box-shadow .3s, background .3s;
+  position:relative; overflow:hidden;
+  background:rgba(255,255,255,.025);
+}
+.slot.filled{
+  border-style:solid; border-color:var(--gold-soft);
+  background:rgba(216,180,106,.08);
+}
+.slot.glow-correct{
+  border-color:var(--gold);
+  box-shadow:0 0 18px var(--glow), inset 0 0 12px rgba(216,180,106,.12);
+  animation:slot-pop .4s ease-out;
+}
+@keyframes slot-pop{
+  0%{transform:scale(1.08)}50%{transform:scale(.97)}100%{transform:scale(1)}
+}
+.slot .slot-word{color:var(--ink);font-weight:700;line-height:1.2;text-align:center;padding:0 4px;}
+.slot .slot-gem{font-family:var(--mono);font-size:11px;color:var(--gold-soft);margin-top:2px;}
+.slot .slot-num{
+  position:absolute;bottom:3px;left:6px;
+  font-family:var(--mono);font-size:10px;color:rgba(216,180,106,.35);
+}
+
+/* progress bar */
+.progress-bar-wrap{flex-shrink:0;margin-bottom:12px;padding:0 2px;}
+.progress-bar-track{height:3px;background:rgba(216,180,106,.12);border-radius:3px;overflow:hidden;}
+.progress-bar-fill{height:100%;background:var(--gold);border-radius:3px;transition:width .4s ease;}
+
+/* tiles section */
+.tiles-section{flex:1;display:flex;flex-direction:column;min-height:0;}
+.tiles-label{font-size:12px;color:var(--muted);letter-spacing:.04em;margin-bottom:8px;text-align:center;}
+.tiles-grid{
+  flex:1; display:flex; flex-wrap:wrap; align-content:flex-start;
+  justify-content:center; gap:8px; overflow-y:auto; padding:4px 2px 8px;
+}
+.tile{
+  padding:10px 16px; border-radius:10px; cursor:pointer;
+  font-family:var(--serif); font-size:clamp(16px,3.5vw,26px); font-weight:700;
+  border:2px solid rgba(216,180,106,.3); background:var(--panel);
+  color:var(--ink); transition:transform .15s, box-shadow .15s, opacity .2s;
+  position:relative; touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+.tile:hover:not(.used):not(.wrong-anim){
+  transform:translateY(-3px) scale(1.04);
+  box-shadow:0 6px 20px rgba(0,0,0,.5), 0 0 12px var(--glow);
+  border-color:var(--gold);
+}
+.tile.used{opacity:0;pointer-events:none;transform:scale(.85);}
+.tile.hint-glow{
+  border-color:var(--gold);
+  box-shadow:0 0 22px var(--glow), 0 0 8px rgba(216,180,106,.6);
+  animation:hint-pulse 1.2s ease-in-out infinite;
+}
+@keyframes hint-pulse{
+  0%,100%{box-shadow:0 0 14px rgba(216,180,106,.5);}
+  50%{box-shadow:0 0 28px rgba(216,180,106,.9), 0 0 8px rgba(216,180,106,.6);}
+}
+.tile.wrong-anim{animation:shake .45s ease-out;}
+@keyframes shake{
+  0%,100%{transform:translateX(0) rotate(0)}
+  20%{transform:translateX(-10px) rotate(-2deg)}
+  40%{transform:translateX(9px) rotate(1.5deg)}
+  60%{transform:translateX(-7px) rotate(-1deg)}
+  80%{transform:translateX(5px) rotate(.5deg)}
+}
+
+/* ===== OVERLAYS ===== */
+.overlay{
+  position:fixed;inset:0;z-index:50;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:24px 20px;
+  background:
+    radial-gradient(900px 600px at 50% 30%, rgba(92,21,48,.55),transparent 65%),
+    rgba(18,10,16,.93);
+  backdrop-filter:blur(8px);
+  text-align:center;
+}
+.overlay.hidden{display:none;}
+.overlay-panel{
+  background:var(--panel); border:1px solid var(--line);
+  border-radius:16px; padding:28px 28px 24px; max-width:420px; width:100%;
+  box-shadow:0 24px 60px rgba(0,0,0,.6), 0 0 40px rgba(92,21,48,.3);
+}
+.overlay-title{
+  font-family:var(--serif); font-size:clamp(22px,5vw,32px); font-weight:900;
+  color:var(--gold); margin-bottom:8px; line-height:1.2;
+}
+.overlay-sub{
+  font-size:clamp(12px,2.5vw,15px); color:var(--ink-dim); line-height:1.65;
+  margin-bottom:20px;
+}
+.overlay-verse{
+  font-family:var(--serif); font-size:clamp(13px,2.8vw,18px); font-weight:700;
+  color:var(--ink); line-height:1.8; margin-bottom:6px; direction:rtl;
+}
+.overlay-sum{
+  font-family:var(--mono); font-size:clamp(14px,2.8vw,18px);
+  color:var(--gold); margin-bottom:20px; font-weight:700;
+}
+.overlay-stat{
+  font-family:var(--mono); font-size:clamp(13px,2.5vw,16px); color:var(--ink-dim);
+  margin-bottom:18px;
+}
+.overlay-stat b{color:var(--gold); font-size:1.2em;}
+.btn-main{
+  background:linear-gradient(135deg,var(--burgundy2),var(--burgundy));
+  border:1px solid rgba(216,180,106,.4); color:var(--ink);
+  font-family:var(--serif); font-size:16px; font-weight:700;
+  border-radius:999px; padding:13px 36px; cursor:pointer;
+  transition:transform .15s, box-shadow .15s;
+  box-shadow:0 4px 20px rgba(92,21,48,.5);
+  touch-action:manipulation; -webkit-tap-highlight-color:transparent;
+}
+.btn-main:hover{transform:translateY(-2px) scale(1.03);box-shadow:0 8px 28px rgba(92,21,48,.65);}
+.divider{width:60%;height:1px;background:var(--line);margin:16px auto;}
+
+/* footer */
+.footer{
+  flex-shrink:0; text-align:center; font-size:11px; color:var(--muted);
+  padding:6px 12px; letter-spacing:.04em;
+  border-top:1px solid rgba(216,180,106,.1);
+}
+
+/* scrollbar */
+.tiles-grid::-webkit-scrollbar{width:4px;}
+.tiles-grid::-webkit-scrollbar-track{background:transparent;}
+.tiles-grid::-webkit-scrollbar-thumb{background:rgba(216,180,106,.25);border-radius:4px;}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-title">בנה את הפסוק</div>
+  <div class="topbar-right">
+    <div class="timer-box">⏱ <span id="timer">00:00</span></div>
+    <button class="btn-hint" id="btnHint" onclick="toggleHint()">רמז</button>
+    <button class="btn-restart" onclick="restartGame()">⟲ מחדש</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="slots-section">
+    <div class="slots-label">מקם את המילים לפי הסדר הנכון ← החל מהמילה הראשונה</div>
+    <div class="slots-row" id="slotsRow"></div>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-track"><div class="progress-bar-fill" id="progressFill" style="width:0%"></div></div>
+  </div>
+  <div class="tiles-section">
+    <div class="tiles-label">בחר מילה</div>
+    <div class="tiles-grid" id="tilesGrid"></div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">The First Verse · בנה את הפסוק</div>
+
+<!-- INTRO OVERLAY -->
+<div class="overlay" id="introOverlay">
+  <div class="overlay-panel">
+    <div class="overlay-title">בנה את הפסוק</div>
+    <div class="overlay-sub">
+      שבע המילים של בראשית א׳ מעורבבות.<br>
+      לחץ על כל מילה לפי סדר הפסוק הנכון.<br>
+      מילה שגויה תרעד — מילה נכונה תינעל בזהב.
+    </div>
+    <div class="divider"></div>
+    <button class="btn-main" onclick="startGame()">התחל משחק</button>
+  </div>
+</div>
+
+<!-- WIN OVERLAY -->
+<div class="overlay hidden" id="winOverlay">
+  <div class="overlay-panel">
+    <div class="overlay-title">🎉 כל הכבוד!</div>
+    <div class="overlay-sub">הפסוק הושלם בהצלחה</div>
+    <div class="overlay-verse" id="winVerse"></div>
+    <div class="overlay-sum" id="winSum"></div>
+    <div class="divider"></div>
+    <div class="overlay-stat" id="winTime"></div>
+    <button class="btn-main" onclick="restartGame()" style="margin-top:14px;">שחק שוב</button>
+  </div>
+</div>
+
+<script>
+// ====== DATA ======
+const VERSE = [
+  { word:'בְּרֵאשִׁית', gem:913 },
+  { word:'בָּרָא',       gem:203 },
+  { word:'אֱלֹהִים',    gem:86  },
+  { word:'אֵת',         gem:401 },
+  { word:'הַשָּׁמַיִם', gem:395 },
+  { word:'וְאֵת',       gem:407 },
+  { word:'הָאָרֶץ',     gem:296 },
+];
+const TOTAL_GEM = 2701;
+
+// ====== STATE ======
+let placed = 0;      // how many slots filled correctly
+let timerSec = 0;
+let timerInterval = null;
+let hintActive = false;
+let hintTimeout = null;
+let gameRunning = false;
+let shuffledOrder = []; // indices into VERSE of the tile order shown
+
+// ====== AUDIO ======
+let audioCtx = null;
+function getAudio(){
+  if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+  return audioCtx;
+}
+function playDing(){
+  try{
+    const ac = getAudio();
+    const o = ac.createOscillator();
+    const g = ac.createGain();
+    o.connect(g); g.connect(ac.destination);
+    o.type='sine'; o.frequency.setValueAtTime(880, ac.currentTime);
+    o.frequency.exponentialRampToValueAtTime(1320, ac.currentTime+.12);
+    g.gain.setValueAtTime(.35, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, ac.currentTime+.45);
+    o.start(ac.currentTime); o.stop(ac.currentTime+.5);
+  }catch(e){}
+}
+function playBuzz(){
+  try{
+    const ac = getAudio();
+    const o = ac.createOscillator();
+    const g = ac.createGain();
+    o.connect(g); g.connect(ac.destination);
+    o.type='sawtooth'; o.frequency.setValueAtTime(130, ac.currentTime);
+    o.frequency.exponentialRampToValueAtTime(80, ac.currentTime+.18);
+    g.gain.setValueAtTime(.3, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, ac.currentTime+.25);
+    o.start(ac.currentTime); o.stop(ac.currentTime+.3);
+  }catch(e){}
+}
+function playWin(){
+  try{
+    const ac = getAudio();
+    const notes=[523,659,784,1047];
+    notes.forEach((freq,i)=>{
+      const o=ac.createOscillator();
+      const g=ac.createGain();
+      o.connect(g); g.connect(ac.destination);
+      o.type='sine'; o.frequency.value=freq;
+      const t=ac.currentTime+i*.14;
+      g.gain.setValueAtTime(.001,t);
+      g.gain.linearRampToValueAtTime(.32,t+.06);
+      g.gain.exponentialRampToValueAtTime(.001,t+.5);
+      o.start(t); o.stop(t+.55);
+    });
+  }catch(e){}
+}
+
+// ====== TIMER ======
+function startTimer(){
+  timerSec=0; updateTimerDisplay();
+  if(timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(()=>{
+    timerSec++;
+    updateTimerDisplay();
+  },1000);
+}
+function stopTimer(){ if(timerInterval){clearInterval(timerInterval);timerInterval=null;} }
+function updateTimerDisplay(){
+  const m=Math.floor(timerSec/60).toString().padStart(2,'0');
+  const s=(timerSec%60).toString().padStart(2,'0');
+  document.getElementById('timer').textContent=m+':'+s;
+}
+
+// ====== BUILD DOM ======
+function buildSlots(){
+  const row=document.getElementById('slotsRow');
+  row.innerHTML='';
+  for(let i=0;i<7;i++){
+    const el=document.createElement('div');
+    el.className='slot';
+    el.id='slot-'+i;
+    // slot number label (RTL: slot 1 is rightmost = index 0)
+    const num=document.createElement('div');
+    num.className='slot-num';
+    num.textContent=(i+1)+'';
+    el.appendChild(num);
+    row.appendChild(el);
+  }
+}
+
+function buildTiles(){
+  const grid=document.getElementById('tilesGrid');
+  grid.innerHTML='';
+  // shuffle a copy of indices
+  shuffledOrder=[0,1,2,3,4,5,6];
+  for(let i=shuffledOrder.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [shuffledOrder[i],shuffledOrder[j]]=[shuffledOrder[j],shuffledOrder[i]];
+  }
+  shuffledOrder.forEach(idx=>{
+    const el=document.createElement('div');
+    el.className='tile';
+    el.id='tile-'+idx;
+    el.textContent=VERSE[idx].word;
+    el.dataset.idx=idx;
+    el.addEventListener('click',()=>onTileClick(idx));
+    el.addEventListener('touchend',(e)=>{e.preventDefault();onTileClick(idx);});
+    grid.appendChild(el);
+  });
+}
+
+// ====== GAME LOGIC ======
+function startGame(){
+  document.getElementById('introOverlay').classList.add('hidden');
+  document.getElementById('winOverlay').classList.add('hidden');
+  placed=0;
+  hintActive=false;
+  gameRunning=true;
+  clearHint();
+  buildSlots();
+  buildTiles();
+  updateProgress();
+  startTimer();
+}
+
+function restartGame(){
+  stopTimer();
+  startGame();
+}
+
+function onTileClick(idx){
+  if(!gameRunning) return;
+  const tile=document.getElementById('tile-'+idx);
+  if(!tile || tile.classList.contains('used')) return;
+
+  // is this the correct next word?
+  if(idx===placed){
+    // correct!
+    clearHint();
+    tile.classList.add('used');
+    fillSlot(placed, idx);
+    placed++;
+    updateProgress();
+    playDing();
+    if(placed===7){
+      // win!
+      gameRunning=false;
+      stopTimer();
+      playWin();
+      setTimeout(showWin, 600);
+    }
+  } else {
+    // wrong
+    playBuzz();
+    tile.classList.add('wrong-anim');
+    setTimeout(()=>tile.classList.remove('wrong-anim'),500);
+  }
+}
+
+function fillSlot(slotIdx, verseIdx){
+  const slot=document.getElementById('slot-'+slotIdx);
+  slot.innerHTML='';
+  const w=document.createElement('div');
+  w.className='slot-word';
+  w.textContent=VERSE[verseIdx].word;
+  const g=document.createElement('div');
+  g.className='slot-gem';
+  g.textContent=VERSE[verseIdx].gem;
+  const num=document.createElement('div');
+  num.className='slot-num';
+  num.textContent=(slotIdx+1)+'';
+  slot.appendChild(num);
+  slot.appendChild(w);
+  slot.appendChild(g);
+  slot.classList.add('filled');
+  // trigger glow animation
+  void slot.offsetWidth;
+  slot.classList.add('glow-correct');
+}
+
+function updateProgress(){
+  document.getElementById('progressFill').style.width=(placed/7*100)+'%';
+}
+
+// ====== HINT ======
+function toggleHint(){
+  if(!gameRunning) return;
+  const btn=document.getElementById('btnHint');
+  if(hintActive){
+    clearHint();
+    btn.classList.remove('active');
+  } else {
+    hintActive=true;
+    btn.classList.add('active');
+    showHint();
+    // auto-hide after 2.5s
+    if(hintTimeout) clearTimeout(hintTimeout);
+    hintTimeout=setTimeout(()=>{
+      clearHint();
+      btn.classList.remove('active');
+    },2500);
+  }
+}
+
+function showHint(){
+  if(placed>=7) return;
+  const tile=document.getElementById('tile-'+placed);
+  if(tile) tile.classList.add('hint-glow');
+}
+
+function clearHint(){
+  hintActive=false;
+  if(hintTimeout){clearTimeout(hintTimeout);hintTimeout=null;}
+  document.querySelectorAll('.tile.hint-glow').forEach(t=>t.classList.remove('hint-glow'));
+}
+
+// ====== WIN SCREEN ======
+function showWin(){
+  // build full verse display
+  const verseText = VERSE.map(v=>v.word).join(' ');
+  document.getElementById('winVerse').textContent = verseText;
+  document.getElementById('winSum').textContent = 'סכום הגימטריה = ' + TOTAL_GEM;
+  const m=Math.floor(timerSec/60).toString().padStart(2,'0');
+  const s=(timerSec%60).toString().padStart(2,'0');
+  document.getElementById('winTime').innerHTML = 'זמן השלמה: <b>'+m+':'+s+'</b>';
+  document.getElementById('winOverlay').classList.remove('hidden');
+}
+
+// ====== INIT ======
+// Show intro on load — game starts when user clicks start
+// (overlays are already shown/hidden by default HTML state)
+</script>
+</body>
+</html>

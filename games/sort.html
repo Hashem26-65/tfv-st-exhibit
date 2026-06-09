@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>סדר עולה · The First Verse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#120a10; --bg2:#1c0f17; --ink:#f4e9d8; --ink-dim:#c9b79c; --muted:#9a8772;
+  --gold:#d8b46a; --gold-soft:#b9924a; --burgundy:#5c1530; --burgundy2:#7a1c3f;
+  --green:#7bd88f; --red:#e8736b; --line:rgba(216,180,106,.22); --glow:rgba(216,180,106,.45);
+  --mono:"Roboto Mono",ui-monospace,monospace; --serif:"Frank Ruhl Libre",serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:var(--serif); color:var(--ink); direction:rtl;
+  background:
+    radial-gradient(1200px 700px at 50% -10%, rgba(122,28,63,.4), transparent 60%),
+    radial-gradient(1200px 700px at 50% 115%, rgba(122,28,63,.35), transparent 60%),
+    var(--bg);
+  -webkit-font-smoothing:antialiased; user-select:none; -webkit-user-select:none;
+  display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+}
+
+/* ===== HUD ===== */
+.hud{
+  position:fixed; top:0; left:0; right:0; z-index:30;
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+  padding:10px 16px;
+  background:linear-gradient(to bottom, rgba(18,10,16,.95), rgba(18,10,16,0));
+}
+.hud .stat{ display:flex; align-items:center; gap:6px; font-family:var(--mono); font-size:13px; color:var(--ink-dim);}
+.hud .stat b{ color:var(--gold); font-size:16px; }
+.hud-title{ font-family:var(--serif); color:var(--gold); font-weight:700; font-size:17px; letter-spacing:.02em;}
+.btn-restart{
+  background:none; border:1px solid var(--line); color:var(--ink-dim);
+  font-family:var(--serif); font-size:12px; border-radius:999px; padding:5px 12px;
+  cursor:pointer; transition:.2s; white-space:nowrap;
+}
+.btn-restart:hover{ border-color:var(--gold-soft); color:var(--gold);}
+
+/* ===== OVERLAYS ===== */
+.overlay{
+  position:fixed; inset:0; z-index:50;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  background:rgba(18,10,16,.92); backdrop-filter:blur(6px);
+  padding:24px; text-align:center;
+  transition:opacity .35s;
+}
+.overlay.hidden{ opacity:0; pointer-events:none; }
+
+.ov-title{
+  font-family:var(--serif); font-size:clamp(26px,6vw,42px); font-weight:900;
+  color:var(--gold); line-height:1.15; margin-bottom:10px;
+}
+.ov-subtitle{
+  font-family:var(--serif); font-size:clamp(14px,3vw,20px); color:var(--ink-dim);
+  margin-bottom:22px; line-height:1.6; max-width:480px;
+}
+.ov-how{
+  font-family:var(--serif); font-size:clamp(13px,2.5vw,17px); color:var(--ink);
+  background:rgba(92,21,48,.35); border:1px solid var(--line);
+  border-radius:14px; padding:16px 22px; margin-bottom:24px;
+  max-width:500px; line-height:1.75; text-align:right;
+}
+.ov-how li{ margin-bottom:4px; }
+.ov-how ul{ padding-right:18px; }
+
+.btn-primary{
+  font-family:var(--serif); font-size:clamp(16px,3.5vw,22px); font-weight:700;
+  background:linear-gradient(135deg, var(--gold-soft), var(--gold));
+  color:var(--bg); border:none; border-radius:999px;
+  padding:13px 42px; cursor:pointer; letter-spacing:.04em;
+  box-shadow:0 0 24px rgba(216,180,106,.4);
+  transition:transform .15s, box-shadow .15s;
+}
+.btn-primary:hover{ transform:scale(1.04); box-shadow:0 0 36px rgba(216,180,106,.55);}
+.btn-primary:active{ transform:scale(.97);}
+
+.win-stats{
+  display:flex; gap:32px; margin:18px 0 22px;
+  font-family:var(--mono); font-size:clamp(14px,3vw,18px);
+}
+.win-stat{ display:flex; flex-direction:column; align-items:center; gap:4px;}
+.win-stat span:first-child{ color:var(--ink-dim); font-size:.8em;}
+.win-stat span:last-child{ color:var(--gold); font-size:1.5em; font-weight:700;}
+
+.verse-ref{
+  font-family:var(--serif); font-size:clamp(12px,2.5vw,15px); color:var(--muted);
+  margin-top:14px; direction:rtl;
+}
+
+/* ===== GAME AREA ===== */
+.game-area{
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  flex:1; width:100%; padding:70px 16px 60px;
+  min-height:0;
+}
+
+.direction-hint{
+  font-family:var(--mono); font-size:clamp(11px,2.2vw,14px); color:var(--muted);
+  margin-bottom:18px; letter-spacing:.05em; text-align:center;
+  display:flex; align-items:center; gap:8px; direction:ltr;
+}
+.direction-hint span{ color:var(--gold-soft);}
+
+/* ===== TILES CONTAINER ===== */
+.tiles-wrap{
+  display:flex; flex-direction:row; flex-wrap:wrap;
+  justify-content:center; align-items:center;
+  gap:10px; width:100%; max-width:820px;
+  direction:ltr; /* positions 0→6 are left→right = ascending */
+}
+
+/* Each slot */
+.slot{
+  flex:0 0 auto;
+  width:clamp(88px,12vw,116px);
+  position:relative;
+}
+.slot-idx{
+  text-align:center; font-family:var(--mono); font-size:10px;
+  color:var(--muted); margin-bottom:4px; letter-spacing:.03em;
+}
+
+/* ===== TILE ===== */
+.tile{
+  width:100%; aspect-ratio:3/4;
+  background:linear-gradient(160deg, rgba(92,21,48,.65), rgba(28,15,23,.9));
+  border:1.5px solid var(--line);
+  border-radius:14px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:6px; cursor:pointer;
+  transition:transform .18s cubic-bezier(.34,1.56,.64,1),
+             border-color .18s, box-shadow .18s,
+             background .18s;
+  position:relative; overflow:hidden;
+}
+.tile::before{
+  content:''; position:absolute; inset:0; border-radius:14px;
+  background:radial-gradient(60% 50% at 50% 30%, rgba(216,180,106,.08), transparent);
+  pointer-events:none;
+}
+.tile:hover{ border-color:var(--gold-soft); transform:translateY(-3px); box-shadow:0 6px 22px rgba(216,180,106,.2);}
+
+.tile.selected{
+  border-color:var(--gold); background:linear-gradient(160deg, rgba(92,21,48,.9), rgba(216,180,106,.15));
+  box-shadow:0 0 0 3px rgba(216,180,106,.35), 0 8px 28px rgba(216,180,106,.3);
+  transform:translateY(-6px) scale(1.04);
+}
+.tile.correct{
+  border-color:var(--green); box-shadow:0 0 18px rgba(123,216,143,.4);
+  background:linear-gradient(160deg, rgba(21,92,48,.65), rgba(28,15,23,.9));
+}
+.tile.wrong{
+  border-color:var(--red); box-shadow:0 0 18px rgba(232,115,107,.35);
+  animation:shake .35s ease;
+}
+.tile.swap-anim{
+  animation:swapPop .28s cubic-bezier(.34,1.56,.64,1);
+}
+
+@keyframes shake{
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-5px)}
+  40%{transform:translateX(5px)}
+  60%{transform:translateX(-4px)}
+  80%{transform:translateX(4px)}
+}
+@keyframes swapPop{
+  0%{transform:scale(1)}
+  50%{transform:scale(1.12)}
+  100%{transform:scale(1)}
+}
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(14px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@keyframes sparkle{
+  0%,100%{opacity:0} 50%{opacity:1}
+}
+
+.tile-word{
+  font-family:var(--serif); font-size:clamp(18px,4vw,28px); font-weight:700;
+  color:var(--ink); line-height:1; text-align:center;
+  direction:rtl;
+}
+.tile-val{
+  font-family:var(--mono); font-size:clamp(11px,2.3vw,15px); font-weight:500;
+  color:var(--gold-soft); letter-spacing:.03em;
+}
+.tile-pos-tag{
+  position:absolute; top:5px; left:6px;
+  font-family:var(--mono); font-size:9px; color:var(--muted); opacity:.7;
+}
+
+/* arrow row */
+.arrow-row{
+  display:flex; align-items:center; justify-content:center;
+  gap:0; margin:14px 0 0; direction:ltr;
+  color:var(--muted); font-size:clamp(10px,2vw,13px);
+  font-family:var(--mono); letter-spacing:.04em;
+}
+.arrow-row .ar-label{ color:var(--gold-soft);}
+.arrow-row .ar-arrow{ margin:0 4px; opacity:.5;}
+
+/* ===== CHECK BUTTON ===== */
+.check-wrap{
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+  margin-top:22px;
+}
+.btn-check{
+  font-family:var(--serif); font-size:clamp(15px,3vw,20px); font-weight:700;
+  background:linear-gradient(135deg, var(--burgundy), var(--burgundy2));
+  color:var(--ink); border:1.5px solid var(--gold-soft);
+  border-radius:999px; padding:11px 44px; cursor:pointer;
+  box-shadow:0 0 18px rgba(92,21,48,.5);
+  transition:transform .15s, box-shadow .15s, border-color .15s;
+  letter-spacing:.05em;
+}
+.btn-check:hover{ transform:scale(1.04); border-color:var(--gold); box-shadow:0 0 28px rgba(216,180,106,.3);}
+.btn-check:active{ transform:scale(.97);}
+
+.check-feedback{
+  font-family:var(--mono); font-size:clamp(12px,2.5vw,15px);
+  color:var(--ink-dim); min-height:20px; text-align:center;
+  letter-spacing:.03em;
+}
+
+/* ===== FOOTER ===== */
+.footer{
+  position:fixed; bottom:0; left:0; right:0; z-index:20;
+  text-align:center; padding:8px;
+  font-family:var(--mono); font-size:11px; color:var(--muted);
+  background:linear-gradient(to top, rgba(18,10,16,.85), transparent);
+  letter-spacing:.04em;
+}
+
+/* ===== PARTICLE CANVAS ===== */
+#particles{
+  position:fixed; inset:0; pointer-events:none; z-index:5;
+}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:480px){
+  .tiles-wrap{ gap:7px; }
+  .slot{ width:clamp(72px,20vw,96px); }
+  .win-stats{ gap:20px; }
+  .ov-how{ padding:12px 14px; }
+}
+@media(max-width:360px){
+  .slot{ width:clamp(64px,22vw,82px); }
+  .tile-word{ font-size:16px; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+
+<!-- HUD -->
+<div class="hud">
+  <div class="stat">מהלכים <b id="hud-moves">0</b></div>
+  <div class="hud-title">סדר עולה</div>
+  <button class="btn-restart" id="btn-restart" onclick="restartGame()">⟲ מחדש</button>
+</div>
+
+<!-- INTRO OVERLAY -->
+<div class="overlay" id="overlay-intro">
+  <div class="ov-title">סדר עולה</div>
+  <div class="ov-subtitle">שבע מילות בראשית · לפי ערך הגימטריה</div>
+  <div class="ov-how">
+    <ul>
+      <li>לחץ על קלף — הוא ייבחר (מסומן בזהב)</li>
+      <li>לחץ על קלף שני — השניים יתחלפו</li>
+      <li>סדר את שבע המילים מהקטן לגדול: <strong style="color:var(--gold)">◂ 86 עד 913 ▸</strong></li>
+      <li>לחץ <strong style="color:var(--gold)">בדוק</strong> לבדוק את הסדר</li>
+    </ul>
+  </div>
+  <button class="btn-primary" onclick="startGame()">התחל!</button>
+  <div class="verse-ref" style="margin-top:20px">בְּרֵאשִׁית בָּרָא אֱלֹהִים אֵת הַשָּׁמַיִם וְאֵת הָאָרֶץ</div>
+</div>
+
+<!-- WIN OVERLAY -->
+<div class="overlay hidden" id="overlay-win">
+  <div class="ov-title" style="font-size:clamp(20px,5vw,34px)">🎉 יפה מאוד!</div>
+  <div class="ov-subtitle">סידרת את מילות הפסוק בסדר גימטריה עולה!</div>
+  <div class="win-stats">
+    <div class="win-stat">
+      <span>מהלכים</span>
+      <span id="win-moves">0</span>
+    </div>
+    <div class="win-stat">
+      <span>זמן</span>
+      <span id="win-time">0:00</span>
+    </div>
+  </div>
+  <div class="ov-how" style="font-size:clamp(12px,2.2vw,15px); direction:ltr; text-align:center; padding:12px 18px;">
+    <span style="color:var(--muted)">86</span>
+    <span style="color:var(--ink-dim)"> → </span>
+    <span style="color:var(--ink-dim)">203</span>
+    <span style="color:var(--ink-dim)"> → </span>
+    <span style="color:var(--ink-dim)">296</span>
+    <span style="color:var(--ink-dim)"> → </span>
+    <span style="color:var(--ink-dim)">395</span>
+    <span style="color:var(--ink-dim)"> → </span>
+    <span style="color:var(--ink-dim)">401</span>
+    <span style="color:var(--ink-dim)"> → </span>
+    <span style="color:var(--ink-dim)">407</span>
+    <span style="color:var(--ink-dim)"> → </span>
+    <span style="color:var(--gold)">913</span>
+  </div>
+  <button class="btn-primary" onclick="restartGame()">שחק שוב</button>
+  <div class="verse-ref">בְּרֵאשִׁית בָּרָא אֱלֹהִים אֵת הַשָּׁמַיִם וְאֵת הָאָרֶץ</div>
+</div>
+
+<!-- GAME AREA -->
+<div class="game-area" id="game-area">
+  <div class="direction-hint">
+    <span>קטן</span>
+    <span class="ar-arrow">◂——————▸</span>
+    <span>גדול</span>
+  </div>
+
+  <div class="tiles-wrap" id="tiles-wrap">
+    <!-- tiles injected by JS -->
+  </div>
+
+  <div class="check-wrap">
+    <button class="btn-check" id="btn-check" onclick="checkOrder()">בדוק</button>
+    <div class="check-feedback" id="check-feedback"></div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">The First Verse · סדר עולה</div>
+
+<script>
+/* ===== DATA ===== */
+/* Positions 0–6 are left-to-right (LTR direction on container).
+   Winning order (ascending gematria): indices 0,1,2,3,4,5,6 must hold
+   values 86,203,296,395,401,407,913 respectively.
+   The container uses direction:ltr so slot 0 = leftmost = smallest. */
+
+const WORDS = [
+  { word: 'אֱלֹהִים', val: 86  },
+  { word: 'בָּרָא',    val: 203 },
+  { word: 'הָאָרֶץ',  val: 296 },
+  { word: 'הַשָּׁמַיִם', val: 395 },
+  { word: 'אֵת',      val: 401 },
+  { word: 'וְאֵת',    val: 407 },
+  { word: 'בְּרֵאשִׁית', val: 913 },
+];
+/* WORDS[i].val is strictly ascending — this IS the winning order */
+
+/* ===== STATE ===== */
+let order = [];          // order[slotIndex] = wordIndex
+let selected = -1;       // slot index of selected tile (-1 = none)
+let moves = 0;
+let startTime = null;
+let timerInterval = null;
+let gameActive = false;
+
+/* ===== AUDIO ===== */
+let audioCtx = null;
+function getCtx(){
+  if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+  return audioCtx;
+}
+function beep(freq, type, dur, vol, startDelay){
+  try{
+    const ctx = getCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = type||'sine'; osc.frequency.value = freq||440;
+    const t = ctx.currentTime + (startDelay||0);
+    gain.gain.setValueAtTime(0,t);
+    gain.gain.linearRampToValueAtTime(vol||0.18, t+0.015);
+    gain.gain.exponentialRampToValueAtTime(0.001, t+(dur||0.18));
+    osc.start(t); osc.stop(t+(dur||0.18)+0.01);
+  }catch(e){}
+}
+function sfxSelect(){ beep(660,'sine',.12,.15); }
+function sfxSwap(){ beep(520,'triangle',.1,.12); beep(680,'triangle',.1,.12,.08); }
+function sfxWrong(){ beep(220,'sawtooth',.18,.12); }
+function sfxCorrect(){ beep(660,'sine',.1,.15); beep(880,'sine',.15,.15,.1); }
+function sfxWin(){
+  const notes=[523,659,784,1047];
+  notes.forEach((n,i)=>beep(n,'sine',.22,.18,i*0.11));
+}
+
+/* ===== PARTICLES ===== */
+const canvas = document.getElementById('particles');
+const pCtx = canvas.getContext('2d');
+let particles = [];
+function resizeCanvas(){
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+function spawnParticles(x,y,color,n){
+  for(let i=0;i<n;i++){
+    const angle = Math.random()*Math.PI*2;
+    const speed = 1.5+Math.random()*3;
+    particles.push({
+      x,y,vx:Math.cos(angle)*speed, vy:Math.sin(angle)*speed-2,
+      alpha:1, color, size:2+Math.random()*3, life:0.85+Math.random()*.3
+    });
+  }
+}
+function animParticles(){
+  pCtx.clearRect(0,0,canvas.width,canvas.height);
+  particles = particles.filter(p=>p.alpha>0.01);
+  particles.forEach(p=>{
+    p.x+=p.vx; p.y+=p.vy; p.vy+=0.06; p.vx*=0.98;
+    p.alpha-=0.022/p.life;
+    pCtx.globalAlpha=p.alpha;
+    pCtx.fillStyle=p.color;
+    pCtx.beginPath();
+    pCtx.arc(p.x,p.y,p.size,0,Math.PI*2);
+    pCtx.fill();
+  });
+  pCtx.globalAlpha=1;
+  requestAnimationFrame(animParticles);
+}
+animParticles();
+
+/* ===== TIMER ===== */
+function formatTime(ms){
+  const s = Math.floor(ms/1000);
+  return Math.floor(s/60)+':'+(s%60<10?'0':'')+(s%60);
+}
+function startTimer(){
+  startTime = Date.now();
+  timerInterval = setInterval(()=>{
+    const el = document.getElementById('hud-moves'); // reuse hud or a timer el if needed
+  },500);
+}
+function stopTimer(){ clearInterval(timerInterval); }
+
+/* ===== SHUFFLE ===== */
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+/* Make sure the shuffle isn't already solved */
+function shuffleNotSolved(){
+  let arr;
+  do{ arr = shuffle([0,1,2,3,4,5,6]); }
+  while(isSolved(arr));
+  return arr;
+}
+
+/* ===== WIN CHECK ===== */
+/* order[slotIndex]=wordIndex; slot 0 is leftmost (smallest).
+   Win: WORDS[order[0]].val < WORDS[order[1]].val < ... strictly ascending */
+function isSolved(ord){
+  for(let i=0;i<ord.length-1;i++){
+    if(WORDS[ord[i]].val >= WORDS[ord[i+1]].val) return false;
+  }
+  return true;
+}
+
+/* ===== RENDER ===== */
+function render(){
+  const wrap = document.getElementById('tiles-wrap');
+  wrap.innerHTML='';
+  order.forEach((wordIdx,slotIdx)=>{
+    const w = WORDS[wordIdx];
+    const slot = document.createElement('div');
+    slot.className='slot';
+    slot.innerHTML=`
+      <div class="slot-idx">${slotIdx+1}</div>
+      <div class="tile" id="tile-${slotIdx}" data-slot="${slotIdx}">
+        <div class="tile-word">${w.word}</div>
+        <div class="tile-val">${w.val}</div>
+      </div>
+    `;
+    wrap.appendChild(slot);
+  });
+  /* attach events */
+  document.querySelectorAll('.tile').forEach(t=>{
+    t.addEventListener('click', onTileClick);
+    t.addEventListener('touchend', e=>{e.preventDefault(); onTileClick(e);}, {passive:false});
+  });
+  applySelectedStyle();
+}
+
+function applySelectedStyle(){
+  document.querySelectorAll('.tile').forEach(t=>{
+    const s = parseInt(t.dataset.slot);
+    t.classList.toggle('selected', s===selected);
+  });
+}
+
+/* ===== TILE CLICK ===== */
+function onTileClick(e){
+  if(!gameActive) return;
+  const tile = e.currentTarget;
+  const slotIdx = parseInt(tile.dataset.slot);
+
+  if(selected === -1){
+    /* select this tile */
+    selected = slotIdx;
+    sfxSelect();
+    applySelectedStyle();
+    return;
+  }
+  if(selected === slotIdx){
+    /* deselect */
+    selected = -1;
+    sfxSelect();
+    applySelectedStyle();
+    return;
+  }
+  /* swap */
+  const a = selected, b = slotIdx;
+  selected = -1;
+  swapSlots(a, b);
+}
+
+function swapSlots(a,b){
+  [order[a], order[b]] = [order[b], order[a]];
+  moves++;
+  document.getElementById('hud-moves').textContent = moves;
+  sfxSwap();
+  render();
+
+  /* flash swap animation briefly */
+  const tA = document.getElementById(`tile-${a}`);
+  const tB = document.getElementById(`tile-${b}`);
+  if(tA){ tA.classList.add('swap-anim'); setTimeout(()=>tA.classList.remove('swap-anim'),300); }
+  if(tB){ tB.classList.add('swap-anim'); setTimeout(()=>tB.classList.remove('swap-anim'),300); }
+
+  /* clear feedback on move */
+  document.getElementById('check-feedback').textContent='';
+
+  /* get tile positions for particles */
+  if(tA){
+    const r=tA.getBoundingClientRect();
+    spawnParticles(r.left+r.width/2, r.top+r.height/2, 'rgba(216,180,106,.9)', 7);
+  }
+  if(tB){
+    const r=tB.getBoundingClientRect();
+    spawnParticles(r.left+r.width/2, r.top+r.height/2, 'rgba(216,180,106,.9)', 7);
+  }
+}
+
+/* ===== CHECK ===== */
+function checkOrder(){
+  if(!gameActive) return;
+  const fb = document.getElementById('check-feedback');
+
+  /* Mark each tile correct/wrong */
+  let correctCount = 0;
+  order.forEach((wordIdx,slotIdx)=>{
+    const tile = document.getElementById(`tile-${slotIdx}`);
+    if(!tile) return;
+    tile.classList.remove('correct','wrong');
+    /* A tile is "correctly placed" if it's in the right relative order:
+       WORDS[order[slotIdx]].val === WORDS[slotIdx].val
+       (because WORDS is already in ascending order, slot i should hold word i) */
+    if(WORDS[wordIdx].val === WORDS[slotIdx].val){
+      tile.classList.add('correct');
+      correctCount++;
+    } else {
+      tile.classList.add('wrong');
+    }
+  });
+
+  if(correctCount===7){
+    sfxWin();
+    triggerWin();
+    return;
+  }
+
+  if(correctCount>=5){
+    sfxCorrect();
+    fb.textContent = `${correctCount}/7 במקום הנכון — קרוב מאוד!`;
+    fb.style.color='var(--green)';
+  } else if(correctCount>=3){
+    sfxCorrect();
+    fb.textContent = `${correctCount}/7 במקום הנכון — כמעט!`;
+    fb.style.color='var(--gold)';
+  } else {
+    sfxWrong();
+    fb.textContent = `${correctCount}/7 במקום הנכון — נסה שוב`;
+    fb.style.color='var(--red)';
+  }
+
+  /* remove wrong class after animation */
+  setTimeout(()=>{
+    document.querySelectorAll('.tile.wrong').forEach(t=>t.classList.remove('wrong'));
+  },600);
+}
+
+/* ===== WIN ===== */
+function triggerWin(){
+  gameActive = false;
+  stopTimer();
+  const elapsed = Date.now() - startTime;
+
+  document.getElementById('win-moves').textContent = moves;
+  document.getElementById('win-time').textContent = formatTime(elapsed);
+
+  /* big particle burst from center */
+  const cx=window.innerWidth/2, cy=window.innerHeight/2;
+  for(let i=0;i<60;i++){
+    setTimeout(()=>{
+      spawnParticles(cx+(Math.random()-.5)*200, cy+(Math.random()-.5)*120,
+        i%3===0?'rgba(216,180,106,.9)':i%3===1?'rgba(123,216,143,.9)':'rgba(244,233,216,.8)', 3);
+    },i*30);
+  }
+
+  setTimeout(()=>{
+    document.getElementById('overlay-win').classList.remove('hidden');
+  }, 400);
+}
+
+/* ===== START / RESTART ===== */
+function startGame(){
+  document.getElementById('overlay-intro').classList.add('hidden');
+  document.getElementById('overlay-win').classList.add('hidden');
+  order = shuffleNotSolved();
+  selected = -1;
+  moves = 0;
+  document.getElementById('hud-moves').textContent='0';
+  document.getElementById('check-feedback').textContent='';
+  gameActive = true;
+  render();
+  startTimer();
+}
+
+function restartGame(){
+  stopTimer();
+  document.getElementById('overlay-win').classList.add('hidden');
+  document.getElementById('overlay-intro').classList.add('hidden');
+  order = shuffleNotSolved();
+  selected = -1;
+  moves = 0;
+  document.getElementById('hud-moves').textContent='0';
+  document.getElementById('check-feedback').textContent='';
+  gameActive = true;
+  render();
+  startTimer();
+}
+
+/* ===== INIT ===== */
+/* Intro overlay visible by default — game starts on button click */
+document.getElementById('overlay-intro').classList.remove('hidden');
+</script>
+</body>
+</html>

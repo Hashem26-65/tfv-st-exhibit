@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>משחקי הפסוק הראשון · The First Verse</title>
+<meta name="description" content="אוסף משחקים אינטראקטיביים על הפסוק הראשון בתורה והגימטריה.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#120a10; --bg2:#1c0f17; --panel:#1a1016; --ink:#f4e9d8; --ink-dim:#c9b79c; --muted:#9a8772;
+  --gold:#d8b46a; --gold-soft:#b9924a; --burgundy:#5c1530; --burgundy2:#7a1c3f;
+  --line:rgba(216,180,106,.22); --glow:rgba(216,180,106,.4);
+  --mono:"Roboto Mono",monospace; --serif:"Frank Ruhl Libre",serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:var(--serif); color:var(--ink); direction:rtl; min-height:100vh;
+  background:
+    radial-gradient(1200px 700px at 50% -10%, rgba(122,28,63,.4), transparent 60%),
+    radial-gradient(1000px 600px at 50% 115%, rgba(216,180,106,.08), transparent 55%),
+    var(--bg);
+  -webkit-font-smoothing:antialiased; padding:0 18px 60px;
+}
+.head{ text-align:center; padding:46px 12px 26px; }
+.brand{ display:inline-flex; flex-direction:column; align-items:center; gap:12px; text-decoration:none; }
+.brand img{ width:84px; height:84px; filter:drop-shadow(0 0 18px rgba(216,180,106,.5)); }
+.sitename{ color:var(--gold); font-weight:700; font-size:clamp(15px,3.4vw,19px); letter-spacing:.06em; }
+.title{ font-size:clamp(30px,7vw,52px); font-weight:900; color:var(--ink); margin-top:18px;
+  text-shadow:0 0 30px rgba(216,180,106,.18); }
+.subtitle{ color:var(--ink-dim); font-size:clamp(15px,2.4vw,19px); margin-top:10px; line-height:1.7; }
+.verse{ color:var(--gold); font-size:clamp(16px,3vw,22px); margin-top:14px; opacity:.85; letter-spacing:.02em; }
+
+.grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(230px,1fr)); gap:18px;
+  max-width:1080px; margin:30px auto 0; }
+.card{
+  display:flex; flex-direction:column; gap:8px; text-decoration:none; color:inherit;
+  background:linear-gradient(180deg, rgba(122,28,63,.2), rgba(26,16,22,.7));
+  border:1px solid var(--line); border-radius:18px; padding:22px 20px;
+  transition:transform .2s, box-shadow .2s, border-color .2s; position:relative; overflow:hidden;
+}
+.card::after{ content:"שׂחק ←"; position:absolute; bottom:14px; left:20px; color:var(--gold-soft);
+  font-size:13px; font-family:var(--mono); opacity:.6; transition:.2s; }
+.card:hover{ transform:translateY(-5px); border-color:var(--gold-soft);
+  box-shadow:0 14px 32px rgba(0,0,0,.5), 0 0 22px var(--glow); }
+.card:hover::after{ opacity:1; color:var(--gold); }
+.ico{ font-size:42px; line-height:1; filter:drop-shadow(0 2px 6px rgba(0,0,0,.4)); }
+.card h3{ font-size:21px; color:var(--gold); font-weight:700; margin-top:4px; }
+.card p{ color:var(--ink-dim); font-size:14.5px; line-height:1.55; padding-bottom:22px; }
+.tag{ position:absolute; top:12px; left:14px; font-family:var(--mono); font-size:10px; letter-spacing:.1em;
+  color:var(--muted); border:1px solid var(--line); border-radius:999px; padding:2px 8px; }
+
+.foot{ text-align:center; color:var(--muted); font-size:13px; margin-top:44px; }
+.foot a{ color:var(--gold-soft); text-decoration:none; }
+.foot a:hover{ color:var(--gold); }
+</style>
+</head>
+<body>
+
+<header class="head">
+  <a class="brand" href="https://thefirstverse.com" target="_blank" rel="noopener">
+    <img src="../assets/logo.svg" alt="The First Verse">
+    <span class="sitename">אֲתַר הַפָּסוּק הָרִאשׁוֹן</span>
+  </a>
+  <h1 class="title">מִשְׂחֲקֵי הַפָּסוּק הָרִאשׁוֹן</h1>
+  <p class="subtitle">למדו תוך כדי משחק — שבע המילים, הגימטריות, 2701 ו־82.</p>
+  <div class="verse">בְּרֵאשִׁית בָּרָא אֱלֹהִים אֵת הַשָּׁמַיִם וְאֵת הָאָרֶץ</div>
+</header>
+
+<main class="grid" id="grid"></main>
+
+<p class="foot">The First Verse · <a href="https://thefirstverse.com" target="_blank" rel="noopener">thefirstverse.com</a> · <a href="../index.html">↩ למצגת</a></p>
+
+<script>
+var GAMES=[
+  {f:"gematria-range.html", i:"🎯", t:"מטווח הגימטריה", d:"טען מחסנית עם מילה — וירה בלוח עם הגימטריה הנכונה.", tag:"קליעה"},
+  {f:"torah-race.html",     i:"🏎️", t:"מרוץ הפסוקים",  d:"נהיגה גוף-ראשון: ענה נכון, הדלק ירוק, והאץ לעקוף.", tag:"מרוץ"},
+  {f:"helicopter.html",     i:"🚁", t:"מסוק הפסוקים",  d:"המסוק צולל — תשובה נכונה מעלה אותו עד לחילוץ.", tag:"הישרדות"},
+  {f:"defense.html",        i:"🛡️", t:"מגן הפסוקים",   d:"אויבים מתקרבים — ענה נכון בזמן כדי לעצור אותם.", tag:"הגנה"},
+  {f:"verse-builder.html",  i:"🧩", t:"בנה את הפסוק",   d:"סדר את שבע המילים לפי סדר הפסוק הנכון.", tag:"סדר"},
+  {f:"memory.html",         i:"🃏", t:"זיכרון גימטרי",  d:"הפוך קלפים והתאם כל מילה לערך הגימטרי שלה.", tag:"זיכרון"},
+  {f:"balloons.html",       i:"🎈", t:"בלוני הגימטריה", d:"פוצץ את הבלון עם הערך הנכון לפני שיברח.", tag:"מהירות"},
+  {f:"snake.html",          i:"🐍", t:"נחש הגימטריה",   d:"הובל את הנחש לאכול את הערך הנכון של המילה.", tag:"קלאסי"},
+  {f:"tower.html",          i:"🏗️", t:"מגדל האלפים",    d:"הרכב מגדל שמסתכם בדיוק ל־2701.", tag:"חשבון"},
+  {f:"match-pairs.html",    i:"🔗", t:"חבר זוגות",      d:"חבר כל מילה לערך הגימטרי שלה בקווים.", tag:"התאמה"},
+  {f:"sort.html",           i:"📊", t:"סדר עולה",       d:"סדר את המילים לפי ערך גימטרי מהקטן לגדול.", tag:"מיון"},
+  {f:"whack.html",          i:"🔨", t:"הכה את הערך",    d:"הכה את המספר הנכון שצץ מהחורים — מהר!", tag:"רפלקסים"},
+  {f:"catch.html",          i:"🧺", t:"תפוס את הנכון",  d:"הזז את הסל ותפוס את הערכים הנכונים שנופלים.", tag:"זריזות"},
+  {f:"quiz-blitz.html",     i:"⚡", t:"חידון בזק",      d:"נכון או לא נכון? ענה מהר על שאלות גימטריה.", tag:"חידון"}
+];
+var grid=document.getElementById("grid");
+GAMES.forEach(function(g){
+  var a=document.createElement("a"); a.className="card"; a.href=g.f;
+  a.innerHTML='<span class="tag">'+g.tag+'</span><span class="ico">'+g.i+'</span>'+
+    '<h3>'+g.t+'</h3><p>'+g.d+'</p>';
+  grid.appendChild(a);
+});
+</script>
+</body>
+</html>

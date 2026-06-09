@@ -1,0 +1,717 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>נחש הגימטריה · The First Verse</title>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#120a10;
+  --gold:#d8b46a;
+  --gold-soft:#b9924a;
+  --burgundy:#5c1530;
+  --ink:#f4e9d8;
+  --ink-dim:#b8a990;
+  --green:#3de08a;
+  --red:#ff4545;
+  --serif:"Frank Ruhl Libre",serif;
+  --mono:"Roboto Mono",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{
+  width:100%;height:100%;
+  overflow:hidden;
+  background:var(--bg);
+  font-family:var(--serif);
+  color:var(--ink);
+  direction:rtl;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ===== LAYOUT ===== */
+#app{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  height:100%;
+  padding:6px 0 0;
+  gap:4px;
+}
+
+/* HUD */
+#hud{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  width:100%;
+  max-width:520px;
+  padding:0 10px;
+  height:34px;
+  flex-shrink:0;
+}
+#word-display{
+  font-size:clamp(1.25rem,5vw,1.7rem);
+  font-weight:700;
+  color:var(--gold);
+  letter-spacing:.04em;
+  text-shadow:0 0 14px rgba(216,180,106,.45);
+}
+#score-box{
+  font-family:var(--mono);
+  font-size:.85rem;
+  color:var(--ink-dim);
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+#score-val{
+  font-size:1.1rem;
+  color:var(--gold);
+  font-weight:700;
+}
+#restart-btn{
+  background:none;
+  border:1px solid var(--gold-soft);
+  color:var(--gold-soft);
+  font-family:var(--serif);
+  font-size:.78rem;
+  padding:3px 8px;
+  border-radius:6px;
+  cursor:pointer;
+  transition:all .15s;
+  direction:rtl;
+}
+#restart-btn:hover{background:rgba(216,180,106,.12);}
+
+/* CANVAS */
+#canvas-wrap{
+  position:relative;
+  flex-shrink:0;
+}
+#gameCanvas{
+  display:block;
+  border:2px solid var(--gold-soft);
+  border-radius:6px;
+  box-shadow:0 0 28px rgba(216,180,106,.18),inset 0 0 40px rgba(0,0,0,.5);
+  background:#0e0710;
+}
+
+/* D-PAD */
+#dpad{
+  display:grid;
+  grid-template-areas:". up ." "left . right" ". down .";
+  grid-template-columns:52px 52px 52px;
+  grid-template-rows:52px 52px 52px;
+  gap:4px;
+  flex-shrink:0;
+  margin-top:4px;
+}
+.dp-btn{
+  background:rgba(216,180,106,.13);
+  border:1.5px solid var(--gold-soft);
+  border-radius:8px;
+  color:var(--gold);
+  font-size:1.3rem;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  touch-action:manipulation;
+  transition:background .1s;
+  -webkit-tap-highlight-color:transparent;
+}
+.dp-btn:active{background:rgba(216,180,106,.32);}
+#dp-up{grid-area:up}
+#dp-left{grid-area:left}
+#dp-right{grid-area:right}
+#dp-down{grid-area:down}
+
+/* FOOTER */
+#footer{
+  margin-top:auto;
+  padding:4px 0 6px;
+  font-size:.65rem;
+  color:var(--ink-dim);
+  opacity:.6;
+  letter-spacing:.04em;
+  flex-shrink:0;
+}
+
+/* ===== OVERLAYS ===== */
+.overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(18,10,16,.92);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:18px;
+  z-index:100;
+  padding:24px;
+  backdrop-filter:blur(4px);
+}
+.overlay.hidden{display:none;}
+.ov-title{
+  font-size:clamp(1.8rem,7vw,2.6rem);
+  font-weight:900;
+  color:var(--gold);
+  text-shadow:0 0 22px rgba(216,180,106,.5);
+  text-align:center;
+}
+.ov-sub{
+  font-size:clamp(.85rem,3.5vw,1.05rem);
+  color:var(--ink-dim);
+  text-align:center;
+  max-width:340px;
+  line-height:1.65;
+}
+.ov-score{
+  font-family:var(--mono);
+  font-size:clamp(1.4rem,6vw,2.2rem);
+  color:var(--gold);
+  font-weight:700;
+  text-align:center;
+}
+.ov-score span{font-size:.75em;color:var(--ink-dim);}
+.ov-btn{
+  background:var(--burgundy);
+  border:2px solid var(--gold-soft);
+  color:var(--gold);
+  font-family:var(--serif);
+  font-size:1.1rem;
+  font-weight:700;
+  padding:12px 36px;
+  border-radius:10px;
+  cursor:pointer;
+  transition:all .15s;
+  letter-spacing:.06em;
+  box-shadow:0 4px 18px rgba(0,0,0,.5);
+}
+.ov-btn:hover{background:#7a1f3e;box-shadow:0 4px 24px rgba(216,180,106,.22);}
+.ov-word-list{
+  font-family:var(--mono);
+  font-size:.82rem;
+  color:var(--ink-dim);
+  text-align:center;
+  line-height:1.8;
+  direction:rtl;
+}
+.ov-word-list b{color:var(--gold);}
+.snake-deco{
+  font-size:2.4rem;
+  animation:wriggle 1.2s ease-in-out infinite alternate;
+  display:inline-block;
+}
+@keyframes wriggle{
+  0%{transform:rotate(-12deg);}
+  100%{transform:rotate(12deg);}
+}
+/* flash overlay on wrong */
+#flash{
+  position:fixed;inset:0;pointer-events:none;z-index:90;
+  background:rgba(255,60,60,0);
+  transition:background .08s;
+}
+#flash.red{background:rgba(255,60,60,.35);}
+#flash.green{background:rgba(61,224,138,.22);}
+</style>
+</head>
+<body>
+
+<!-- FLASH -->
+<div id="flash"></div>
+
+<!-- INTRO OVERLAY -->
+<div class="overlay" id="introOverlay">
+  <div class="snake-deco">🐍</div>
+  <div class="ov-title">נחש הגימטריה</div>
+  <div class="ov-sub">
+    מילה מפסוק בראשית מוצגת מעל הלוח.<br>
+    הנחש חייב לאכול את <b style="color:var(--gold)">המספר הנכון</b> — ערך הגימטריה שלה.<br>
+    מספר שגוי, קיר, או גוף עצמך — <b style="color:var(--red)">משחק נגמר</b>.<br><br>
+    <span style="color:var(--ink-dim);font-size:.85em">
+      שליטה: חצים / WASD / לחצני מסך / החלקה
+    </span>
+  </div>
+  <button class="ov-btn" id="startBtn">▶ התחל</button>
+  <div class="ov-word-list">
+    <b>בְּרֵאשִׁית</b>=913 · <b>בָּרָא</b>=203 · <b>אֱלֹהִים</b>=86<br>
+    <b>אֵת</b>=401 · <b>הַשָּׁמַיִם</b>=395 · <b>וְאֵת</b>=407 · <b>הָאָרֶץ</b>=296
+  </div>
+</div>
+
+<!-- END OVERLAY -->
+<div class="overlay hidden" id="endOverlay">
+  <div class="snake-deco">🐍</div>
+  <div class="ov-title" id="endTitle">סוף משחק</div>
+  <div class="ov-score"><span>ניקוד: </span><span id="finalScore">0</span></div>
+  <div class="ov-sub" id="endMsg"></div>
+  <button class="ov-btn" id="playAgainBtn">⟲ שחק שוב</button>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div id="hud">
+    <div id="word-display">—</div>
+    <div id="score-box">
+      ניקוד: <span id="score-val">0</span>
+      <button id="restart-btn" onclick="restartGame()">⟲ מחדש</button>
+    </div>
+  </div>
+  <div id="canvas-wrap">
+    <canvas id="gameCanvas"></canvas>
+  </div>
+  <div id="dpad">
+    <button class="dp-btn" id="dp-up">▲</button>
+    <button class="dp-btn" id="dp-left">◀</button>
+    <button class="dp-btn" id="dp-right">▶</button>
+    <button class="dp-btn" id="dp-down">▼</button>
+  </div>
+  <div id="footer">The First Verse · נחש הגימטריה</div>
+</div>
+
+<script>
+"use strict";
+
+/* ===== DATA ===== */
+const WORDS = [
+  {word:"בְּרֵאשִׁית", val:913},
+  {word:"בָּרָא",       val:203},
+  {word:"אֱלֹהִים",    val:86 },
+  {word:"אֵת",          val:401},
+  {word:"הַשָּׁמַיִם", val:395},
+  {word:"וְאֵת",        val:407},
+  {word:"הָאָרֶץ",     val:296}
+];
+
+/* ===== LAYOUT ===== */
+const CELL = 26; // px per cell
+let COLS = 16, ROWS = 14;
+
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+function setupCanvas(){
+  // fit within viewport
+  const maxW = Math.min(window.innerWidth - 12, 520);
+  const maxH = window.innerHeight - 160; // leave room for HUD + dpad + footer
+  COLS = Math.floor(maxW / CELL);
+  ROWS = Math.floor(maxH / CELL);
+  if(COLS < 10) COLS = 10;
+  if(ROWS < 10) ROWS = 10;
+  canvas.width  = COLS * CELL;
+  canvas.height = ROWS * CELL;
+}
+setupCanvas();
+
+/* ===== AUDIO ===== */
+let audioCtx = null;
+function getAudio(){
+  if(!audioCtx){
+    try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); } catch(e){}
+  }
+  return audioCtx;
+}
+function playTone(freq, type, dur, vol, delay=0){
+  const ac = getAudio();
+  if(!ac) return;
+  const osc = ac.createOscillator();
+  const gain = ac.createGain();
+  osc.connect(gain);
+  gain.connect(ac.destination);
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, ac.currentTime + delay);
+  osc.frequency.exponentialRampToValueAtTime(freq*0.5, ac.currentTime + delay + dur*0.9);
+  gain.gain.setValueAtTime(0.001, ac.currentTime + delay);
+  gain.gain.exponentialRampToValueAtTime(vol, ac.currentTime + delay + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + delay + dur);
+  osc.start(ac.currentTime + delay);
+  osc.stop(ac.currentTime + delay + dur + 0.05);
+}
+function sfxEat(){
+  playTone(440,"sine",.12,.18);
+  playTone(660,"sine",.12,.14,.08);
+}
+function sfxDie(){
+  playTone(200,"sawtooth",.3,.22);
+  playTone(120,"sawtooth",.4,.18,.15);
+}
+function sfxWrong(){
+  playTone(160,"square",.25,.18);
+}
+
+/* ===== STATE ===== */
+let snake, dir, nextDir, tiles, targetWord, targetVal, score, gameRunning, gameLoop;
+let wordIdx = 0;
+
+function rnd(n){ return Math.floor(Math.random()*n); }
+
+function emptyCell(){
+  // find a cell not occupied by snake or tiles
+  let tries = 200;
+  while(tries-- > 0){
+    const c = {x:rnd(COLS), y:rnd(ROWS)};
+    if(snake.every(s=>s.x!==c.x||s.y!==c.y) &&
+       tiles.every(t=>t.x!==c.x||t.y!==c.y)) return c;
+  }
+  return {x:rnd(COLS),y:rnd(ROWS)};
+}
+
+function generateDistractors(correct){
+  const set = new Set([correct]);
+  const offsets = [
+    ...Array.from({length:6},(_,i)=>( (i+1)*7  )),
+    ...Array.from({length:6},(_,i)=>(-(i+1)*11 )),
+    ...Array.from({length:4},(_,i)=>( (i+1)*50 )),
+    ...Array.from({length:4},(_,i)=>(-(i+1)*37 ))
+  ];
+  // also add other word values as distractors
+  WORDS.forEach(w=>{ if(w.val!==correct) set.add(w.val); });
+  offsets.forEach(o=>{
+    const v = correct + o;
+    if(v>0) set.add(v);
+  });
+  const pool = [...set].filter(v=>v!==correct);
+  // shuffle
+  for(let i=pool.length-1;i>0;i--){
+    const j=rnd(i+1);[pool[i],pool[j]]=[pool[j],pool[i]];
+  }
+  return pool.slice(0,4);
+}
+
+const NUM_TILES = 5; // 1 correct + 4 wrong
+
+function spawnTiles(){
+  tiles = [];
+  const distractors = generateDistractors(targetVal);
+  // choose random position for correct tile (1..NUM_TILES-1)
+  const positions = [];
+  for(let i=0;i<NUM_TILES;i++) positions.push(emptyCell());
+  // place correct tile at random index
+  const correctIdx = rnd(NUM_TILES);
+  tiles.push({...positions[correctIdx], val:targetVal, correct:true});
+  let di = 0;
+  for(let i=0;i<NUM_TILES;i++){
+    if(i===correctIdx) continue;
+    tiles.push({...positions[i], val:distractors[di++], correct:false});
+  }
+}
+
+function pickWord(){
+  // cycle through all 7 words
+  const w = WORDS[wordIdx % WORDS.length];
+  wordIdx++;
+  targetWord = w.word;
+  targetVal  = w.val;
+}
+
+function initGame(){
+  snake = [
+    {x:Math.floor(COLS/2),   y:Math.floor(ROWS/2)},
+    {x:Math.floor(COLS/2)+1, y:Math.floor(ROWS/2)},
+    {x:Math.floor(COLS/2)+2, y:Math.floor(ROWS/2)}
+  ];
+  dir     = {x:-1, y:0}; // moving left (RTL feels natural)
+  nextDir = {x:-1, y:0};
+  tiles   = [];
+  score   = 0;
+  wordIdx = rnd(WORDS.length); // random start word
+  pickWord();
+  spawnTiles();
+  gameRunning = true;
+  document.getElementById("score-val").textContent = score;
+  document.getElementById("word-display").textContent = targetWord;
+}
+
+/* ===== DRAW ===== */
+const GOLD      = "#d8b46a";
+const GOLD_SOFT = "#b9924a";
+const BURGUNDY  = "#5c1530";
+const INK       = "#f4e9d8";
+const GREEN     = "#3de08a";
+const RED       = "#ff4545";
+const BG        = "#0e0710";
+const GRID_CLR  = "rgba(216,180,106,0.045)";
+
+function drawGrid(){
+  ctx.strokeStyle = GRID_CLR;
+  ctx.lineWidth = .5;
+  for(let x=0;x<=COLS;x++){
+    ctx.beginPath();
+    ctx.moveTo(x*CELL,0);
+    ctx.lineTo(x*CELL,ROWS*CELL);
+    ctx.stroke();
+  }
+  for(let y=0;y<=ROWS;y++){
+    ctx.beginPath();
+    ctx.moveTo(0,y*CELL);
+    ctx.lineTo(COLS*CELL,y*CELL);
+    ctx.stroke();
+  }
+}
+
+function drawSnake(){
+  snake.forEach((seg,i)=>{
+    const isHead = i===0;
+    const t = i/snake.length;
+    // color gradient: head=gold, tail=burgundy
+    const r1=[216,180,106], r2=[92,21,48];
+    const ri = r => Math.round(r1[r]*(1-t)+r2[r]*t);
+    ctx.fillStyle = `rgb(${ri(0)},${ri(1)},${ri(2)})`;
+    const pad = isHead ? 1 : 2;
+    const r = 4;
+    const x=seg.x*CELL+pad, y=seg.y*CELL+pad, w=CELL-pad*2, h=CELL-pad*2;
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+    ctx.fill();
+    // eyes on head
+    if(isHead){
+      ctx.fillStyle="#120a10";
+      const eyeR=2.2;
+      // position eyes based on direction
+      let ex1,ey1,ex2,ey2;
+      const cx=seg.x*CELL+CELL/2, cy=seg.y*CELL+CELL/2;
+      if(dir.x!==0){
+        ex1=cx+dir.x*5; ey1=cy-4;
+        ex2=cx+dir.x*5; ey2=cy+4;
+      } else {
+        ex1=cx-4; ey1=cy+dir.y*5;
+        ex2=cx+4; ey2=cy+dir.y*5;
+      }
+      ctx.beginPath(); ctx.arc(ex1,ey1,eyeR,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(ex2,ey2,eyeR,0,Math.PI*2); ctx.fill();
+    }
+  });
+}
+
+function drawTiles(){
+  tiles.forEach(t=>{
+    const x=t.x*CELL, y=t.y*CELL;
+    const pad=2, r=5;
+    const bx=x+pad, by=y+pad, bw=CELL-pad*2, bh=CELL-pad*2;
+    // bg
+    ctx.fillStyle = "rgba(92,21,48,0.75)";
+    ctx.beginPath();
+    ctx.moveTo(bx+r,by);
+    ctx.arcTo(bx+bw,by,bx+bw,by+bh,r);
+    ctx.arcTo(bx+bw,by+bh,bx,by+bh,r);
+    ctx.arcTo(bx,by+bh,bx,by,r);
+    ctx.arcTo(bx,by,bx+bw,by,r);
+    ctx.closePath();
+    ctx.fill();
+    // border glow
+    ctx.strokeStyle = GOLD_SOFT;
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+    // number text
+    const valStr = String(t.val);
+    const fontSize = valStr.length > 2 ? (CELL*0.32) : (CELL*0.38);
+    ctx.font = `bold ${fontSize}px "Roboto Mono",monospace`;
+    ctx.fillStyle = GOLD;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(valStr, x+CELL/2, y+CELL/2);
+  });
+}
+
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  // bg
+  ctx.fillStyle = BG;
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  drawGrid();
+  drawTiles();
+  drawSnake();
+}
+
+/* ===== STEP ===== */
+let lastStep = 0;
+let STEP_MS  = 150; // ms per step, decreases with score
+
+function step(ts){
+  if(!gameRunning) return;
+  gameLoop = requestAnimationFrame(step);
+  if(ts - lastStep < STEP_MS){ draw(); return; }
+  lastStep = ts;
+
+  dir = {...nextDir};
+  const head = {x:snake[0].x+dir.x, y:snake[0].y+dir.y};
+
+  // wall collision
+  if(head.x<0||head.x>=COLS||head.y<0||head.y>=ROWS){
+    endGame("פגעת בקיר!");
+    return;
+  }
+  // self collision (skip tail tip since it moves)
+  for(let i=0;i<snake.length-1;i++){
+    if(snake[i].x===head.x&&snake[i].y===head.y){
+      endGame("פגעת בעצמך!");
+      return;
+    }
+  }
+
+  // check tile
+  let ate = null;
+  for(let i=0;i<tiles.length;i++){
+    if(tiles[i].x===head.x&&tiles[i].y===head.y){
+      ate = tiles[i];
+      break;
+    }
+  }
+
+  snake.unshift(head);
+
+  if(ate){
+    if(ate.correct){
+      // grow (don't pop tail)
+      score++;
+      document.getElementById("score-val").textContent = score;
+      sfxEat();
+      flashScreen("green");
+      pickWord();
+      spawnTiles();
+      document.getElementById("word-display").textContent = targetWord;
+      // speed up slightly
+      STEP_MS = Math.max(80, 150 - score*7);
+    } else {
+      sfxWrong();
+      endGame("אכלת מספר שגוי!");
+      return;
+    }
+  } else {
+    snake.pop();
+  }
+
+  draw();
+}
+
+/* ===== FLASH ===== */
+function flashScreen(cls){
+  const el = document.getElementById("flash");
+  el.classList.add(cls);
+  setTimeout(()=>el.classList.remove(cls),200);
+}
+
+/* ===== END ===== */
+function endGame(reason){
+  gameRunning = false;
+  cancelAnimationFrame(gameLoop);
+  sfxDie();
+  flashScreen("red");
+  draw();
+  const finalScore = document.getElementById("finalScore");
+  const endMsg = document.getElementById("endMsg");
+  const endTitle = document.getElementById("endTitle");
+  finalScore.textContent = score;
+  endTitle.textContent   = "סוף משחק";
+  endMsg.textContent     = reason + " | ניקוד סופי: " + score;
+  document.getElementById("endOverlay").classList.remove("hidden");
+}
+
+/* ===== RESTART ===== */
+function restartGame(){
+  cancelAnimationFrame(gameLoop);
+  document.getElementById("endOverlay").classList.add("hidden");
+  document.getElementById("introOverlay").classList.add("hidden");
+  STEP_MS = 150;
+  setupCanvas();
+  initGame();
+  lastStep = 0;
+  gameLoop = requestAnimationFrame(step);
+}
+window.restartGame = restartGame;
+
+/* ===== CONTROLS ===== */
+const DIR_MAP = {
+  ArrowUp:   {x:0,y:-1}, ArrowDown: {x:0,y:1},
+  ArrowLeft: {x:-1,y:0}, ArrowRight:{x:1,y:0},
+  w:{x:0,y:-1}, s:{x:0,y:1}, a:{x:-1,y:0}, d:{x:1,y:0},
+  W:{x:0,y:-1}, S:{x:0,y:1}, A:{x:-1,y:0}, D:{x:1,y:0}
+};
+document.addEventListener("keydown",e=>{
+  const d = DIR_MAP[e.key];
+  if(!d) return;
+  e.preventDefault();
+  if(d.x === -dir.x && d.y === -dir.y) return; // no reverse
+  nextDir = d;
+  getAudio(); // resume audio context on first interaction
+});
+
+function setDir(nx,ny){
+  if(nx === -dir.x && ny === -dir.y) return;
+  nextDir = {x:nx,y:ny};
+  getAudio();
+}
+document.getElementById("dp-up"   ).addEventListener("touchstart",e=>{e.preventDefault();setDir(0,-1); },{passive:false});
+document.getElementById("dp-down" ).addEventListener("touchstart",e=>{e.preventDefault();setDir(0, 1); },{passive:false});
+document.getElementById("dp-left" ).addEventListener("touchstart",e=>{e.preventDefault();setDir(-1,0); },{passive:false});
+document.getElementById("dp-right").addEventListener("touchstart",e=>{e.preventDefault();setDir( 1,0); },{passive:false});
+document.getElementById("dp-up"   ).addEventListener("click",()=>setDir(0,-1));
+document.getElementById("dp-down" ).addEventListener("click",()=>setDir(0, 1));
+document.getElementById("dp-left" ).addEventListener("click",()=>setDir(-1,0));
+document.getElementById("dp-right").addEventListener("click",()=>setDir( 1,0));
+
+// swipe
+let touchX=0,touchY=0;
+canvas.addEventListener("touchstart",e=>{
+  touchX=e.touches[0].clientX;
+  touchY=e.touches[0].clientY;
+  getAudio();
+},{passive:true});
+canvas.addEventListener("touchend",e=>{
+  const dx=e.changedTouches[0].clientX-touchX;
+  const dy=e.changedTouches[0].clientY-touchY;
+  if(Math.abs(dx)<10&&Math.abs(dy)<10) return;
+  if(Math.abs(dx)>Math.abs(dy)){
+    setDir(dx>0?1:-1, 0);
+  } else {
+    setDir(0, dy>0?1:-1);
+  }
+},{passive:true});
+
+/* ===== START BUTTONS ===== */
+document.getElementById("startBtn").addEventListener("click",()=>{
+  getAudio();
+  restartGame();
+});
+document.getElementById("playAgainBtn").addEventListener("click",()=>{
+  getAudio();
+  restartGame();
+});
+
+/* ===== RESIZE ===== */
+window.addEventListener("resize",()=>{
+  if(!gameRunning) return;
+  setupCanvas();
+  draw();
+});
+
+/* ===== INITIAL DRAW ===== */
+setupCanvas();
+// draw a still board behind overlay
+snake=[{x:8,y:7},{x:9,y:7},{x:10,y:7},{x:11,y:7}];
+dir={x:-1,y:0}; nextDir={x:-1,y:0};
+tiles=[]; targetVal=913;
+STEP_MS=150;
+const demoTiles=[
+  {x:3,y:4,val:913,correct:true},
+  {x:12,y:3,val:203,correct:false},
+  {x:5,y:10,val:407,correct:false},
+  {x:14,y:8,val:86, correct:false},
+  {x:1,y:7,val:296,correct:false}
+];
+tiles=demoTiles;
+draw();
+gameRunning=false;
+</script>
+</body>
+</html>

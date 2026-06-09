@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>הכה את הערך – The First Verse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700;900&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #120a10;
+    --gold: #d8b46a;
+    --gold-soft: #b9924a;
+    --burgundy: #5c1530;
+    --ink: #f4e9d8;
+    --hole-bg: #1e0f1a;
+    --hole-border: #3a1828;
+    --mole-bg: #2a1420;
+    --correct: #4caf87;
+    --wrong: #c0392b;
+    --serif: 'Frank Ruhl Libre', serif;
+    --mono: 'Roboto Mono', monospace;
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--serif);
+    overflow: hidden;
+    touch-action: manipulation;
+  }
+
+  /* ── OVERLAYS ── */
+  .overlay {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: rgba(18,10,16,0.97);
+    z-index: 100;
+    padding: 20px;
+    text-align: center;
+  }
+  .overlay.hidden { display: none; }
+
+  .overlay-title {
+    font-size: clamp(1.8rem, 6vw, 3rem);
+    font-weight: 900;
+    color: var(--gold);
+    line-height: 1.2;
+    margin-bottom: 12px;
+    text-shadow: 0 0 20px rgba(216,180,106,0.4);
+  }
+  .overlay-sub {
+    font-size: clamp(0.85rem, 2.5vw, 1.1rem);
+    color: var(--ink);
+    opacity: 0.85;
+    max-width: 440px;
+    line-height: 1.7;
+    margin-bottom: 24px;
+  }
+  .overlay-sub b { color: var(--gold-soft); }
+  .overlay-verse {
+    font-size: clamp(1rem, 3vw, 1.25rem);
+    color: var(--gold-soft);
+    margin-bottom: 20px;
+    letter-spacing: 0.05em;
+  }
+
+  .btn {
+    background: linear-gradient(135deg, var(--burgundy), #8b2040);
+    color: var(--gold);
+    border: 2px solid var(--gold-soft);
+    border-radius: 10px;
+    padding: 14px 36px;
+    font-family: var(--serif);
+    font-size: clamp(1rem, 3vw, 1.2rem);
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.15s;
+    box-shadow: 0 4px 18px rgba(92,21,48,0.5);
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn:active { transform: scale(0.95); }
+  .btn:hover  { box-shadow: 0 6px 24px rgba(216,180,106,0.35); }
+
+  /* end overlay */
+  #end-overlay .score-big {
+    font-family: var(--mono);
+    font-size: clamp(3rem, 12vw, 5rem);
+    color: var(--gold);
+    font-weight: 700;
+    text-shadow: 0 0 30px rgba(216,180,106,0.5);
+    margin: 8px 0;
+  }
+  #end-overlay .stat-row {
+    display: flex; gap: 32px; margin-bottom: 20px;
+    justify-content: center;
+  }
+  #end-overlay .stat {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  #end-overlay .stat-label {
+    font-size: 0.75rem; color: var(--gold-soft); text-transform: uppercase; letter-spacing: 0.1em;
+  }
+  #end-overlay .stat-val {
+    font-family: var(--mono); font-size: 1.4rem; color: var(--ink);
+  }
+
+  /* ── GAME WRAPPER ── */
+  #game-wrap {
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column;
+    align-items: center;
+    padding: 0 10px;
+    overflow: hidden;
+  }
+
+  /* ── HUD ── */
+  #hud {
+    width: 100%; max-width: 520px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 4px 6px;
+    gap: 8px;
+  }
+  .hud-box {
+    display: flex; flex-direction: column; align-items: center;
+    background: rgba(92,21,48,0.3);
+    border: 1px solid var(--hole-border);
+    border-radius: 8px;
+    padding: 4px 10px;
+    min-width: 64px;
+  }
+  .hud-label {
+    font-size: 0.62rem; color: var(--gold-soft);
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .hud-val {
+    font-family: var(--mono); font-size: 1.3rem;
+    color: var(--gold); font-weight: 700; line-height: 1.1;
+  }
+  #timer-bar-wrap {
+    flex: 1; height: 8px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 4px; overflow: hidden;
+  }
+  #timer-bar {
+    height: 100%; width: 100%;
+    background: linear-gradient(90deg, var(--burgundy), var(--gold));
+    transition: width 0.25s linear, background 0.5s;
+    border-radius: 4px;
+  }
+
+  /* ── TARGET WORD ── */
+  #target-wrap {
+    width: 100%; max-width: 520px;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 6px 0 8px;
+  }
+  #target-label {
+    font-size: 0.72rem; color: var(--gold-soft);
+    letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px;
+  }
+  #target-word {
+    font-size: clamp(2rem, 8vw, 3rem);
+    font-weight: 900;
+    color: var(--gold);
+    text-shadow: 0 0 18px rgba(216,180,106,0.45);
+    line-height: 1.1;
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  #target-word.flash {
+    animation: wordFlash 0.35s ease;
+  }
+  @keyframes wordFlash {
+    0%   { opacity:1; transform: scale(1); }
+    40%  { opacity:0; transform: scale(0.85); }
+    100% { opacity:1; transform: scale(1); }
+  }
+  #combo-display {
+    font-size: 0.8rem; color: var(--gold-soft); min-height: 1.2em;
+    font-family: var(--mono);
+    transition: opacity 0.3s;
+  }
+
+  /* ── GRID ── */
+  #grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(8px, 2.5vw, 14px);
+    width: 100%; max-width: 520px;
+    padding: 4px;
+    flex: 1;
+    align-content: center;
+  }
+
+  .hole {
+    position: relative;
+    aspect-ratio: 1/1;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at 40% 35%, #2c1425, var(--hole-bg));
+    border: 2px solid var(--hole-border);
+    box-shadow: inset 0 6px 18px rgba(0,0,0,0.7), 0 2px 8px rgba(0,0,0,0.4);
+    overflow: hidden;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+  /* dirt rim */
+  .hole::after {
+    content: '';
+    position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%);
+    width: 80%; height: 28%;
+    background: radial-gradient(ellipse, #2e1420 60%, transparent 100%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .mole {
+    position: absolute;
+    left: 50%; bottom: 0;
+    transform: translateX(-50%) translateY(100%);
+    width: 72%; height: 72%;
+    display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(ellipse at 45% 35%, #3d1e2e, var(--mole-bg));
+    border-radius: 50% 50% 45% 45%;
+    border: 2px solid var(--hole-border);
+    font-family: var(--mono);
+    font-size: clamp(1rem, 4vw, 1.5rem);
+    font-weight: 700;
+    color: var(--gold-soft);
+    transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
+    pointer-events: none;
+    box-shadow: 0 -4px 12px rgba(0,0,0,0.5);
+    will-change: transform;
+  }
+  .mole.up {
+    transform: translateX(-50%) translateY(22%);
+  }
+  .mole.bonk {
+    animation: bonkAnim 0.3s ease forwards;
+  }
+  @keyframes bonkAnim {
+    0%   { transform: translateX(-50%) translateY(22%) scale(1); }
+    30%  { transform: translateX(-50%) translateY(32%) scale(0.85); }
+    100% { transform: translateX(-50%) translateY(100%) scale(1); }
+  }
+  .mole.wrong-bonk {
+    animation: wrongAnim 0.3s ease forwards;
+  }
+  @keyframes wrongAnim {
+    0%   { transform: translateX(-50%) translateY(22%) scale(1); }
+    30%  { transform: translateX(-50%) translateY(18%) scale(1.1); }
+    100% { transform: translateX(-50%) translateY(22%) scale(1); }
+  }
+
+  .hole.correct-flash { animation: correctFlash 0.4s ease; }
+  @keyframes correctFlash {
+    0%   { box-shadow: inset 0 6px 18px rgba(0,0,0,0.7), 0 0 0 0 rgba(76,175,135,0); }
+    50%  { box-shadow: inset 0 6px 18px rgba(0,0,0,0.7), 0 0 28px 12px rgba(76,175,135,0.55); }
+    100% { box-shadow: inset 0 6px 18px rgba(0,0,0,0.7), 0 0 0 0 rgba(76,175,135,0); }
+  }
+  .hole.wrong-flash { animation: wrongFlash 0.4s ease; }
+  @keyframes wrongFlash {
+    0%   { box-shadow: inset 0 6px 18px rgba(0,0,0,0.7), 0 0 0 0 rgba(192,57,43,0); }
+    50%  { box-shadow: inset 0 6px 18px rgba(0,0,0,0.7), 0 0 28px 12px rgba(192,57,43,0.55); }
+    100% { box-shadow: inset 0 6px 18px rgba(0,0,0,0.7), 0 0 0 0 rgba(192,57,43,0); }
+  }
+
+  /* ── PARTICLES ── */
+  .particle {
+    position: fixed;
+    pointer-events: none;
+    border-radius: 50%;
+    font-family: var(--mono);
+    font-weight: 700;
+    z-index: 200;
+    animation: particleFly 0.7s ease forwards;
+  }
+  @keyframes particleFly {
+    0%   { opacity: 1; transform: translate(0,0) scale(1); }
+    100% { opacity: 0; transform: var(--pend) scale(0.4); }
+  }
+
+  /* ── FLOATING SCORE ── */
+  .float-score {
+    position: fixed;
+    pointer-events: none;
+    font-family: var(--mono);
+    font-size: 1.4rem;
+    font-weight: 700;
+    z-index: 201;
+    animation: floatUp 0.8s ease forwards;
+  }
+  @keyframes floatUp {
+    0%   { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-50px) scale(0.8); }
+  }
+
+  /* ── RESTART BTN ── */
+  #restart-btn {
+    position: fixed; bottom: 48px; left: 50%; transform: translateX(-50%);
+    background: rgba(92,21,48,0.6);
+    border: 1px solid var(--gold-soft);
+    color: var(--gold-soft);
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 0.8rem;
+    font-family: var(--serif);
+    cursor: pointer;
+    z-index: 50;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity 0.2s;
+  }
+  #restart-btn:hover { opacity: 0.8; }
+
+  /* ── FOOTER ── */
+  footer {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    text-align: center;
+    font-size: 0.62rem;
+    color: rgba(244,233,216,0.3);
+    padding: 4px 0 6px;
+    letter-spacing: 0.07em;
+    pointer-events: none;
+  }
+
+  /* ── DECORATIVE ── */
+  .deco-line {
+    width: 120px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-soft), transparent);
+    margin: 12px auto;
+  }
+</style>
+</head>
+<body>
+
+<!-- INTRO OVERLAY -->
+<div class="overlay" id="intro-overlay">
+  <div class="overlay-title">הכה את הערך</div>
+  <div class="overlay-verse">בְּרֵאשִׁית בָּרָא אֱלֹהִים אֵת הַשָּׁמַיִם וְאֵת הָאָרֶץ</div>
+  <div class="deco-line"></div>
+  <div class="overlay-sub">
+    מילה מהפסוק תוצג למעלה.<br>
+    <b>הכה</b> על המספר הנכון (ערך הגימטריה שלה)<br>
+    כשהוא צץ מהחור.<br>
+    מספר שגוי – ניקוד שלילי!<br>
+    יש לך <b>60 שניות</b> – קדימה!
+  </div>
+  <button class="btn" id="start-btn">התחל משחק ▶</button>
+</div>
+
+<!-- END OVERLAY -->
+<div class="overlay hidden" id="end-overlay">
+  <div class="overlay-title">זמן נגמר!</div>
+  <div class="deco-line"></div>
+  <div class="score-big" id="final-score">0</div>
+  <div class="stat-row">
+    <div class="stat">
+      <div class="stat-label">מדויק</div>
+      <div class="stat-val" id="final-acc">-</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">רצף מקסימלי</div>
+      <div class="stat-val" id="final-streak">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">סה״כ הכאות</div>
+      <div class="stat-val" id="final-hits">0</div>
+    </div>
+  </div>
+  <button class="btn" id="play-again-btn">שחק שוב ▶</button>
+</div>
+
+<!-- GAME -->
+<div id="game-wrap">
+  <!-- HUD -->
+  <div id="hud">
+    <div class="hud-box">
+      <div class="hud-label">ניקוד</div>
+      <div class="hud-val" id="score-disp">0</div>
+    </div>
+    <div id="timer-bar-wrap">
+      <div id="timer-bar"></div>
+    </div>
+    <div class="hud-box">
+      <div class="hud-label">זמן</div>
+      <div class="hud-val" id="time-disp">60</div>
+    </div>
+  </div>
+
+  <!-- TARGET -->
+  <div id="target-wrap">
+    <div id="target-label">מהי הגימטריה של:</div>
+    <div id="target-word">–</div>
+    <div id="combo-display"></div>
+  </div>
+
+  <!-- GRID (3×3) -->
+  <div id="grid">
+    <!-- holes injected by JS -->
+  </div>
+</div>
+
+<!-- RESTART BTN -->
+<button id="restart-btn">⟲ מחדש</button>
+
+<footer>The First Verse &middot; הכה את הערך</footer>
+
+<script>
+(function(){
+"use strict";
+
+/* ── CANONICAL DATA ── */
+const WORDS = [
+  { word: 'בְּרֵאשִׁית', val: 913 },
+  { word: 'בָּרָא',      val: 203 },
+  { word: 'אֱלֹהִים',   val: 86  },
+  { word: 'אֵת',         val: 401 },
+  { word: 'הַשָּׁמַיִם', val: 395 },
+  { word: 'וְאֵת',       val: 407 },
+  { word: 'הָאָרֶץ',    val: 296 },
+];
+
+/* ── AUDIO ── */
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let actx = null;
+
+function ensureAudio() {
+  if (!actx) {
+    try { actx = new AudioCtx(); } catch(e){}
+  }
+  if (actx && actx.state === 'suspended') actx.resume().catch(()=>{});
+}
+
+function playTone(freq, type, dur, gainVal, freq2) {
+  ensureAudio();
+  if (!actx) return;
+  try {
+    const g = actx.createGain();
+    g.gain.setValueAtTime(gainVal, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + dur);
+    g.connect(actx.destination);
+    const o = actx.createOscillator();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, actx.currentTime);
+    if (freq2) o.frequency.exponentialRampToValueAtTime(freq2, actx.currentTime + dur * 0.5);
+    o.connect(g);
+    o.start(actx.currentTime);
+    o.stop(actx.currentTime + dur);
+  } catch(e){}
+}
+
+function sfxDing() {
+  playTone(880, 'sine', 0.25, 0.35);
+  setTimeout(() => playTone(1320, 'sine', 0.2, 0.25), 80);
+}
+function sfxBuzz() {
+  playTone(160, 'sawtooth', 0.25, 0.2, 80);
+}
+function sfxPop() {
+  playTone(440, 'sine', 0.08, 0.15);
+}
+function sfxEnd() {
+  [523, 659, 784, 1047].forEach((f,i) => {
+    setTimeout(() => playTone(f, 'sine', 0.4, 0.25), i * 120);
+  });
+}
+
+/* ── GAME STATE ── */
+const TOTAL_TIME = 60;
+const HOLES = 9;
+const WORD_CHANGE_INTERVAL = [8000, 12000]; // ms range
+const SPAWN_INTERVAL_BASE  = 900;   // ms between spawns
+const MOLE_UP_DURATION     = [1800, 3000]; // ms visible range
+
+let score = 0;
+let timeLeft = TOTAL_TIME;
+let combo = 0;
+let maxCombo = 0;
+let hits = 0;
+let misses = 0;
+let totalTaps = 0;
+let targetIdx = 0;
+let gameRunning = false;
+let timerInterval = null;
+let spawnInterval = null;
+let wordTimer = null;
+
+// per-hole state
+// { moleUp, moleVal, isCorrect, upTimer, moleEl }
+let holeState = [];
+
+/* ── DOM ── */
+const introOverlay = document.getElementById('intro-overlay');
+const endOverlay   = document.getElementById('end-overlay');
+const startBtn     = document.getElementById('start-btn');
+const playAgainBtn = document.getElementById('play-again-btn');
+const restartBtn   = document.getElementById('restart-btn');
+const scoreDisp    = document.getElementById('score-disp');
+const timeDisp     = document.getElementById('time-disp');
+const timerBar     = document.getElementById('timer-bar');
+const targetWordEl = document.getElementById('target-word');
+const comboDisp    = document.getElementById('combo-display');
+const gridEl       = document.getElementById('grid');
+const finalScoreEl = document.getElementById('final-score');
+const finalAccEl   = document.getElementById('final-acc');
+const finalStreakEl= document.getElementById('final-streak');
+const finalHitsEl  = document.getElementById('final-hits');
+
+/* ── BUILD GRID ── */
+function buildGrid() {
+  gridEl.innerHTML = '';
+  holeState = [];
+  for (let i = 0; i < HOLES; i++) {
+    const hole = document.createElement('div');
+    hole.className = 'hole';
+    hole.dataset.idx = i;
+    const mole = document.createElement('div');
+    mole.className = 'mole';
+    hole.appendChild(mole);
+    gridEl.appendChild(hole);
+
+    holeState.push({ moleUp: false, moleVal: null, isCorrect: false, upTimer: null, moleEl: mole, holeEl: hole });
+
+    hole.addEventListener('pointerdown', e => { e.preventDefault(); onHoleClick(i); }, { passive: false });
+  }
+}
+
+/* ── DISTRACTOR NUMBERS ── */
+function getDistractors(correct) {
+  const pool = [];
+  // nearby offsets (positive and negative)
+  const posOffsets = [7, 13, 20, 30, 50, 100];
+  const offsets = posOffsets.concat(posOffsets.map(x => -x));
+  offsets.forEach(d => {
+    const v = correct + d;
+    if (v > 0 && v !== correct) pool.push(v);
+  });
+  // other word values
+  WORDS.forEach(w => { if (w.val !== correct) pool.push(w.val); });
+  // round-ish numbers near range
+  [100, 200, 300, 400, 500, 600, 700, 800, 900, 250, 450, 650, 850, 150, 350, 550, 750].forEach(v => {
+    if (v !== correct) pool.push(v);
+  });
+  // shuffle and pick unique
+  const unique = [...new Set(pool)].filter(v => v !== correct);
+  shuffle(unique);
+  return unique;
+}
+
+/* ── SPAWN ── */
+function getEmptyHoles() {
+  return holeState.map((s,i) => s.moleUp ? -1 : i).filter(i => i >= 0);
+}
+
+function spawnMole() {
+  if (!gameRunning) return;
+  const empty = getEmptyHoles();
+  if (empty.length === 0) return;
+
+  // pick random empty hole
+  const idx = empty[Math.floor(Math.random() * empty.length)];
+  const correct = WORDS[targetIdx].val;
+
+  // decide: correct or distractor
+  // always have ~40% chance of spawning correct
+  const showCorrect = Math.random() < 0.4;
+  let val;
+  if (showCorrect) {
+    val = correct;
+  } else {
+    const distractors = getDistractors(correct);
+    val = distractors[Math.floor(Math.random() * distractors.length)] || correct + 7;
+  }
+
+  const state = holeState[idx];
+  state.moleUp    = true;
+  state.moleVal   = val;
+  state.isCorrect = (val === correct);
+  state.moleEl.textContent = val;
+  state.moleEl.style.color = '';
+  // pop up
+  requestAnimationFrame(() => {
+    state.moleEl.classList.add('up');
+    state.moleEl.classList.remove('bonk','wrong-bonk');
+  });
+  sfxPop();
+
+  // auto-retract
+  const upDur = MOLE_UP_DURATION[0] + Math.random() * (MOLE_UP_DURATION[1] - MOLE_UP_DURATION[0]);
+  state.upTimer = setTimeout(() => retractMole(idx, false), upDur);
+}
+
+function retractMole(idx, wasHit) {
+  const state = holeState[idx];
+  if (!state.moleUp) return;
+  clearTimeout(state.upTimer);
+  state.upTimer = null;
+  state.moleUp  = false;
+  if (!wasHit) {
+    state.moleEl.classList.remove('up','bonk','wrong-bonk');
+  }
+  // clean state after animation
+  setTimeout(() => {
+    state.moleVal    = null;
+    state.isCorrect  = false;
+    state.moleEl.textContent = '';
+  }, 250);
+}
+
+/* ── HIT HANDLING ── */
+function onHoleClick(idx) {
+  ensureAudio();
+  if (!gameRunning) return;
+  const state = holeState[idx];
+  if (!state.moleUp) return;
+
+  totalTaps++;
+  const correct = state.isCorrect;
+  retractMole(idx, true);
+
+  if (correct) {
+    hits++;
+    combo++;
+    if (combo > maxCombo) maxCombo = combo;
+
+    const pts = 10 + (combo > 1 ? (combo - 1) * 5 : 0);
+    score = Math.max(0, score + pts);
+    scoreDisp.textContent = score;
+
+    sfxDing();
+    state.holeEl.classList.remove('correct-flash','wrong-flash');
+    void state.holeEl.offsetWidth;
+    state.holeEl.classList.add('correct-flash');
+    state.moleEl.classList.add('bonk');
+
+    // float score
+    showFloat(state.holeEl, '+' + pts, '#4caf87');
+    // particles
+    spawnParticles(state.holeEl, '#d8b46a', 10);
+
+    updateCombo();
+
+    // word change on hit sometimes
+    if (Math.random() < 0.25) scheduleWordChange(1200);
+
+  } else {
+    misses++;
+    combo = 0;
+    score = Math.max(0, score - 5);
+    scoreDisp.textContent = score;
+
+    sfxBuzz();
+    state.holeEl.classList.remove('correct-flash','wrong-flash');
+    void state.holeEl.offsetWidth;
+    state.holeEl.classList.add('wrong-flash');
+    state.moleEl.classList.add('wrong-bonk');
+
+    showFloat(state.holeEl, '−5', '#c0392b');
+    updateCombo();
+  }
+
+  // retract after bonk animation
+  setTimeout(() => {
+    state.moleEl.classList.remove('bonk','wrong-bonk','up');
+  }, 320);
+}
+
+function updateCombo() {
+  if (combo >= 3) {
+    comboDisp.textContent = 'רצף: ' + combo + (combo >= 5 ? ' 🔥' : '');
+    comboDisp.style.opacity = '1';
+  } else {
+    comboDisp.textContent = '';
+    comboDisp.style.opacity = '0';
+  }
+}
+
+/* ── TARGET WORD ── */
+function changeTargetWord(forceIdx) {
+  const prev = targetIdx;
+  if (forceIdx !== undefined) {
+    targetIdx = forceIdx;
+  } else {
+    let next;
+    do { next = Math.floor(Math.random() * WORDS.length); } while (next === prev && WORDS.length > 1);
+    targetIdx = next;
+  }
+  targetWordEl.classList.remove('flash');
+  void targetWordEl.offsetWidth;
+  targetWordEl.classList.add('flash');
+  targetWordEl.textContent = WORDS[targetIdx].word;
+
+  // retract any wrong moles but keep correct ones visible briefly
+  holeState.forEach((s, i) => {
+    if (s.moleUp && s.moleVal !== WORDS[targetIdx].val) {
+      retractMole(i, false);
+    }
+  });
+
+  scheduleWordChange();
+}
+
+let wordChangeTimeout = null;
+function scheduleWordChange(overrideMs) {
+  clearTimeout(wordChangeTimeout);
+  const delay = overrideMs || (WORD_CHANGE_INTERVAL[0] + Math.random() * (WORD_CHANGE_INTERVAL[1] - WORD_CHANGE_INTERVAL[0]));
+  wordChangeTimeout = setTimeout(changeTargetWord, delay);
+}
+
+/* ── PARTICLES ── */
+function spawnParticles(el, color, count) {
+  const rect = el.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top  + rect.height / 2;
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = 4 + Math.random() * 6;
+    const angle = (Math.PI * 2 / count) * i + Math.random() * 0.5;
+    const dist  = 30 + Math.random() * 50;
+    const dx    = Math.cos(angle) * dist;
+    const dy    = Math.sin(angle) * dist;
+    p.style.cssText = `
+      width:${size}px; height:${size}px;
+      background:${color};
+      left:${cx - size/2}px; top:${cy - size/2}px;
+      --pend: translate(${dx}px, ${dy}px);
+    `;
+    document.body.appendChild(p);
+    p.addEventListener('animationend', () => p.remove());
+  }
+}
+
+function showFloat(el, text, color) {
+  const rect = el.getBoundingClientRect();
+  const f = document.createElement('div');
+  f.className = 'float-score';
+  f.textContent = text;
+  f.style.color = color;
+  f.style.left = (rect.left + rect.width / 2 - 20) + 'px';
+  f.style.top  = (rect.top - 10) + 'px';
+  document.body.appendChild(f);
+  f.addEventListener('animationend', () => f.remove());
+}
+
+/* ── TIMER ── */
+function startTimer() {
+  timeLeft = TOTAL_TIME;
+  timeDisp.textContent = timeLeft;
+  timerBar.style.width = '100%';
+  timerBar.style.background = 'linear-gradient(90deg, var(--burgundy), var(--gold))';
+
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    timeDisp.textContent = timeLeft;
+    const pct = (timeLeft / TOTAL_TIME) * 100;
+    timerBar.style.width = pct + '%';
+    if (pct < 30) timerBar.style.background = 'linear-gradient(90deg, #c0392b, #e74c3c)';
+    else if (pct < 60) timerBar.style.background = 'linear-gradient(90deg, var(--burgundy), var(--gold-soft))';
+    if (timeLeft <= 0) endGame();
+  }, 1000);
+}
+
+/* ── SPAWN LOOP ── */
+function startSpawnLoop() {
+  // adaptive spawn: faster as time runs out
+  function doSpawn() {
+    if (!gameRunning) return;
+    const elapsed = TOTAL_TIME - timeLeft;
+    const speedFactor = 1 + elapsed / 60; // speeds up slightly
+    const interval = Math.max(400, SPAWN_INTERVAL_BASE / speedFactor);
+
+    // possibly spawn 1 or 2 moles
+    spawnMole();
+    if (elapsed > 20 && Math.random() < 0.4) setTimeout(spawnMole, 250);
+
+    spawnInterval = setTimeout(doSpawn, interval);
+  }
+  doSpawn();
+}
+
+/* ── GAME FLOW ── */
+function startGame() {
+  score = 0; timeLeft = TOTAL_TIME; combo = 0; maxCombo = 0;
+  hits = 0; misses = 0; totalTaps = 0;
+  gameRunning = true;
+
+  scoreDisp.textContent = '0';
+  comboDisp.textContent = '';
+
+  buildGrid();
+  changeTargetWord(Math.floor(Math.random() * WORDS.length));
+  startTimer();
+  startSpawnLoop();
+}
+
+function endGame() {
+  gameRunning = false;
+  clearInterval(timerInterval);
+  clearTimeout(spawnInterval);
+  clearTimeout(wordChangeTimeout);
+
+  // retract all
+  holeState.forEach((s, i) => { if (s.moleUp) retractMole(i, false); });
+
+  sfxEnd();
+
+  const acc = totalTaps > 0 ? Math.round((hits / totalTaps) * 100) + '%' : '–';
+  finalScoreEl.textContent = score;
+  finalAccEl.textContent   = acc;
+  finalStreakEl.textContent = maxCombo;
+  finalHitsEl.textContent  = hits;
+
+  setTimeout(() => {
+    endOverlay.classList.remove('hidden');
+  }, 600);
+}
+
+function resetGame() {
+  clearInterval(timerInterval);
+  clearTimeout(spawnInterval);
+  clearTimeout(wordChangeTimeout);
+  gameRunning = false;
+  holeState.forEach((s, i) => { if (s.upTimer) clearTimeout(s.upTimer); });
+  endOverlay.classList.add('hidden');
+  introOverlay.classList.add('hidden');
+  startGame();
+}
+
+/* ── EVENTS ── */
+startBtn.addEventListener('click', () => {
+  ensureAudio();
+  introOverlay.classList.add('hidden');
+  startGame();
+});
+playAgainBtn.addEventListener('click', resetGame);
+restartBtn.addEventListener('click',   resetGame);
+
+// Touch unlock on first interaction anywhere
+document.addEventListener('pointerdown', ensureAudio, { once: true });
+
+/* ── UTILS ── */
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+
+})();
+</script>
+</body>
+</html>

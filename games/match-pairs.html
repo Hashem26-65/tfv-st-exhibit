@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>חבר זוגות · The First Verse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#120a10; --bg2:#1c0f17; --ink:#f4e9d8; --ink-dim:#c9b79c; --muted:#9a8772;
+  --gold:#d8b46a; --gold-soft:#b9924a; --burgundy:#5c1530; --burgundy2:#7a1c3f;
+  --green:#7bd88f; --red:#e8736b; --line:rgba(216,180,106,.22); --glow:rgba(216,180,106,.45);
+  --mono:"Roboto Mono",ui-monospace,monospace; --serif:"Frank Ruhl Libre",serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;min-height:100%}
+body{
+  font-family:var(--serif); color:var(--ink); direction:rtl;
+  background:
+    radial-gradient(1200px 700px at 50% -10%, rgba(122,28,63,.4), transparent 60%),
+    radial-gradient(1200px 700px at 50% 115%, rgba(122,28,63,.35), transparent 60%),
+    var(--bg);
+  -webkit-font-smoothing:antialiased; user-select:none; -webkit-user-select:none;
+  overflow-x:hidden; overflow-y:auto;
+}
+
+/* ===== HUD ===== */
+.hud{
+  position:fixed; top:0; left:0; right:0; z-index:40;
+  display:flex; align-items:center; justify-content:space-between; gap:6px;
+  padding:10px 16px;
+  background:linear-gradient(to bottom, rgba(18,10,16,.96) 70%, rgba(18,10,16,0));
+}
+.hud .stat{ display:flex; align-items:center; gap:6px; font-family:var(--mono); font-size:13px; color:var(--ink-dim);}
+.hud .stat b{ color:var(--gold); font-size:17px; min-width:28px; display:inline-block; text-align:center;}
+.hud .title{ font-family:var(--serif); color:var(--gold); font-weight:700; font-size:16px; letter-spacing:.02em; text-align:center;}
+.btn-restart{
+  background:none; border:1px solid var(--line); color:var(--ink-dim);
+  font-family:var(--serif); font-size:12px; border-radius:999px; padding:5px 12px; cursor:pointer; transition:.2s;
+  white-space:nowrap;
+}
+.btn-restart:hover,.btn-restart:active{ border-color:var(--gold-soft); color:var(--ink); }
+
+/* ===== OVERLAYS ===== */
+.overlay{
+  position:fixed; inset:0; z-index:100;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  background:rgba(18,10,16,.93);
+  backdrop-filter:blur(6px);
+  padding:24px 20px;
+  text-align:center;
+}
+.overlay.hidden{ display:none; }
+.overlay h1{
+  font-family:var(--serif); font-weight:900; font-size:clamp(26px,6vw,46px);
+  color:var(--gold); margin-bottom:10px; line-height:1.2;
+}
+.overlay h2{
+  font-family:var(--serif); font-weight:700; font-size:clamp(20px,4.5vw,34px);
+  color:var(--gold); margin-bottom:14px; line-height:1.3;
+}
+.overlay .sub{
+  font-size:clamp(13px,3.5vw,17px); color:var(--ink-dim); margin-bottom:6px; line-height:1.65;
+  max-width:480px;
+}
+.overlay .verse{
+  font-family:var(--serif); font-size:clamp(15px,4vw,22px); color:var(--ink);
+  margin:14px 0 20px; letter-spacing:.06em; line-height:1.8;
+  max-width:500px;
+}
+.btn-primary{
+  margin-top:16px;
+  background:linear-gradient(135deg,var(--burgundy2),var(--burgundy));
+  border:1.5px solid var(--gold-soft); color:var(--gold);
+  font-family:var(--serif); font-size:clamp(15px,3.5vw,20px); font-weight:700;
+  border-radius:12px; padding:12px 36px; cursor:pointer;
+  transition:opacity .18s,transform .12s,box-shadow .2s;
+  box-shadow:0 0 18px rgba(216,180,106,.18);
+}
+.btn-primary:hover{ opacity:.92; box-shadow:0 0 28px rgba(216,180,106,.36); transform:scale(1.03); }
+.btn-primary:active{ transform:scale(.97); }
+.score-grid{
+  display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px 20px;
+  margin:14px 0 6px; max-width:380px; width:100%;
+}
+.score-cell{ display:flex; flex-direction:column; align-items:center; gap:4px; }
+.score-cell .val{ font-family:var(--mono); font-size:clamp(22px,5vw,36px); color:var(--gold); font-weight:700; }
+.score-cell .lbl{ font-size:clamp(11px,2.5vw,13px); color:var(--ink-dim); }
+
+/* ===== GAME AREA ===== */
+.game-wrap{
+  position:relative;
+  padding-top:56px; /* below HUD */
+  padding-bottom:36px;
+  min-height:100vh;
+  display:flex; flex-direction:column; align-items:stretch;
+}
+.columns-area{
+  position:relative;
+  display:flex; flex-direction:row-reverse; /* RTL: words right, values left */
+  align-items:stretch; justify-content:center;
+  gap:0; padding:16px 8px;
+  flex:1;
+}
+/* SVG layer for connecting lines */
+#svg-lines{
+  position:absolute; inset:0; pointer-events:none; z-index:10;
+  overflow:visible;
+}
+
+.col{
+  display:flex; flex-direction:column; gap:10px;
+  width:48%; max-width:200px;
+  flex-shrink:0;
+}
+.col-words{ align-items:flex-start; padding-right:4px; }
+.col-values{ align-items:flex-end; padding-left:4px; }
+
+/* spacer between cols */
+.col-gap{ flex:1; min-width:16px; max-width:60px; }
+
+.card{
+  position:relative; z-index:20;
+  border:1.5px solid var(--line);
+  border-radius:10px; padding:10px 14px;
+  cursor:pointer; transition:border-color .18s, background .18s, transform .12s, box-shadow .18s;
+  background:rgba(28,15,23,.72);
+  text-align:center; width:100%;
+}
+.card:hover:not(.locked):not(.wrong){ border-color:var(--gold-soft); background:rgba(92,21,48,.35); }
+.card:active:not(.locked){ transform:scale(.96); }
+
+.card.word-card{ font-family:var(--serif); font-size:clamp(18px,5vw,26px); font-weight:700; color:var(--ink); }
+.card.val-card{ font-family:var(--mono); font-size:clamp(15px,4vw,22px); font-weight:700; color:var(--ink-dim); }
+
+.card.selected{
+  border-color:var(--gold); background:rgba(92,21,48,.6);
+  box-shadow:0 0 14px rgba(216,180,106,.5);
+  transform:scale(1.04);
+}
+.card.locked{
+  border-color:var(--gold-soft); background:rgba(45,60,30,.55);
+  color:var(--gold); cursor:default;
+  box-shadow:0 0 10px rgba(123,216,143,.22);
+}
+.card.locked.val-card{ color:var(--green); }
+.card.wrong{
+  border-color:var(--red);
+  background:rgba(90,20,20,.55);
+  animation:shake .35s ease;
+}
+@keyframes shake{
+  0%{transform:translateX(0)}
+  20%{transform:translateX(-5px)}
+  40%{transform:translateX(5px)}
+  60%{transform:translateX(-4px)}
+  80%{transform:translateX(4px)}
+  100%{transform:translateX(0)}
+}
+@keyframes lockIn{
+  0%{transform:scale(1)}
+  40%{transform:scale(1.1)}
+  70%{transform:scale(.96)}
+  100%{transform:scale(1)}
+}
+.card.lock-anim{ animation:lockIn .38s ease forwards; }
+
+/* ===== FOOTER ===== */
+footer{
+  text-align:center; font-size:12px; color:var(--muted);
+  padding:8px 12px 10px; letter-spacing:.03em;
+}
+
+/* ===== PROGRESS BAR ===== */
+.progress-bar-wrap{
+  height:3px; width:100%; background:rgba(216,180,106,.1);
+  position:fixed; top:50px; left:0; right:0; z-index:35;
+}
+.progress-bar{ height:100%; background:var(--gold); width:0%; transition:width .5s ease; }
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:400px){
+  .col{ gap:8px; }
+  .card{ padding:9px 10px; }
+  .card.word-card{ font-size:18px; }
+  .card.val-card{ font-size:15px; }
+}
+@media(min-width:600px){
+  .col{ max-width:240px; }
+  .card.word-card{ font-size:28px; }
+  .card.val-card{ font-size:24px; }
+  .col-gap{ max-width:80px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HUD -->
+<div class="hud">
+  <div class="stat">טעויות <b id="hud-mistakes">0</b></div>
+  <div class="title">חבר זוגות</div>
+  <div class="stat"><b id="hud-time">0:00</b>&nbsp;⏱</div>
+</div>
+<div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar"></div></div>
+
+<!-- INTRO OVERLAY -->
+<div class="overlay" id="overlay-intro">
+  <h1>חבר זוגות</h1>
+  <div class="verse">בְּרֵאשִׁית בָּרָא אֱלֹהִים אֵת הַשָּׁמַיִם וְאֵת הָאָרֶץ</div>
+  <div class="sub">חַבֵּר כָּל מִלָּה מִפָּסוּק הַבְּרֵאשִׁית<br>לְעֶרֶךְ הַגִּימַטְרִיָּה שֶׁלָּהּ.</div>
+  <div class="sub" style="margin-top:8px">
+    לָחַץ עַל מִלָּה בְּעַמּוּד הַיָּמִין,<br>
+    אַחַר כָּךְ עַל הַמִּסְפָּר בְּעַמּוּד הַשְּׂמֹאל.<br>
+    <span style="color:var(--gold)">7 זוּגוֹת · סְכוּם כֹּל = 2701</span>
+  </div>
+  <button class="btn-primary" id="btn-start">▶&nbsp;&nbsp;התחל</button>
+  <footer style="position:absolute;bottom:0;left:0;right:0">The First Verse · חבר זוגות</footer>
+</div>
+
+<!-- END OVERLAY -->
+<div class="overlay hidden" id="overlay-end">
+  <h2>🎉 כָּל הַזּוּגוֹת הוּתְאֲמוּ!</h2>
+  <div class="score-grid">
+    <div class="score-cell"><div class="val" id="end-time">—</div><div class="lbl">זְמַן</div></div>
+    <div class="score-cell"><div class="val" id="end-mistakes">—</div><div class="lbl">טְעוּיוֹת</div></div>
+    <div class="score-cell"><div class="val" id="end-score">—</div><div class="lbl">נְקֻדּוֹת</div></div>
+  </div>
+  <div class="sub" id="end-msg" style="margin-top:6px;color:var(--gold)"></div>
+  <button class="btn-primary" id="btn-again">⟲&nbsp;&nbsp;שחק שוב</button>
+  <footer style="position:absolute;bottom:0;left:0;right:0">The First Verse · חבר זוגות</footer>
+</div>
+
+<!-- GAME -->
+<div class="game-wrap" id="game-wrap">
+  <div class="columns-area" id="columns-area">
+    <svg id="svg-lines" aria-hidden="true"></svg>
+    <div class="col col-words" id="col-words"></div>
+    <div class="col-gap"></div>
+    <div class="col col-values" id="col-values"></div>
+  </div>
+  <footer>The First Verse · חבר זוגות</footer>
+</div>
+
+<!-- Restart button (always visible during game) -->
+<button class="btn-restart" id="btn-restart" style="position:fixed;bottom:44px;left:50%;transform:translateX(-50%);z-index:50;display:none">⟲ מחדש</button>
+
+<script>
+(function(){
+"use strict";
+
+/* ===== DATA ===== */
+const PAIRS = [
+  { word:"בְּרֵאשִׁית", val:913 },
+  { word:"בָּרָא",      val:203 },
+  { word:"אֱלֹהִים",   val:86  },
+  { word:"אֵת",        val:401 },
+  { word:"הַשָּׁמַיִם", val:395 },
+  { word:"וְאֵת",      val:407 },
+  { word:"הָאָרֶץ",    val:296 }
+];
+const N = PAIRS.length;
+
+/* ===== AUDIO ===== */
+let AC = null;
+function getAC(){
+  if(!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+  if(AC && AC.state === 'suspended') AC.resume();
+  return AC;
+}
+function playDing(){
+  const ac = getAC(); if(!ac) return;
+  const t = ac.currentTime;
+  const osc = ac.createOscillator(); const g = ac.createGain();
+  osc.connect(g); g.connect(ac.destination);
+  osc.type = 'sine'; osc.frequency.setValueAtTime(880, t); osc.frequency.exponentialRampToValueAtTime(1320, t+.08);
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.22, t+.02);
+  g.gain.exponentialRampToValueAtTime(.001, t+.45);
+  osc.start(t); osc.stop(t+.5);
+}
+function playBuzz(){
+  const ac = getAC(); if(!ac) return;
+  const t = ac.currentTime;
+  const osc = ac.createOscillator(); const g = ac.createGain();
+  osc.connect(g); g.connect(ac.destination);
+  osc.type = 'sawtooth'; osc.frequency.setValueAtTime(180, t);
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.12, t+.01);
+  g.gain.exponentialRampToValueAtTime(.001, t+.28);
+  osc.start(t); osc.stop(t+.3);
+}
+function playWin(){
+  const ac = getAC(); if(!ac) return;
+  const notes = [523.25, 659.25, 783.99, 1046.5];
+  notes.forEach((f,i)=>{
+    const t = ac.currentTime + i*.12;
+    const osc = ac.createOscillator(); const g = ac.createGain();
+    osc.connect(g); g.connect(ac.destination);
+    osc.type = 'sine'; osc.frequency.value = f;
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.18, t+.02);
+    g.gain.exponentialRampToValueAtTime(.001, t+.55);
+    osc.start(t); osc.stop(t+.6);
+  });
+}
+function playSelect(){
+  const ac = getAC(); if(!ac) return;
+  const t = ac.currentTime;
+  const osc = ac.createOscillator(); const g = ac.createGain();
+  osc.connect(g); g.connect(ac.destination);
+  osc.type = 'sine'; osc.frequency.setValueAtTime(660, t);
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.1, t+.01);
+  g.gain.exponentialRampToValueAtTime(.001, t+.15);
+  osc.start(t); osc.stop(t+.18);
+}
+
+/* ===== STATE ===== */
+let wordOrder = [], valOrder = [];
+let selectedWord = null; // index into wordOrder
+let selectedVal = null;  // index into valOrder
+let locked = new Array(N).fill(false); // locked[i] = true when PAIRS[i] matched
+let mistakes = 0;
+let timerID = null;
+let elapsed = 0;
+let running = false;
+let wordEls = [], valEls = [];
+let lockedLines = []; // [{pairIdx, x1,y1,x2,y2}]
+
+/* ===== SHUFFLE ===== */
+function shuffle(arr){
+  const a = [...arr];
+  for(let i=a.length-1;i>0;i--){ const j=0|Math.random()*(i+1); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+
+/* ===== TIMER ===== */
+function startTimer(){
+  clearInterval(timerID);
+  elapsed = 0; running = true;
+  timerID = setInterval(()=>{ if(!running) return; elapsed++; updateHUD(); }, 1000);
+}
+function stopTimer(){ running = false; clearInterval(timerID); }
+function fmtTime(s){ return Math.floor(s/60)+':'+(s%60<10?'0':'')+(s%60); }
+
+/* ===== HUD ===== */
+function updateHUD(){
+  document.getElementById('hud-time').textContent = fmtTime(elapsed);
+  document.getElementById('hud-mistakes').textContent = mistakes;
+  const done = locked.filter(Boolean).length;
+  document.getElementById('progress-bar').style.width = (done/N*100)+'%';
+}
+
+/* ===== BUILD BOARD ===== */
+function buildBoard(){
+  wordOrder = shuffle([...Array(N).keys()]);
+  valOrder  = shuffle([...Array(N).keys()]);
+  selectedWord = null; selectedVal = null;
+  locked = new Array(N).fill(false);
+  lockedLines = [];
+  mistakes = 0;
+  updateHUD();
+
+  const wCol = document.getElementById('col-words');
+  const vCol = document.getElementById('col-values');
+  wCol.innerHTML = ''; vCol.innerHTML = '';
+  wordEls = []; valEls = [];
+
+  const svg = document.getElementById('svg-lines');
+  svg.innerHTML = '';
+
+  wordOrder.forEach((pairIdx, slotIdx)=>{
+    const el = document.createElement('div');
+    el.className = 'card word-card';
+    el.textContent = PAIRS[pairIdx].word;
+    el.dataset.pairIdx = pairIdx;
+    el.dataset.slotIdx = slotIdx;
+    el.addEventListener('pointerdown', e=>{ e.preventDefault(); onWordTap(slotIdx); });
+    wCol.appendChild(el);
+    wordEls[slotIdx] = el;
+  });
+
+  valOrder.forEach((pairIdx, slotIdx)=>{
+    const el = document.createElement('div');
+    el.className = 'card val-card';
+    el.textContent = PAIRS[pairIdx].val;
+    el.dataset.pairIdx = pairIdx;
+    el.dataset.slotIdx = slotIdx;
+    el.addEventListener('pointerdown', e=>{ e.preventDefault(); onValTap(slotIdx); });
+    vCol.appendChild(el);
+    valEls[slotIdx] = el;
+  });
+}
+
+/* ===== INTERACTION ===== */
+function onWordTap(slotIdx){
+  if(!running) return;
+  const el = wordEls[slotIdx];
+  const pairIdx = wordOrder[slotIdx];
+  if(locked[pairIdx]) return;
+
+  // deselect if already selected
+  if(selectedWord === slotIdx){
+    el.classList.remove('selected');
+    selectedWord = null;
+    return;
+  }
+  // deselect previous word
+  if(selectedWord !== null) wordEls[selectedWord].classList.remove('selected');
+  selectedWord = slotIdx;
+  el.classList.add('selected');
+  playSelect();
+
+  if(selectedVal !== null) tryMatch();
+}
+
+function onValTap(slotIdx){
+  if(!running) return;
+  const el = valEls[slotIdx];
+  const pairIdx = valOrder[slotIdx];
+  if(locked[pairIdx]) return;
+
+  if(selectedVal === slotIdx){
+    el.classList.remove('selected');
+    selectedVal = null;
+    return;
+  }
+  if(selectedVal !== null) valEls[selectedVal].classList.remove('selected');
+  selectedVal = slotIdx;
+  el.classList.add('selected');
+  playSelect();
+
+  if(selectedWord !== null) tryMatch();
+}
+
+function tryMatch(){
+  const wSlot = selectedWord, vSlot = selectedVal;
+  const wPair = wordOrder[wSlot], vPair = valOrder[vSlot];
+  const wEl = wordEls[wSlot], vEl = valEls[vSlot];
+
+  selectedWord = null; selectedVal = null;
+
+  if(wPair === vPair){
+    // CORRECT
+    wEl.classList.remove('selected'); vEl.classList.remove('selected');
+    wEl.classList.add('locked','lock-anim'); vEl.classList.add('locked','lock-anim');
+    locked[wPair] = true;
+    playDing();
+    drawLine(wSlot, vSlot, wPair);
+    updateHUD();
+
+    if(locked.every(Boolean)){
+      setTimeout(()=>showEnd(), 500);
+    }
+  } else {
+    // WRONG
+    mistakes++;
+    wEl.classList.remove('selected'); vEl.classList.remove('selected');
+    wEl.classList.add('wrong'); vEl.classList.add('wrong');
+    playBuzz();
+    setTimeout(()=>{
+      wEl.classList.remove('wrong');
+      vEl.classList.remove('wrong');
+    }, 500);
+    updateHUD();
+  }
+}
+
+/* ===== SVG LINES ===== */
+function getCardCenter(el){
+  const svgEl = document.getElementById('svg-lines');
+  const svgRect = svgEl.getBoundingClientRect();
+  const r = el.getBoundingClientRect();
+  return {
+    x: r.left + r.width/2 - svgRect.left,
+    y: r.top  + r.height/2 - svgRect.top
+  };
+}
+
+function drawLine(wSlot, vSlot, pairIdx){
+  const svg = document.getElementById('svg-lines');
+  const wEl = wordEls[wSlot], vEl = valEls[vSlot];
+  const p1 = getCardCenter(wEl);
+  const p2 = getCardCenter(vEl);
+
+  const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+  line.setAttribute('x1', p1.x); line.setAttribute('y1', p1.y);
+  line.setAttribute('x2', p2.x); line.setAttribute('y2', p2.y);
+  line.setAttribute('stroke','rgba(123,216,143,0.55)');
+  line.setAttribute('stroke-width','2');
+  line.setAttribute('stroke-linecap','round');
+  line.setAttribute('stroke-dasharray','6 4');
+  line.dataset.pairIdx = pairIdx;
+  svg.appendChild(line);
+
+  lockedLines.push({ pairIdx, wSlot, vSlot });
+}
+
+function redrawLines(){
+  const svg = document.getElementById('svg-lines');
+  svg.innerHTML = '';
+  lockedLines.forEach(({wSlot,vSlot,pairIdx})=>{
+    const wEl = wordEls[wSlot], vEl = valEls[vSlot];
+    if(!wEl||!vEl) return;
+    const p1 = getCardCenter(wEl);
+    const p2 = getCardCenter(vEl);
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1', p1.x); line.setAttribute('y1', p1.y);
+    line.setAttribute('x2', p2.x); line.setAttribute('y2', p2.y);
+    line.setAttribute('stroke','rgba(123,216,143,0.55)');
+    line.setAttribute('stroke-width','2');
+    line.setAttribute('stroke-linecap','round');
+    line.setAttribute('stroke-dasharray','6 4');
+    line.dataset.pairIdx = pairIdx;
+    svg.appendChild(line);
+  });
+}
+
+/* ===== END ===== */
+function showEnd(){
+  stopTimer();
+  playWin();
+  const score = Math.max(0, 1000 - mistakes*80 - Math.floor(elapsed/5)*5);
+  document.getElementById('end-time').textContent = fmtTime(elapsed);
+  document.getElementById('end-mistakes').textContent = mistakes;
+  document.getElementById('end-score').textContent = score;
+  const msgs = ['מצוין! תלמיד חכם אמיתי 🌟','כל הכבוד! ידע מרשים 🏆','יפה מאוד! כמעט מושלם ✨','לא רע! כדאי לחזור על הנושא 📖'];
+  const mi = mistakes===0?0:mistakes<=2?1:mistakes<=4?2:3;
+  document.getElementById('end-msg').textContent = msgs[mi];
+  document.getElementById('overlay-end').classList.remove('hidden');
+}
+
+/* ===== INIT / RESTART ===== */
+function startGame(){
+  document.getElementById('overlay-intro').classList.add('hidden');
+  document.getElementById('overlay-end').classList.add('hidden');
+  document.getElementById('btn-restart').style.display = 'block';
+  buildBoard();
+  startTimer();
+}
+
+function restartGame(){
+  stopTimer();
+  document.getElementById('overlay-end').classList.add('hidden');
+  buildBoard();
+  startTimer();
+}
+
+/* ===== EVENTS ===== */
+document.getElementById('btn-start').addEventListener('click', ()=>{ getAC(); startGame(); });
+document.getElementById('btn-again').addEventListener('click', restartGame);
+document.getElementById('btn-restart').addEventListener('click', restartGame);
+
+// Resize → redraw lines
+let resizeTimer;
+window.addEventListener('resize', ()=>{
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(redrawLines, 80);
+});
+
+// prevent iOS bounce/zoom
+document.addEventListener('touchmove', e=>{ if(e.scale && e.scale!==1) e.preventDefault(); }, {passive:false});
+
+})();
+</script>
+</body>
+</html>

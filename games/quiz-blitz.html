@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>חידון בזק · The First Verse</title>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#120a10;
+  --gold:#d8b46a;
+  --gold-soft:#b9924a;
+  --burgundy:#5c1530;
+  --ink:#f4e9d8;
+  --ink-dim:#c4ae8e;
+  --green:#3ddc84;
+  --red:#ff4d5e;
+  --serif:"Frank Ruhl Libre",serif;
+  --mono:"Roboto Mono",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{font-family:var(--serif);color:var(--ink);direction:rtl;user-select:none;
+  -webkit-user-select:none;-webkit-font-smoothing:antialiased;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+
+/* ── STARS BG ── */
+#stars{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+#stars span{position:absolute;border-radius:50%;background:#d8b46a;animation:twinkle var(--d,3s) var(--delay,0s) infinite alternate}
+@keyframes twinkle{0%{opacity:.08}100%{opacity:.55}}
+
+/* ── OVERLAYS ── */
+.overlay{
+  position:fixed;inset:0;z-index:100;
+  background:rgba(18,10,16,.96);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:20px;padding:24px;text-align:center;
+}
+.overlay.hidden{display:none}
+
+.overlay-title{
+  font-size:clamp(28px,7vw,52px);font-weight:900;color:var(--gold);
+  text-shadow:0 0 24px rgba(216,180,106,.5);line-height:1.2;
+}
+.overlay-sub{
+  font-size:clamp(15px,4vw,22px);color:var(--ink-dim);max-width:500px;line-height:1.6;
+}
+.verse-display{
+  font-size:clamp(14px,3.5vw,20px);color:var(--ink);
+  background:rgba(92,21,48,.35);border:1px solid var(--gold-soft);
+  border-radius:12px;padding:14px 20px;max-width:520px;line-height:1.8;
+  direction:rtl;
+}
+.btn-start{
+  background:linear-gradient(135deg,#8a2240,var(--burgundy));
+  color:var(--gold);font-family:var(--serif);font-size:clamp(18px,4.5vw,28px);
+  font-weight:700;border:2px solid var(--gold-soft);border-radius:14px;
+  padding:14px 48px;cursor:pointer;transition:all .2s;
+  box-shadow:0 0 20px rgba(92,21,48,.6);
+}
+.btn-start:hover,.btn-start:active{transform:scale(1.05);box-shadow:0 0 32px rgba(216,180,106,.35)}
+
+/* ── HUD ── */
+#hud{
+  position:fixed;top:0;left:0;right:0;z-index:50;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;background:rgba(18,10,16,.8);
+  border-bottom:1px solid rgba(216,180,106,.2);
+}
+#hud.hidden{display:none}
+.hud-score{font-family:var(--mono);font-size:clamp(16px,4vw,22px);color:var(--gold);font-weight:700}
+.hud-lives{display:flex;gap:6px;font-size:clamp(18px,4vw,24px)}
+.heart{transition:transform .3s}
+.heart.lost{opacity:.25;transform:scale(.8)}
+.hud-streak{font-family:var(--mono);font-size:clamp(12px,3vw,16px);color:var(--ink-dim)}
+.streak-fire{color:var(--gold);font-size:1.1em}
+
+/* ── RESTART BTN ── */
+#btn-restart{
+  position:fixed;bottom:52px;left:50%;transform:translateX(-50%);z-index:60;
+  background:rgba(92,21,48,.7);color:var(--ink-dim);font-family:var(--serif);
+  font-size:14px;border:1px solid rgba(216,180,106,.3);border-radius:8px;
+  padding:6px 14px;cursor:pointer;transition:all .2s;
+}
+#btn-restart.hidden{display:none}
+#btn-restart:hover{color:var(--gold);border-color:var(--gold-soft)}
+
+/* ── GAME AREA ── */
+#game{
+  position:fixed;inset:0;z-index:10;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:clamp(14px,3vh,28px);padding:80px 16px 70px;
+}
+#game.hidden{display:none}
+
+/* countdown bar */
+#timer-wrap{
+  width:min(480px,92vw);height:8px;background:rgba(255,255,255,.1);
+  border-radius:4px;overflow:hidden;
+}
+#timer-bar{
+  height:100%;width:100%;background:var(--gold);
+  border-radius:4px;transform-origin:right center;
+  transition:width linear;
+}
+
+/* statement card */
+#statement-card{
+  background:rgba(30,12,24,.9);border:1.5px solid var(--gold-soft);
+  border-radius:18px;padding:clamp(18px,4vw,32px) clamp(20px,5vw,40px);
+  width:min(500px,94vw);text-align:center;
+  box-shadow:0 0 30px rgba(92,21,48,.5);
+  min-height:110px;display:flex;align-items:center;justify-content:center;
+}
+#statement-text{
+  font-size:clamp(18px,5.5vw,32px);font-weight:700;color:var(--ink);
+  line-height:1.4;direction:rtl;
+}
+#statement-text .num{
+  font-family:var(--mono);color:var(--gold);font-size:.9em;
+}
+
+/* answer buttons */
+#answer-btns{
+  display:flex;gap:clamp(12px,3vw,24px);width:min(500px,94vw);
+  justify-content:center;
+}
+.ans-btn{
+  flex:1;max-width:200px;
+  font-family:var(--serif);font-size:clamp(18px,5vw,28px);font-weight:700;
+  border-radius:14px;border:2px solid transparent;padding:clamp(14px,3.5vw,22px) 10px;
+  cursor:pointer;transition:all .15s;position:relative;overflow:hidden;
+}
+.ans-btn::after{content:"";position:absolute;inset:0;background:white;opacity:0;transition:opacity .15s}
+.ans-btn:active::after{opacity:.12}
+#btn-true{background:linear-gradient(135deg,#1a5c38,#0f3d26);color:var(--green);border-color:#3ddc8480}
+#btn-false{background:linear-gradient(135deg,#5c1a28,#3d0f1a);color:var(--red);border-color:#ff4d5e80}
+#btn-true:hover{box-shadow:0 0 20px rgba(61,220,132,.3);transform:scale(1.04)}
+#btn-false:hover{box-shadow:0 0 20px rgba(255,77,94,.3);transform:scale(1.04)}
+
+/* feedback flash */
+#feedback{
+  position:fixed;inset:0;z-index:80;
+  display:flex;align-items:center;justify-content:center;
+  pointer-events:none;
+  font-size:clamp(60px,20vw,130px);
+  opacity:0;transition:opacity .1s;
+}
+#feedback.show{opacity:1}
+
+/* question counter */
+#q-counter{
+  font-family:var(--mono);font-size:clamp(11px,2.5vw,14px);
+  color:var(--ink-dim);
+}
+
+/* END overlay extras */
+.end-score{
+  font-size:clamp(42px,12vw,80px);font-weight:900;color:var(--gold);
+  text-shadow:0 0 30px rgba(216,180,106,.6);
+}
+.end-stats{font-size:clamp(14px,3.5vw,20px);color:var(--ink-dim);line-height:1.8}
+.end-stats span{color:var(--gold);font-weight:700}
+
+/* FOOTER */
+footer{
+  position:fixed;bottom:0;left:0;right:0;z-index:200;
+  text-align:center;font-size:12px;color:rgba(216,180,106,.4);
+  padding:8px;background:rgba(18,10,16,.7);letter-spacing:.05em;
+  font-family:var(--mono);
+}
+
+/* shake animation */
+@keyframes shake{
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-8px)}
+  40%{transform:translateX(8px)}
+  60%{transform:translateX(-6px)}
+  80%{transform:translateX(6px)}
+}
+.shake{animation:shake .35s ease}
+
+/* pop animation */
+@keyframes pop{
+  0%{transform:scale(.8);opacity:0}
+  60%{transform:scale(1.06)}
+  100%{transform:scale(1);opacity:1}
+}
+.pop{animation:pop .22s ease}
+
+/* pulse gold */
+@keyframes pulseGold{
+  0%,100%{text-shadow:0 0 24px rgba(216,180,106,.5)}
+  50%{text-shadow:0 0 48px rgba(216,180,106,.9),0 0 80px rgba(216,180,106,.4)}
+}
+</style>
+</head>
+<body>
+
+<!-- STARS -->
+<div id="stars"></div>
+
+<!-- INTRO OVERLAY -->
+<div id="overlay-intro" class="overlay">
+  <div class="overlay-title">חידון בזק</div>
+  <div class="overlay-sub">האם ידיעת את ערכי הגימטריה של הפסוק הראשון בתורה?</div>
+  <div class="verse-display">בְּרֵאשִׁית בָּרָא אֱלֹהִים אֵת הַשָּׁמַיִם וְאֵת הָאָרֶץ</div>
+  <div class="overlay-sub" style="font-size:clamp(13px,3.2vw,17px);color:var(--ink-dim)">
+    כל משפט — <strong style="color:var(--gold)">נכון</strong> או <strong style="color:var(--gold)">לא נכון</strong>?<br>
+    ענה לפני שהזמן נגמר · שלוש חיות · כל תשובה נכונה = נקודה<br>
+    <span style="color:var(--gold-soft)">הגמטריה הקטנה = 82 · הסכום הכולל = 2701 · 7 מילים</span>
+  </div>
+  <button class="btn-start" id="btn-start-intro">▶ התחל</button>
+</div>
+
+<!-- END OVERLAY -->
+<div id="overlay-end" class="overlay hidden">
+  <div class="overlay-title">סוף המשחק</div>
+  <div class="end-score" id="end-score">0</div>
+  <div class="end-stats" id="end-stats"></div>
+  <button class="btn-start" id="btn-start-end">⟲ שחק שוב</button>
+</div>
+
+<!-- HUD -->
+<div id="hud" class="hidden">
+  <div class="hud-score">ניקוד: <span id="score-val">0</span></div>
+  <div class="hud-lives" id="lives-display">
+    <span class="heart" id="h1">❤️</span>
+    <span class="heart" id="h2">❤️</span>
+    <span class="heart" id="h3">❤️</span>
+  </div>
+  <div class="hud-streak"><span class="streak-fire" id="streak-val">🔥0</span></div>
+</div>
+
+<!-- GAME AREA -->
+<div id="game" class="hidden">
+  <div id="q-counter">שאלה <span id="q-num">1</span></div>
+  <div id="timer-wrap"><div id="timer-bar"></div></div>
+  <div id="statement-card"><div id="statement-text"></div></div>
+  <div id="answer-btns">
+    <button class="ans-btn" id="btn-true">✓&nbsp;נכון</button>
+    <button class="ans-btn" id="btn-false">✗&nbsp;לא נכון</button>
+  </div>
+</div>
+
+<!-- FEEDBACK -->
+<div id="feedback"></div>
+
+<!-- RESTART -->
+<button id="btn-restart" class="hidden">⟲ מחדש</button>
+
+<footer>The First Verse · חידון בזק</footer>
+
+<script>
+(function(){
+"use strict";
+
+/* ── CANONICAL DATA ── */
+const WORDS = [
+  {w:"בְּרֵאשִׁית", v:913},
+  {w:"בָּרָא",       v:203},
+  {w:"אֱלֹהִים",    v:86},
+  {w:"אֵת",          v:401},
+  {w:"הַשָּׁמַיִם",  v:395},
+  {w:"וְאֵת",        v:407},
+  {w:"הָאָרֶץ",      v:296}
+];
+const SUM       = 2701;
+const WORD_COUNT= 7;
+const REDUCED   = 82;     // digital root / reduced gematria: 2+7+0+1=10→1+0=1… actually digit-sum: 2+7+0+1=10, 1+0=1. Wait — spec says 82.
+// Spec explicitly states reduced gematria = 82. Use spec value.
+const TRIANGULAR= 73;     // 2701 = T(73)
+const FIRST_WORD= "בְּרֵאשִׁית";
+const LAST_WORD = "הָאָרֶץ";
+const BARA_MEANING = "ברא"; // created
+
+/* plausible wrong values for each word */
+const WRONG_VALS = {
+  "בְּרֵאשִׁית": [912, 914, 900, 933, 831, 923, 813],
+  "בָּרָא":       [202, 204, 200, 213, 230, 223, 303],
+  "אֱלֹהִים":    [91,  85,  87,  96, 106,  68,  80],
+  "אֵת":          [400, 402, 411, 390, 410, 301, 414],
+  "הַשָּׁמַיִם":  [394, 396, 385, 405, 350, 293, 375],
+  "וְאֵת":        [406, 408, 417, 400, 370, 417, 307],
+  "הָאָרֶץ":      [295, 297, 286, 306, 260, 396, 269]
+};
+
+/* ── STATEMENT GENERATORS ── */
+function pickWrong(word){
+  const arr = WRONG_VALS[word] || [999];
+  return arr[Math.floor(Math.random()*arr.length)];
+}
+
+function buildStatements(){
+  const stmts = [];
+
+  /* 1. For each word: correct value (true) */
+  WORDS.forEach(({w,v})=>{
+    stmts.push({
+      text: ()=>`<span>${w}</span> = <span class="num">${v}</span>`,
+      correct: true,
+      category:"word"
+    });
+  });
+
+  /* 2. For each word: wrong value (false) */
+  WORDS.forEach(({w})=>{
+    const wv = pickWrong(w);
+    stmts.push({
+      text: ()=>`<span>${w}</span> = <span class="num">${wv}</span>`,
+      correct: false,
+      category:"word"
+    });
+  });
+
+  /* 3. Fixed fact statements */
+  const fixed = [
+    {t:`סכום ערכי הפסוק = <span class="num">${SUM}</span>`, c:true},
+    {t:`סכום ערכי הפסוק = <span class="num">2700</span>`, c:false},
+    {t:`סכום ערכי הפסוק = <span class="num">2711</span>`, c:false},
+    {t:`בפסוק יש <span class="num">${WORD_COUNT}</span> מילים`, c:true},
+    {t:`בפסוק יש <span class="num">8</span> מילים`, c:false},
+    {t:`בפסוק יש <span class="num">6</span> מילים`, c:false},
+    {t:`הגימטריה הקטנה של הפסוק = <span class="num">${REDUCED}</span>`, c:true},
+    {t:`הגימטריה הקטנה של הפסוק = <span class="num">28</span>`, c:false},
+    {t:`הגימטריה הקטנה של הפסוק = <span class="num">19</span>`, c:false},
+    {t:`המילה הראשונה בפסוק היא בְּרֵאשִׁית`, c:true},
+    {t:`המילה הראשונה בפסוק היא בָּרָא`, c:false},
+    {t:`המילה האחרונה בפסוק היא הָאָרֶץ`, c:true},
+    {t:`המילה האחרונה בפסוק היא הַשָּׁמַיִם`, c:false},
+    {t:`2701 הוא המספר המשולש ה-<span class="num">${TRIANGULAR}</span>`, c:true},
+    {t:`2701 הוא המספר המשולש ה-<span class="num">37</span>`, c:false},
+    {t:`המילה בָּרָא פירושה "ברא / יצר"`, c:true},
+    {t:`המילה בָּרָא פירושה "ראה"`, c:false},
+    {t:`אֱלֹהִים היא המילה השלישית בפסוק`, c:true},
+    {t:`אֵת היא המילה השנייה בפסוק`, c:false},
+    {t:`וְאֵת היא המילה השישית בפסוק`, c:true},
+    {t:`הַשָּׁמַיִם היא המילה החמישית בפסוק`, c:true},
+    {t:`הַשָּׁמַיִם היא המילה הרביעית בפסוק`, c:false},
+    {t:`הגימטריה של אֱלֹהִים = <span class="num">86</span>`, c:true},
+    {t:`הגימטריה של אֵת = <span class="num">401</span>`, c:true},
+    {t:`הגימטריה של וְאֵת = <span class="num">407</span>`, c:true},
+    {t:`הגימטריה של הָאָרֶץ = <span class="num">296</span>`, c:true},
+    {t:`הגימטריה של בָּרָא גדולה מ-<span class="num">200</span>`, c:true},
+    {t:`הגימטריה של אֱלֹהִים גדולה מ-<span class="num">100</span>`, c:false},
+    {t:`הגימטריה של בְּרֵאשִׁית גדולה מ-<span class="num">900</span>`, c:true},
+    {t:`הגימטריה של הַשָּׁמַיִם גדולה מ-<span class="num">400</span>`, c:false},
+    {t:`הסכום 2701 = 73 × 37`, c:true},
+    {t:`הסכום 2701 = 37 × 73`, c:true},
+    {t:`הסכום 2701 = 71 × 37`, c:false},
+    {t:`בפסוק יש 2 מילות יחס (אֵת / וְאֵת)`, c:true},
+    {t:`בפסוק יש 3 מילות יחס`, c:false},
+  ];
+
+  fixed.forEach(({t,c})=>{
+    stmts.push({text:()=>t, correct:c, category:"fixed"});
+  });
+
+  return stmts;
+}
+
+/* ── SHUFFLE ── */
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr;
+}
+
+/* ── AUDIO ── */
+let actx = null;
+function getACtx(){
+  if(!actx) actx = new (window.AudioContext||window.webkitAudioContext)();
+  return actx;
+}
+function beep(freq,dur,type,vol,delayS){
+  try{
+    const ctx=getACtx();
+    const o=ctx.createOscillator();
+    const g=ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.type=type||"sine";
+    o.frequency.setValueAtTime(freq,ctx.currentTime+(delayS||0));
+    g.gain.setValueAtTime(vol||0.15,ctx.currentTime+(delayS||0));
+    g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+(delayS||0)+dur);
+    o.start(ctx.currentTime+(delayS||0));
+    o.stop(ctx.currentTime+(delayS||0)+dur+0.05);
+  }catch(e){}
+}
+function sfxCorrect(){
+  beep(523,.12,"sine",.12);
+  beep(659,.12,"sine",.12,.14);
+  beep(784,.18,"sine",.15,.28);
+}
+function sfxWrong(){
+  beep(220,.08,"sawtooth",.1);
+  beep(180,.18,"sawtooth",.12,.1);
+}
+function sfxTick(){beep(880,.04,"sine",.05)}
+function sfxGameOver(){
+  beep(300,.15,"sawtooth",.15);
+  beep(250,.2,"sawtooth",.15,.18);
+  beep(200,.4,"sawtooth",.18,.4);
+}
+
+/* ── STARS ── */
+(function makeStars(){
+  const cont=document.getElementById("stars");
+  for(let i=0;i<55;i++){
+    const s=document.createElement("span");
+    const size=Math.random()*2.5+.8;
+    s.style.cssText=`width:${size}px;height:${size}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${(Math.random()*3+2).toFixed(1)}s;--delay:${(Math.random()*4).toFixed(1)}s`;
+    cont.appendChild(s);
+  }
+})();
+
+/* ── GAME STATE ── */
+let score=0, lives=3, streak=0, bestStreak=0;
+let totalQ=0, correctQ=0;
+let questions=[], qIdx=0;
+let timerInterval=null, timerStarted=null, timerDuration=4000;
+let answered=false;
+let gameRunning=false;
+const BASE_DURATION=4000;
+
+/* ── DOM REFS ── */
+const overlayIntro = document.getElementById("overlay-intro");
+const overlayEnd   = document.getElementById("overlay-end");
+const hudEl        = document.getElementById("hud");
+const gameEl       = document.getElementById("game");
+const btnRestart   = document.getElementById("btn-restart");
+const scoreVal     = document.getElementById("score-val");
+const livesDisplay = document.getElementById("lives-display");
+const streakVal    = document.getElementById("streak-val");
+const timerBar     = document.getElementById("timer-bar");
+const statText     = document.getElementById("statement-text");
+const qNum         = document.getElementById("q-num");
+const endScore     = document.getElementById("end-score");
+const endStats     = document.getElementById("end-stats");
+const feedback     = document.getElementById("feedback");
+const btnTrue      = document.getElementById("btn-true");
+const btnFalse     = document.getElementById("btn-false");
+
+/* ── UI HELPERS ── */
+function showOverlayIntro(){overlayIntro.classList.remove("hidden")}
+function hideOverlayIntro(){overlayIntro.classList.add("hidden")}
+function showOverlayEnd(){overlayEnd.classList.remove("hidden")}
+function hideOverlayEnd(){overlayEnd.classList.add("hidden")}
+function showHud(){hudEl.classList.remove("hidden")}
+function hideHud(){hudEl.classList.add("hidden")}
+function showGame(){gameEl.classList.remove("hidden")}
+function hideGame(){gameEl.classList.add("hidden")}
+function showRestart(){btnRestart.classList.remove("hidden")}
+function hideRestart(){btnRestart.classList.add("hidden")}
+
+function updateHud(){
+  scoreVal.textContent = score;
+  streakVal.textContent = "🔥" + streak;
+  // hearts
+  ["h1","h2","h3"].forEach((id,i)=>{
+    const el=document.getElementById(id);
+    if(i < lives){el.classList.remove("lost")}
+    else{el.classList.add("lost")}
+  });
+}
+
+function showFeedback(ok){
+  feedback.textContent = ok ? "✓" : "✗";
+  feedback.style.color  = ok ? "var(--green)" : "var(--red)";
+  feedback.classList.add("show");
+  setTimeout(()=>feedback.classList.remove("show"), 420);
+}
+
+/* ── TIMER ── */
+function startTimer(duration){
+  clearInterval(timerInterval);
+  timerBar.style.transition="none";
+  timerBar.style.width="100%";
+  // force reflow
+  void timerBar.offsetWidth;
+  timerBar.style.transition=`width ${duration/1000}s linear`;
+  timerBar.style.width="0%";
+  timerStarted = Date.now();
+
+  timerInterval = setTimeout(()=>{
+    if(!answered && gameRunning){
+      onTimeout();
+    }
+  }, duration);
+}
+
+function stopTimer(){
+  clearInterval(timerInterval);
+  timerBar.style.transition="none";
+}
+
+/* ── QUESTION FLOW ── */
+function loadQuestion(){
+  if(!gameRunning) return;
+  answered = false;
+  btnTrue.disabled = false;
+  btnFalse.disabled = false;
+  btnTrue.style.opacity = "1";
+  btnFalse.style.opacity = "1";
+
+  // speed up slightly: shave 80ms per 5 points, min 1.6s
+  const speedBonus = Math.floor(score/5)*80;
+  timerDuration = Math.max(1600, BASE_DURATION - speedBonus);
+
+  if(qIdx >= questions.length){
+    // reshuffle and continue
+    questions = shuffle(buildStatements());
+    qIdx = 0;
+  }
+  const q = questions[qIdx++];
+  totalQ++;
+  qNum.textContent = totalQ;
+  statText.innerHTML = q.text();
+  statText._correct = q.correct;
+
+  // pop animation
+  const card = document.getElementById("statement-card");
+  card.classList.remove("pop");
+  void card.offsetWidth;
+  card.classList.add("pop");
+
+  startTimer(timerDuration);
+}
+
+function onAnswer(userSaidTrue){
+  if(answered || !gameRunning) return;
+  answered = true;
+  stopTimer();
+  btnTrue.disabled = true;
+  btnFalse.disabled = true;
+
+  const correct = statText._correct; // true = statement is correct
+  const isRight = (userSaidTrue === correct);
+
+  if(isRight){
+    score++;
+    streak++;
+    if(streak > bestStreak) bestStreak = streak;
+    correctQ++;
+    showFeedback(true);
+    sfxCorrect();
+    // flash green tint
+    timerBar.style.transition="none";
+    timerBar.style.width="100%";
+    timerBar.style.background="var(--green)";
+    setTimeout(()=>{timerBar.style.background="var(--gold)"},300);
+  } else {
+    loseLife();
+  }
+
+  updateHud();
+
+  if(lives <= 0){
+    setTimeout(endGame, 350);
+  } else {
+    setTimeout(loadQuestion, isRight ? 480 : 620);
+  }
+}
+
+function onTimeout(){
+  if(answered || !gameRunning) return;
+  answered = true;
+  btnTrue.disabled = true;
+  btnFalse.disabled = true;
+  sfxTick();
+  loseLife();
+  updateHud();
+  if(lives <= 0){
+    setTimeout(endGame, 350);
+  } else {
+    setTimeout(loadQuestion, 700);
+  }
+}
+
+function loseLife(){
+  lives--;
+  showFeedback(false);
+  sfxWrong();
+  streak = 0;
+  // shake card
+  const card = document.getElementById("statement-card");
+  card.classList.remove("shake");
+  void card.offsetWidth;
+  card.classList.add("shake");
+  // flash red on bar
+  timerBar.style.transition="none";
+  timerBar.style.width="100%";
+  timerBar.style.background="var(--red)";
+  setTimeout(()=>{
+    timerBar.style.background="var(--gold)";
+  },300);
+}
+
+/* ── GAME START / END ── */
+function startGame(){
+  score=0; lives=3; streak=0; bestStreak=0; totalQ=0; correctQ=0; qIdx=0;
+  timerDuration=BASE_DURATION;
+  gameRunning=true;
+  questions = shuffle(buildStatements());
+  updateHud();
+  hideOverlayIntro();
+  hideOverlayEnd();
+  showHud();
+  showGame();
+  showRestart();
+  loadQuestion();
+}
+
+function endGame(){
+  gameRunning=false;
+  stopTimer();
+  hideGame();
+  sfxGameOver();
+
+  endScore.textContent = score;
+  endStats.innerHTML =
+    `שאלות שנענו: <span>${totalQ}</span><br>` +
+    `תשובות נכונות: <span>${correctQ}</span><br>` +
+    `רצף מקסימלי: <span>🔥${bestStreak}</span>`;
+  showOverlayEnd();
+}
+
+/* ── EVENTS ── */
+document.getElementById("btn-start-intro").addEventListener("click", startGame);
+document.getElementById("btn-start-end").addEventListener("click", startGame);
+btnRestart.addEventListener("click", startGame);
+
+btnTrue.addEventListener("click",  ()=>onAnswer(true));
+btnFalse.addEventListener("click", ()=>onAnswer(false));
+
+// touch support (prevent double-fire)
+function addTouch(el, fn){
+  let fired=false;
+  el.addEventListener("touchend",e=>{
+    e.preventDefault();
+    if(fired) return;
+    fired=true;
+    setTimeout(()=>fired=false,600);
+    fn();
+  },{passive:false});
+}
+addTouch(btnTrue,  ()=>onAnswer(true));
+addTouch(btnFalse, ()=>onAnswer(false));
+addTouch(document.getElementById("btn-start-intro"), startGame);
+addTouch(document.getElementById("btn-start-end"),   startGame);
+addTouch(btnRestart, startGame);
+
+// keyboard support
+document.addEventListener("keydown",e=>{
+  if(e.key==="ArrowRight"||e.key==="t"||e.key==="T"||e.key==="n"||e.key==="N") onAnswer(true);
+  if(e.key==="ArrowLeft" ||e.key==="f"||e.key==="F"||e.key==="l"||e.key==="L") onAnswer(false);
+});
+
+})();
+</script>
+</body>
+</html>

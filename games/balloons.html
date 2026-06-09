@@ -1,0 +1,738 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>בלוני הגימטריה · The First Verse</title>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#120a10;
+  --gold:#d8b46a;
+  --gold-soft:#b9924a;
+  --burg:#5c1530;
+  --ink:#f4e9d8;
+  --ink-dim:#c5b49a;
+  --green:#4ade80;
+  --red:#ff5555;
+  --serif:"Frank Ruhl Libre",serif;
+  --mono:"Roboto Mono",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg)}
+body{font-family:var(--serif);color:var(--ink);direction:rtl;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;}
+
+/* ===== BG gradient ===== */
+#scene{
+  position:fixed;inset:0;overflow:hidden;
+  background:linear-gradient(180deg,#1a0a1a 0%,#120a10 40%,#1a0808 100%);
+}
+
+/* Stars */
+#stars{position:absolute;inset:0;pointer-events:none;z-index:0;}
+
+/* ===== OVERLAYS ===== */
+.overlay{
+  position:fixed;inset:0;z-index:100;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(12,5,12,.92);
+  backdrop-filter:blur(8px);
+  padding:20px;
+  text-align:center;
+}
+.overlay.hidden{display:none;}
+
+.overlay-box{
+  background:linear-gradient(160deg,#2a1020 0%,#1a0a18 100%);
+  border:2px solid var(--gold-soft);
+  border-radius:18px;
+  padding:clamp(20px,5vw,40px) clamp(18px,6vw,48px);
+  max-width:480px;
+  width:100%;
+  box-shadow:0 0 60px rgba(92,21,48,.5), inset 0 1px 0 rgba(216,180,106,.15);
+}
+
+.overlay-title{
+  font-size:clamp(28px,7vw,46px);
+  font-weight:900;
+  color:var(--gold);
+  text-shadow:0 0 30px rgba(216,180,106,.4);
+  margin-bottom:10px;
+  line-height:1.2;
+}
+.overlay-sub{
+  font-size:clamp(13px,3.5vw,17px);
+  color:var(--ink-dim);
+  margin-bottom:24px;
+  line-height:1.6;
+}
+.overlay-rules{
+  font-size:clamp(12px,3vw,15px);
+  color:var(--ink-dim);
+  line-height:1.8;
+  margin-bottom:28px;
+  text-align:right;
+}
+.overlay-rules span{color:var(--gold);font-weight:700;}
+
+.btn{
+  display:inline-block;
+  background:linear-gradient(135deg,var(--burg),#8a1f45);
+  color:var(--gold);
+  border:1.5px solid var(--gold-soft);
+  border-radius:10px;
+  padding:12px 36px;
+  font-family:var(--serif);
+  font-size:clamp(16px,4vw,20px);
+  font-weight:700;
+  cursor:pointer;
+  transition:all .15s;
+  box-shadow:0 4px 20px rgba(92,21,48,.5);
+}
+.btn:hover{background:linear-gradient(135deg,#7a1f40,#a0244e);transform:translateY(-2px);}
+.btn:active{transform:translateY(0);}
+
+/* End overlay score */
+.end-score-val{
+  font-size:clamp(48px,12vw,80px);
+  font-weight:900;
+  color:var(--gold);
+  text-shadow:0 0 40px rgba(216,180,106,.6);
+  line-height:1;
+  margin-bottom:4px;
+}
+.end-score-label{font-size:clamp(13px,3vw,16px);color:var(--ink-dim);margin-bottom:8px;}
+.end-accuracy{
+  font-size:clamp(15px,3.5vw,19px);
+  color:var(--ink);
+  margin-bottom:24px;
+}
+
+/* ===== HUD ===== */
+#hud{
+  position:fixed;top:0;left:0;right:0;z-index:50;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px 8px;
+  background:linear-gradient(180deg,rgba(12,4,12,.85) 0%,transparent 100%);
+  pointer-events:none;
+}
+#hud.hidden{opacity:0;}
+.hud-block{display:flex;flex-direction:column;align-items:center;gap:2px;}
+.hud-label{font-size:11px;color:var(--gold-soft);letter-spacing:.05em;font-family:var(--mono);}
+.hud-value{font-size:clamp(20px,5vw,28px);font-weight:700;color:var(--gold);font-family:var(--mono);line-height:1;}
+#timer-val{color:var(--gold);}
+#timer-val.warn{color:#ff9055;animation:timerWarn .5s infinite alternate;}
+@keyframes timerWarn{from{opacity:1;}to{opacity:.5;}}
+
+/* ===== TARGET WORD ===== */
+#target-wrap{
+  position:fixed;top:64px;left:0;right:0;z-index:50;
+  display:flex;flex-direction:column;align-items:center;
+  pointer-events:none;
+}
+#target-wrap.hidden{display:none;}
+#target-label{font-size:12px;color:var(--ink-dim);letter-spacing:.08em;margin-bottom:4px;}
+#target-word{
+  font-size:clamp(34px,9vw,54px);
+  font-weight:900;
+  color:var(--ink);
+  text-shadow:0 0 20px rgba(216,180,106,.35);
+  line-height:1;
+  transition:transform .15s, opacity .15s;
+}
+#target-word.change{animation:wordChange .25s ease;}
+@keyframes wordChange{0%{opacity:0;transform:scale(.8);}100%{opacity:1;transform:scale(1);}}
+
+/* ===== RESTART BUTTON ===== */
+#restart-btn{
+  position:fixed;bottom:46px;left:14px;z-index:60;
+  background:rgba(92,21,48,.7);
+  border:1px solid var(--gold-soft);
+  border-radius:8px;
+  color:var(--gold-soft);
+  font-size:13px;
+  padding:6px 12px;
+  cursor:pointer;
+  transition:all .15s;
+  display:none;
+}
+#restart-btn:hover{background:rgba(92,21,48,.95);color:var(--gold);}
+#restart-btn.visible{display:block;}
+
+/* ===== FEEDBACK FLASH ===== */
+#feedback{
+  position:fixed;inset:0;z-index:55;pointer-events:none;
+  opacity:0;
+  transition:opacity .2s;
+}
+#feedback.correct{background:rgba(74,222,128,.08);}
+#feedback.wrong{background:rgba(255,85,85,.1);}
+#feedback.show{opacity:1;}
+
+/* ===== SCORE POPUP ===== */
+.score-pop{
+  position:fixed;
+  font-size:28px;
+  font-weight:900;
+  font-family:var(--mono);
+  pointer-events:none;
+  z-index:80;
+  animation:scorePop .7s ease-out forwards;
+  text-shadow:0 0 12px currentColor;
+}
+@keyframes scorePop{
+  0%{transform:translateY(0) scale(1);opacity:1;}
+  100%{transform:translateY(-70px) scale(1.3);opacity:0;}
+}
+
+/* ===== FOOTER ===== */
+#footer{
+  position:fixed;bottom:0;left:0;right:0;z-index:40;
+  text-align:center;
+  padding:6px;
+  font-size:11px;
+  color:rgba(185,146,74,.5);
+  letter-spacing:.06em;
+  pointer-events:none;
+}
+
+/* ===== BALLOONS ===== */
+.balloon{
+  position:absolute;
+  width:var(--sz,62px);
+  cursor:pointer;
+  transform:translateX(-50%);
+  will-change:transform,top;
+  z-index:20;
+  touch-action:manipulation;
+}
+.balloon:active{transform:translateX(-50%) scale(.95);}
+.balloon svg{display:block;width:100%;height:auto;filter:drop-shadow(0 4px 8px rgba(0,0,0,.5));}
+.balloon .bnum{
+  position:absolute;
+  left:50%;top:42%;
+  transform:translate(-50%,-50%);
+  font-family:var(--mono);
+  font-weight:700;
+  font-size:clamp(13px,3.5vw,17px);
+  color:#fff;
+  text-shadow:0 1px 3px rgba(0,0,0,.7);
+  pointer-events:none;
+  white-space:nowrap;
+}
+
+/* ===== PARTICLES ===== */
+.particle{
+  position:fixed;
+  border-radius:50%;
+  pointer-events:none;
+  z-index:70;
+  animation:particleFly var(--dur,.7s) ease-out forwards;
+}
+@keyframes particleFly{
+  0%{transform:translate(0,0) scale(1);opacity:1;}
+  100%{transform:translate(var(--dx,0px),var(--dy,0px)) scale(0);opacity:0;}
+}
+</style>
+</head>
+<body>
+
+<div id="scene">
+  <canvas id="stars"></canvas>
+</div>
+
+<!-- INTRO OVERLAY -->
+<div class="overlay" id="intro-overlay">
+  <div class="overlay-box">
+    <div class="overlay-title">בלוני הגימטריה</div>
+    <div class="overlay-sub">פסוק ראשון בתורה · The First Verse</div>
+    <div class="overlay-rules">
+      <div>יוצגו מילה עברית ובלונים עם מספרים.</div>
+      <div>לחץ על הבלון עם ה<span>ערך הגימטרי הנכון</span> של המילה.</div>
+      <div>בלון שגוי — מינוס נקודות.</div>
+      <div>יש לך <span>60 שניות</span> — כמה תצבור?</div>
+    </div>
+    <button class="btn" id="start-btn">התחל משחק</button>
+  </div>
+</div>
+
+<!-- END OVERLAY -->
+<div class="overlay hidden" id="end-overlay">
+  <div class="overlay-box">
+    <div class="overlay-title">המשחק הסתיים!</div>
+    <div class="end-score-val" id="final-score">0</div>
+    <div class="end-score-label">נקודות</div>
+    <div class="end-accuracy" id="final-accuracy"></div>
+    <button class="btn" id="play-again-btn">שחק שוב</button>
+  </div>
+</div>
+
+<!-- HUD -->
+<div id="hud" class="hidden">
+  <div class="hud-block">
+    <div class="hud-label">ניקוד</div>
+    <div class="hud-value" id="score-val">0</div>
+  </div>
+  <div class="hud-block">
+    <div class="hud-label">זמן</div>
+    <div class="hud-value" id="timer-val">60</div>
+  </div>
+  <div class="hud-block">
+    <div class="hud-label">פגיעות</div>
+    <div class="hud-value" id="hits-val">0/0</div>
+  </div>
+</div>
+
+<!-- TARGET -->
+<div id="target-wrap" class="hidden">
+  <div id="target-label">מה הגימטריה של</div>
+  <div id="target-word"></div>
+</div>
+
+<!-- FEEDBACK -->
+<div id="feedback"></div>
+
+<!-- RESTART -->
+<button id="restart-btn">⟲ מחדש</button>
+
+<!-- FOOTER -->
+<div id="footer">The First Verse · בלוני הגימטריה</div>
+
+<script>
+'use strict';
+
+/* ── DATA ── */
+const WORDS = [
+  {word:'בְּרֵאשִׁית', val:913},
+  {word:'בָּרָא',       val:203},
+  {word:'אֱלֹהִים',    val:86},
+  {word:'אֵת',          val:401},
+  {word:'הַשָּׁמַיִם',  val:395},
+  {word:'וְאֵת',        val:407},
+  {word:'הָאָרֶץ',      val:296},
+];
+const ALL_VALS = WORDS.map(w=>w.val); // [913,203,86,401,395,407,296]
+
+/* ── AUDIO ── */
+let audioCtx = null;
+function getAudio(){
+  if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+  return audioCtx;
+}
+function playPop(x,y){
+  try{
+    const ctx = getAudio();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.type='sine';
+    o.frequency.setValueAtTime(600,ctx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(1200,ctx.currentTime+.08);
+    o.frequency.exponentialRampToValueAtTime(400,ctx.currentTime+.18);
+    g.gain.setValueAtTime(.35,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.22);
+    o.start(ctx.currentTime); o.stop(ctx.currentTime+.22);
+  }catch(e){}
+}
+function playBuzz(){
+  try{
+    const ctx = getAudio();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.type='sawtooth';
+    o.frequency.setValueAtTime(180,ctx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(80,ctx.currentTime+.15);
+    g.gain.setValueAtTime(.25,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.18);
+    o.start(ctx.currentTime); o.stop(ctx.currentTime+.18);
+  }catch(e){}
+}
+
+/* ── STARS ── */
+(function initStars(){
+  const canvas = document.getElementById('stars');
+  const resize = ()=>{
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    for(let i=0;i<90;i++){
+      const x = Math.random()*canvas.width;
+      const y = Math.random()*canvas.height*.7;
+      const r = Math.random()*1.2+.3;
+      const a = Math.random()*.7+.3;
+      ctx.beginPath();
+      ctx.arc(x,y,r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(244,233,216,${a})`;
+      ctx.fill();
+    }
+  };
+  resize();
+  window.addEventListener('resize', resize);
+})();
+
+/* ── BALLOON COLORS ── */
+const BALLOON_COLORS = [
+  {body:'#c0392b',shine:'#e74c3c',string:'#922b21'},
+  {body:'#8e24aa',shine:'#ab47bc',string:'#6a1b9a'},
+  {body:'#1565c0',shine:'#1e88e5',string:'#0d47a1'},
+  {body:'#00695c',shine:'#00897b',string:'#004d40'},
+  {body:'#e65100',shine:'#fb8c00',string:'#bf360c'},
+  {body:'#ad1457',shine:'#e91e63',string:'#880e4f'},
+  {body:'#37474f',shine:'#546e7a',string:'#263238'},
+  {body:'#4527a0',shine:'#5e35b1',string:'#311b92'},
+];
+
+function balloonSVG(color, num){
+  const {body,shine,string} = color;
+  const size = num >= 1000 ? 72 : num >= 100 ? 66 : 60;
+  return `<svg viewBox="0 0 60 80" xmlns="http://www.w3.org/2000/svg" width="${size}" height="${Math.round(size*80/60)}">
+    <ellipse cx="30" cy="28" rx="22" ry="26" fill="${body}"/>
+    <ellipse cx="30" cy="28" rx="22" ry="26" fill="url(#sg_${num})"/>
+    <ellipse cx="22" cy="16" rx="7" ry="5" fill="${shine}" opacity=".45" transform="rotate(-20,22,16)"/>
+    <polygon points="27,54 33,54 30,60" fill="${body}"/>
+    <line x1="30" y1="60" x2="30" y2="80" stroke="${string}" stroke-width="1.2" opacity=".7"/>
+    <defs>
+      <radialGradient id="sg_${num}" cx="38%" cy="30%" r="65%">
+        <stop offset="0%" stop-color="#fff" stop-opacity=".18"/>
+        <stop offset="100%" stop-color="#000" stop-opacity=".22"/>
+      </radialGradient>
+    </defs>
+  </svg>`;
+}
+
+/* ── GAME STATE ── */
+let gameRunning = false;
+let score = 0;
+let timeLeft = 60;
+let totalAttempts = 0;
+let correctHits = 0;
+let currentWordIdx = 0;
+let balloons = [];
+let balloonId = 0;
+let timerInterval = null;
+let animFrame = null;
+let lastTime = null;
+
+const scene = document.getElementById('scene');
+const hudEl = document.getElementById('hud');
+const targetWrap = document.getElementById('target-wrap');
+const targetWordEl = document.getElementById('target-word');
+const scoreValEl = document.getElementById('score-val');
+const timerValEl = document.getElementById('timer-val');
+const hitsValEl = document.getElementById('hits-val');
+const feedbackEl = document.getElementById('feedback');
+const introOverlay = document.getElementById('intro-overlay');
+const endOverlay = document.getElementById('end-overlay');
+const finalScoreEl = document.getElementById('final-score');
+const finalAccEl = document.getElementById('final-accuracy');
+const restartBtn = document.getElementById('restart-btn');
+
+/* ── BALLOON SPAWNING ── */
+function pickDistractors(correct, count){
+  const distractors = new Set();
+  // Use other word values as distractors
+  const others = ALL_VALS.filter(v=>v!==correct);
+  // Shuffle others
+  for(let i=others.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [others[i],others[j]]=[others[j],others[i]];
+  }
+  for(let v of others){
+    if(distractors.size>=count) break;
+    distractors.add(v);
+  }
+  // Fill remainder with invented near-values
+  const extras = [-50,-30,-20,+20,+30,+50,-100,+100,-10,+10,-5,+5];
+  let ei=0;
+  while(distractors.size<count && ei<extras.length){
+    const v = correct + extras[ei++];
+    if(v>0 && !distractors.has(v) && v!==correct) distractors.add(v);
+  }
+  return [...distractors].slice(0,count);
+}
+
+function spawnBalloon(forceCorrect){
+  const correct = WORDS[currentWordIdx].val;
+  const isCorrect = forceCorrect || (Math.random() < 0.4);
+  const value = isCorrect ? correct : pickDistractors(correct,1)[0];
+  const colorIdx = Math.floor(Math.random()*BALLOON_COLORS.length);
+  const color = BALLOON_COLORS[colorIdx];
+
+  const el = document.createElement('div');
+  el.className = 'balloon';
+  const sz = value >= 1000 ? 72 : value >= 100 ? 66 : 60;
+  el.style.setProperty('--sz', sz+'px');
+
+  const xPct = 8 + Math.random()*84; // 8–92% from left
+  const speed = 55 + Math.random()*45; // px/s
+  const sway = (Math.random()-.5)*30; // horizontal drift
+  const swayFreq = .4 + Math.random()*.6;
+  const swayPhase = Math.random()*Math.PI*2;
+
+  const startY = window.innerHeight + 10;
+
+  el.style.left = xPct+'%';
+  el.style.top = startY+'px';
+
+  el.innerHTML = balloonSVG(color, value) + `<div class="bnum">${value}</div>`;
+  el.dataset.val = value;
+  el.dataset.correct = isCorrect ? '1' : '0';
+
+  scene.appendChild(el);
+
+  const id = ++balloonId;
+  const bObj = {id, el, x:xPct, y:startY, speed, sway, swayFreq, swayPhase, t:0, value, isCorrect};
+  balloons.push(bObj);
+
+  el.addEventListener('pointerdown', ()=>onBalloonTap(bObj), {passive:true});
+  return bObj;
+}
+
+function removeBalloon(bObj){
+  bObj.el.remove();
+  balloons = balloons.filter(b=>b!==bObj);
+}
+
+/* ── TAP HANDLER ── */
+function onBalloonTap(bObj){
+  if(!gameRunning) return;
+  const correct = WORDS[currentWordIdx].val;
+  totalAttempts++;
+
+  const rect = bObj.el.getBoundingClientRect();
+  const cx = rect.left + rect.width/2;
+  const cy = rect.top + rect.height/2;
+
+  if(bObj.value === correct){
+    // Correct!
+    correctHits++;
+    score += 10;
+    playPop(cx, cy);
+    spawnParticles(cx, cy, true);
+    showScorePop(cx, cy, '+10', '#4ade80');
+    showFeedback(true);
+    removeBalloon(bObj);
+    updateHUD();
+    nextWord();
+    // Ensure a correct balloon is spawned soon
+    ensureCorrectBalloon();
+  } else {
+    // Wrong
+    score = Math.max(0, score - 3);
+    playBuzz();
+    spawnParticles(cx, cy, false);
+    showScorePop(cx, cy, '−3', '#ff5555');
+    showFeedback(false);
+    // Shake the balloon
+    bObj.el.style.animation='shake .25s ease';
+    setTimeout(()=>{if(bObj.el)bObj.el.style.animation='';},260);
+    updateHUD();
+  }
+}
+
+function ensureCorrectBalloon(){
+  setTimeout(()=>{
+    if(!gameRunning) return;
+    const correct = WORDS[currentWordIdx].val;
+    const hasCorrect = balloons.some(b=>b.value===correct);
+    if(!hasCorrect) spawnBalloon(true);
+  }, 300);
+}
+
+/* ── NEXT WORD ── */
+function nextWord(){
+  // Clear old correct balloons for previous word that are still on screen
+  const oldCorrect = WORDS[currentWordIdx].val;
+  balloons.filter(b=>b.value===oldCorrect).forEach(b=>{
+    // Fade them out
+    b.el.style.transition='opacity .3s';
+    b.el.style.opacity='0.3';
+    b.speed += 80; // rush them off screen
+  });
+
+  let next;
+  do { next = Math.floor(Math.random()*WORDS.length); } while(next===currentWordIdx && WORDS.length>1);
+  currentWordIdx = next;
+
+  targetWordEl.classList.remove('change');
+  void targetWordEl.offsetWidth;
+  targetWordEl.textContent = WORDS[currentWordIdx].word;
+  targetWordEl.classList.add('change');
+}
+
+/* ── PARTICLES ── */
+function spawnParticles(cx, cy, isCorrect){
+  const colors = isCorrect
+    ? ['#d8b46a','#f4e9d8','#4ade80','#ffe082','#fff']
+    : ['#ff5555','#ff9055','#ffcc44','#fff'];
+  for(let i=0;i<18;i++){
+    const p = document.createElement('div');
+    p.className='particle';
+    const ang = Math.random()*Math.PI*2;
+    const dist = 40+Math.random()*80;
+    const dx = Math.cos(ang)*dist;
+    const dy = Math.sin(ang)*dist - 20;
+    const sz = 4+Math.random()*8;
+    const dur = .4+Math.random()*.5;
+    const col = colors[Math.floor(Math.random()*colors.length)];
+    p.style.cssText=`left:${cx}px;top:${cy}px;width:${sz}px;height:${sz}px;background:${col};--dx:${dx}px;--dy:${dy}px;--dur:${dur}s`;
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(), dur*1000+50);
+  }
+}
+
+/* ── SCORE POP ── */
+function showScorePop(cx, cy, text, color){
+  const el = document.createElement('div');
+  el.className='score-pop';
+  el.textContent=text;
+  el.style.cssText=`left:${cx-20}px;top:${cy-20}px;color:${color};`;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(), 750);
+}
+
+/* ── FEEDBACK FLASH ── */
+function showFeedback(correct){
+  feedbackEl.className = correct ? 'correct show' : 'wrong show';
+  setTimeout(()=>feedbackEl.classList.remove('show'), 200);
+}
+
+/* ── UPDATE HUD ── */
+function updateHUD(){
+  scoreValEl.textContent = score;
+  timerValEl.textContent = timeLeft;
+  hitsValEl.textContent = correctHits+'/'+totalAttempts;
+  if(timeLeft <= 10){
+    timerValEl.classList.add('warn');
+  } else {
+    timerValEl.classList.remove('warn');
+  }
+}
+
+/* ── ANIMATION LOOP ── */
+function animLoop(ts){
+  if(!gameRunning) return;
+  if(lastTime===null) lastTime=ts;
+  const dt = Math.min((ts-lastTime)/1000, .1);
+  lastTime=ts;
+
+  const W = window.innerWidth;
+
+  for(let i=balloons.length-1;i>=0;i--){
+    const b = balloons[i];
+    b.t += dt;
+    b.y -= b.speed * dt;
+    // Sway
+    const swayX = b.sway * Math.sin(b.swayFreq * b.t * Math.PI*2 + b.swayPhase);
+    const baseX = b.x / 100 * W;
+    b.el.style.top = b.y + 'px';
+    b.el.style.left = (baseX + swayX) + 'px';
+
+    // Remove if above screen
+    if(b.y < -100){
+      removeBalloon(b);
+      i--;
+    }
+  }
+
+  // Keep ~6–8 balloons on screen
+  const target = 7;
+  if(balloons.length < target){
+    spawnBalloon(false);
+  }
+
+  animFrame = requestAnimationFrame(animLoop);
+}
+
+/* ── START GAME ── */
+function startGame(){
+  score = 0;
+  timeLeft = 60;
+  totalAttempts = 0;
+  correctHits = 0;
+  lastTime = null;
+
+  // Clear any lingering balloons
+  balloons.forEach(b=>b.el.remove());
+  balloons = [];
+  balloonId = 0;
+
+  // Pick random start word
+  currentWordIdx = Math.floor(Math.random()*WORDS.length);
+  targetWordEl.textContent = WORDS[currentWordIdx].word;
+  targetWordEl.classList.add('change');
+
+  // Hide overlays
+  introOverlay.classList.add('hidden');
+  endOverlay.classList.add('hidden');
+  hudEl.classList.remove('hidden');
+  targetWrap.classList.remove('hidden');
+  restartBtn.classList.add('visible');
+
+  updateHUD();
+  gameRunning = true;
+
+  // Spawn initial balloons – include at least one correct
+  spawnBalloon(true);
+  for(let i=0;i<5;i++) spawnBalloon(false);
+
+  // Timer
+  timerInterval = setInterval(()=>{
+    if(!gameRunning) return;
+    timeLeft--;
+    updateHUD();
+    if(timeLeft<=0) endGame();
+  }, 1000);
+
+  animFrame = requestAnimationFrame(animLoop);
+}
+
+/* ── END GAME ── */
+function endGame(){
+  gameRunning = false;
+  clearInterval(timerInterval);
+  cancelAnimationFrame(animFrame);
+
+  // Clear balloons
+  balloons.forEach(b=>{
+    b.el.style.transition='opacity .4s';
+    b.el.style.opacity='0';
+    setTimeout(()=>b.el.remove(),420);
+  });
+  balloons=[];
+
+  hudEl.classList.add('hidden');
+  targetWrap.classList.add('hidden');
+
+  finalScoreEl.textContent = score;
+  const acc = totalAttempts > 0 ? Math.round(correctHits/totalAttempts*100) : 0;
+  finalAccEl.textContent = `דיוק: ${acc}%  |  פגיעות נכונות: ${correctHits} / ${totalAttempts}`;
+
+  endOverlay.classList.remove('hidden');
+}
+
+/* ── RESTART ── */
+function doRestart(){
+  endOverlay.classList.add('hidden');
+  startGame();
+}
+
+/* ── ADD SHAKE KEYFRAME ── */
+const styleTag = document.createElement('style');
+styleTag.textContent='@keyframes shake{0%{margin-right:0}25%{margin-right:8px}50%{margin-right:-8px}75%{margin-right:5px}100%{margin-right:0}}';
+document.head.appendChild(styleTag);
+
+/* ── EVENTS ── */
+document.getElementById('start-btn').addEventListener('click', startGame);
+document.getElementById('play-again-btn').addEventListener('click', doRestart);
+restartBtn.addEventListener('click', doRestart);
+
+// Unlock audio context on first interaction
+document.addEventListener('pointerdown', ()=>{
+  try{ const c=getAudio(); if(c.state==='suspended') c.resume(); }catch(e){}
+}, {once:true});
+</script>
+</body>
+</html>
