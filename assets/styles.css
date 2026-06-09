@@ -582,7 +582,7 @@ body.lang-en .subs-text{ direction:ltr; }
   .intro-verse .vline{ font-size:clamp(23px,6.8vw,38px); }
   .intro-verse-en{ font-size:clamp(13px,3.4vw,17px); margin:-2px 0 8px; }
   .intro-para{ font-size:14px; line-height:1.6; }
-  .intro-cta{ margin-top:16px; padding:15px 42px; font-size:20px; }
+  .intro-cta{ margin-top:9vh; padding:15px 42px; font-size:20px; }
 
   /* ---- אקטים: קומפקטיים כדי שייכנסו בלי גלילה ---- */
   .stage{ padding:74px 12px 88px; }
@@ -639,7 +639,7 @@ body.lang-en .subs-text{ direction:ltr; }
   .intro-verse .vline{ font-size:clamp(19px,4.6vh,32px); }
   .intro-verse-en{ font-size:clamp(11px,2.8vh,15px); margin:0 0 4px; }
   .intro-para{ font-size:12px; line-height:1.4; }
-  .intro-cta{ margin-top:9px; padding:12px 36px; font-size:18px; }
+  .intro-cta{ margin-top:5vh; padding:12px 36px; font-size:18px; }
   /* ההערה שמתחת לכפתור מיותרת במסך נמוך — הכפתור עצמו ברור */
   .intro-cta ~ .intro-para{ display:none; }
 

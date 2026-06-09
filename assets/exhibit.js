@@ -743,10 +743,7 @@
       "A mathematical signature in the Torah's first verse");
     setTextSel(".intro-sitename", "אֲתַר הַפָּסוּק הָרִאשׁוֹן", "The First Verse");
     const ip = $$(".intro-para");
-    if (ip[0]) ip[0].innerHTML = L(
-      "שבע מילים פותחות את התורה. מה מסתתר מתחת לערכיהן? צאו למסע קצר — ותגלו בעצמכם.",
-      "Seven words open the Torah. What lies beneath their values? Set out on a short journey — and discover for yourself.");
-    if (ip[1]) ip[1].innerHTML = L("המצגת מלווה בקריינות. לחצו להתחלה.",
+    if (ip[0]) ip[0].innerHTML = L("המצגת מלווה בקריינות. לחצו להתחלה.",
       "The presentation includes narration. Click to begin.");
     setTextSel(".intro-cta", "הַתְחֵל אֶת הַמַּסָּע", "Begin the Journey");
   }
