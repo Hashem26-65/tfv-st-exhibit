@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>מגן הפסוקים · The First Verse</title>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#f4e9d8; --ink-dim:#cdbfa8; --gold:#e8c873; --gold-soft:#b9924a;
+  --green:#37e07a; --red:#ff453a; --amber:#ffcf3a;
+  --mono:"Roboto Mono",monospace; --serif:"Frank Ruhl Libre",serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{ font-family:var(--serif); color:var(--ink); direction:rtl; user-select:none; -webkit-user-select:none;
+  -webkit-font-smoothing:antialiased; background:#0a0c10; }
+
+/* ===== זירה ===== */
+.scene{ position:fixed; inset:0; overflow:hidden; z-index:1; }
+.sky{ position:absolute; left:0; right:0; top:0; height:52%;
+  background:linear-gradient(to bottom, #20283b 0%, #3a3550 40%, #6e4a52 72%, #9c6a48 100%); }
+.sky::after{ content:""; position:absolute; left:50%; bottom:6%; width:120px; height:120px; transform:translateX(-50%);
+  border-radius:50%; background:radial-gradient(circle,#ffe7b0 25%, #e8a85a 55%, transparent 72%); filter:blur(2px); opacity:.7;}
+.ground{ position:absolute; left:0; right:0; top:50%; bottom:0;
+  background:linear-gradient(to bottom, #4a3f30, #221c14); }
+.ground::before{ content:""; position:absolute; inset:0;
+  background:radial-gradient(120% 60% at 50% 0%, rgba(0,0,0,.0), rgba(0,0,0,.5));}
+.haze{ position:absolute; left:0; right:0; top:46%; height:9%; background:linear-gradient(to bottom, rgba(200,140,90,.45), transparent); filter:blur(6px);}
+
+/* ===== אויבים ===== */
+.enemy{ position:absolute; transform-origin:bottom center; z-index:4; transition:top .5s ease, left .5s ease, transform .5s ease, opacity .4s;}
+.enemy svg{ display:block; filter:drop-shadow(0 5px 7px rgba(0,0,0,.6));}
+.enemy.down{ transform:translate(-50%,-100%) rotate(82deg) scale(.9) !important; opacity:0; }
+.enemy .flash{ position:absolute; top:42%; left:-8px; width:24px; height:24px; transform:translate(-50%,-50%) scale(0);
+  background:radial-gradient(circle,#fff 10%, #ffd23a 40%, #ff7a1a 60%, transparent 72%); border-radius:50%; }
+.enemy.fire .flash{ animation:efl .18s ease-out; }
+@keyframes efl{ 0%{transform:translate(-50%,-50%) scale(.3);opacity:1;} 100%{transform:translate(-50%,-50%) scale(1.5);opacity:0;} }
+
+/* ===== מכונת יריה (FPS) ===== */
+.mg{ position:fixed; left:50%; bottom:-6px; z-index:17; transform:translateX(-50%); pointer-events:none; }
+.mg svg{ display:block; width:min(74vw,470px); height:auto; filter:drop-shadow(0 -4px 12px rgba(0,0,0,.6)); }
+.mg.recoil{ animation:mgr .1s ease-out; }
+@keyframes mgr{ 0%{transform:translateX(-50%) translateY(0);} 50%{transform:translateX(-50%) translateY(8px);} 100%{transform:translateX(-50%) translateY(0);} }
+.muzzle{ position:fixed; left:50%; bottom:36%; z-index:9; width:60px; height:60px; transform:translate(-50%,-50%) scale(0);
+  background:radial-gradient(circle,#fff 8%, #ffe49a 30%, #ff9a2a 55%, transparent 70%); border-radius:50%; pointer-events:none;}
+.muzzle.flash{ animation:mfl .14s ease-out; }
+@keyframes mfl{ 0%{transform:translate(-50%,-50%) scale(.3);opacity:1;} 100%{transform:translate(-50%,-50%) scale(1.5);opacity:0;} }
+/* שקי חול בתחתית */
+.sandbags{ position:fixed; left:0; right:0; bottom:0; height:14%; z-index:7; pointer-events:none;
+  background:
+    radial-gradient(40px 26px at 10% 60%, #8a7448 0 70%, transparent 72%),
+    radial-gradient(40px 26px at 26% 70%, #7a6640 0 70%, transparent 72%),
+    radial-gradient(40px 26px at 42% 62%, #8a7448 0 70%, transparent 72%),
+    radial-gradient(40px 26px at 58% 70%, #7a6640 0 70%, transparent 72%),
+    radial-gradient(40px 26px at 74% 62%, #8a7448 0 70%, transparent 72%),
+    radial-gradient(40px 26px at 90% 70%, #7a6640 0 70%, transparent 72%),
+    linear-gradient(to top,#5c4d30,#3a3020); }
+
+/* הבזק נזק */
+.dmg{ position:fixed; inset:0; z-index:15; background:radial-gradient(circle at 50% 70%, transparent 40%, rgba(255,40,30,.55)); opacity:0; pointer-events:none; transition:opacity .1s; }
+.dmg.show{ opacity:1; }
+
+/* ===== HUD ===== */
+.hud{ position:fixed; top:0; left:0; right:0; z-index:20; display:flex; align-items:center; justify-content:space-between;
+  padding:10px 16px; background:linear-gradient(to bottom, rgba(10,12,16,.9), transparent);}
+.hud .title{ color:var(--gold); font-weight:700; font-size:17px; text-shadow:0 2px 4px #000;}
+.hearts{ font-size:22px; letter-spacing:2px; }
+.hud .stat{ font-family:var(--mono); color:var(--ink-dim); font-size:14px; }
+.hud .stat b{ color:var(--gold); font-size:18px; }
+.btn-restart{ background:rgba(10,12,16,.6); border:1px solid rgba(232,200,115,.3); color:var(--ink-dim);
+  font-family:var(--serif); font-size:12px; border-radius:999px; padding:5px 12px; cursor:pointer;}
+
+/* ===== טיימר ===== */
+.timerbar{ position:fixed; top:46px; left:50%; transform:translateX(-50%); z-index:20; width:min(680px,92%); height:10px;
+  background:rgba(255,255,255,.12); border-radius:6px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,.4);}
+.timerbar > i{ display:block; height:100%; width:100%; background:linear-gradient(90deg,var(--green),var(--amber),var(--red));
+  transform-origin:right; transition:transform .1s linear;}
+
+/* ===== פאנל שאלה ===== */
+.panel{ position:fixed; left:0; right:0; bottom:0; z-index:18; padding:12px 16px 16px;
+  display:flex; flex-direction:column; gap:10px; align-items:center; }
+.qcard{ width:min(720px,98%); background:linear-gradient(to bottom, rgba(14,18,24,.94), rgba(8,10,14,.97));
+  border:1px solid rgba(232,200,115,.35); border-radius:14px; padding:12px 14px 14px; box-shadow:0 10px 30px rgba(0,0,0,.6);}
+.q{ font-size:clamp(16px,2.8vw,22px); color:#eaf2ff; text-align:center; line-height:1.45; margin-bottom:10px;}
+.q b{ color:var(--gold);}
+.opts{ display:grid; grid-template-columns:1fr 1fr; gap:9px;}
+.opt{ font-family:var(--serif); font-size:clamp(14px,2.4vw,18px); color:#e8eef7;
+  background:linear-gradient(180deg, rgba(70,80,95,.4), rgba(16,20,28,.92)); border:1px solid rgba(180,180,200,.25);
+  border-radius:10px; padding:12px 8px; cursor:pointer; transition:.12s; line-height:1.35; text-align:center;}
+.opt:hover{ border-color:var(--gold); transform:translateY(-2px);}
+.opt.correct{ background:linear-gradient(180deg, rgba(55,224,122,.35), rgba(16,20,28,.92)); border-color:var(--green); }
+.opt.wrong{ background:linear-gradient(180deg, rgba(255,69,58,.32), rgba(16,20,28,.92)); border-color:var(--red);}
+.feedback{ font-family:var(--mono); font-size:14px; min-height:16px; font-weight:700;}
+.feedback.good{ color:var(--green);} .feedback.bad{ color:var(--red);}
+
+/* ===== שכבות ===== */
+.overlay{ position:fixed; inset:0; z-index:60; display:grid; place-items:center; text-align:center; padding:24px;
+  background:radial-gradient(900px 600px at 50% 28%, rgba(60,50,70,.5), rgba(8,10,14,.97)); transition:opacity .5s;}
+.overlay.hide{ opacity:0; pointer-events:none;}
+.card{ max-width:560px;}
+.kicker{ color:var(--gold); letter-spacing:.4em; font-size:13px; margin-bottom:12px;}
+.card h1{ font-size:clamp(30px,8vw,50px); color:var(--ink); font-weight:900; margin-bottom:12px;}
+.card p{ color:var(--ink-dim); line-height:1.85; font-size:17px; margin-bottom:8px;}
+.card .how{ color:#b9c4d4; font-size:15px; line-height:1.9; margin:14px 0;}
+.cta{ margin-top:16px; font-family:var(--serif); font-size:20px; font-weight:700; color:#0c0f14;
+  background:linear-gradient(180deg,var(--gold),var(--gold-soft)); border:none; border-radius:999px;
+  padding:14px 48px; cursor:pointer; box-shadow:0 6px 26px rgba(232,200,115,.35); animation:pulse 1.6s infinite;}
+.cta:hover{ transform:translateY(-2px);}
+@keyframes pulse{ 0%,100%{ box-shadow:0 6px 22px rgba(232,200,115,.3); transform:scale(1);} 50%{ box-shadow:0 8px 40px rgba(232,200,115,.7); transform:scale(1.04);} }
+.big-num{ font-family:var(--mono); font-size:46px; font-weight:700; color:var(--gold); margin:6px 0;}
+.brand{ position:fixed; bottom:3px; left:8px; z-index:22; color:#6b7686; font-size:10px;}
+
+@media (max-width:600px){ .opts{ grid-template-columns:1fr;} .mg svg{ width:74vw;} }
+</style>
+</head>
+<body>
+
+<div class="scene" id="scene">
+  <div class="sky"></div>
+  <div class="haze"></div>
+  <div class="ground"></div>
+  <div class="enemies" id="enemies"></div>
+</div>
+
+<div class="sandbags"></div>
+<!-- מכונת יריה -->
+<div class="mg" id="mg">
+  <svg viewBox="0 0 220 120" width="360">
+    <g fill="#2b2f36" stroke="#0c0f14" stroke-width="2" stroke-linejoin="round">
+      <rect x="96" y="6" width="28" height="64" rx="6"/>                 <!-- קנה (אל הזירה) -->
+      <rect x="90" y="14" width="40" height="8" rx="3"/><rect x="90" y="30" width="40" height="8" rx="3"/><rect x="90" y="46" width="40" height="8" rx="3"/>
+      <rect x="74" y="66" width="72" height="30" rx="8"/>                <!-- גוף הנשק -->
+      <path d="M150 80 q40 6 56 34 l-30 0 q-12 -20 -34 -22 z"/>          <!-- חגורת תחמושת -->
+      <rect x="86" y="92" width="48" height="14" rx="5"/>                <!-- בסיס -->
+      <path d="M70 96 l-22 22 l12 0 l20 -18 z"/><path d="M150 96 l22 22 l-12 0 l-20 -18 z"/> <!-- חצובה -->
+    </g>
+    <circle cx="110" cy="81" r="6" fill="#e8c873"/>
+  </svg>
+</div>
+<div class="muzzle" id="muzzle"></div>
+<div class="dmg" id="dmg"></div>
+
+<div class="hud">
+  <div class="hearts" id="hearts">❤️❤️❤️</div>
+  <div class="title">מָגֵן הַפְּסוּקִים</div>
+  <div class="stat">חוסלו <b id="score">0</b></div>
+  <button class="btn-restart" id="btn-restart" type="button">⟲ מחדש</button>
+</div>
+<div class="timerbar"><i id="timerfill"></i></div>
+
+<div class="panel">
+  <div class="qcard">
+    <div class="q" id="q">…</div>
+    <div class="opts" id="opts"></div>
+    <div class="feedback" id="feedback"></div>
+  </div>
+</div>
+
+<div class="brand">The First Verse · מגן הפסוקים</div>
+
+<!-- פתיחה -->
+<div class="overlay" id="intro"><div class="card">
+  <div class="kicker">משחק · TFV</div>
+  <h1>מָגֵן הַפְּסוּקִים</h1>
+  <p>אתה מאחורי מכונת-היריה. <b style="color:var(--gold)">אויבים מתקרבים</b> — ענה נכון <b style="color:var(--gold)">בזמן</b> כדי לחסל את הקרוב. לא הספקת? הוא יורה בך!</p>
+  <div class="how">🎯 תשובה נכונה בזמן → פגיעה באויב<br>⏱️ הזמן אוזל — כל שנייה קריטית<br>❤️ 3 חיים. עצור את כל הגל ותנצח</div>
+  <button class="cta" id="btn-start" type="button">לַעֲמָדוֹת!</button>
+</div></div>
+
+<div class="overlay hide" id="end"><div class="card">
+  <div class="kicker" id="end-kicker">סיום</div>
+  <h1 id="end-title">התוצאה</h1>
+  <div class="big-num" id="end-num">0</div>
+  <p id="end-msg"></p>
+  <button class="cta" id="btn-again" type="button">שׁוּב!</button>
+</div></div>
+
+<script>
+(function(){
+  "use strict";
+  var $=function(s){return document.querySelector(s);};
+  var QUESTIONS=[
+    {q:'איזה הוא <b>הפסוק הראשון</b> בתורה?',
+     o:['בְּרֵאשִׁית בָּרָא אֱלֹהִים אֵת הַשָּׁמַיִם וְאֵת הָאָרֶץ','וַיֹּאמֶר אֱלֹהִים יְהִי אוֹר','שְׁמַע יִשְׂרָאֵל','וַיְכֻלּוּ הַשָּׁמַיִם'], a:0},
+    {q:'הגימטריה של <b>בְּרֵאשִׁית</b>?', o:['913','903','86','401'], a:0},
+    {q:'כמה מילים בפסוק הראשון?', o:['7','6','8','5'], a:0},
+    {q:'<b>סכום</b> ערכי שבע המילים?', o:['2701','1820','82','304'], a:0},
+    {q:'ערך הפסוק ב<b>גימטריה קטנה</b>?', o:['82','28','100','19'], a:0},
+    {q:'איזו מילה פירושה <b>“בָּרָא”</b>?', o:['בָּרָא','אֱלֹהִים','אֵת','הָאָרֶץ'], a:0},
+    {q:'הגימטריה של <b>אֱלֹהִים</b>?', o:['86','91','120','65'], a:0},
+    {q:'הגימטריה של <b>הָאָרֶץ</b>?', o:['296','291','385','300'], a:0},
+    {q:'המילה <b>האחרונה</b> בפסוק?', o:['הָאָרֶץ','הַשָּׁמַיִם','בָּרָא','וְאֵת'], a:0},
+    {q:'2701 הוא המספר ה<b>משולשי</b> ה־?', o:['73','37','82','100'], a:0}
+  ];
+  var COLORS=["#3a3f47","#46414e","#3f4640","#4a4038"];
+
+  var enemiesEl=$("#enemies"), mg=$("#mg"), muzzle=$("#muzzle"), dmg=$("#dmg");
+  var qEl=$("#q"), optsEl=$("#opts"), fbEl=$("#feedback"), heartsEl=$("#hearts"), scoreEl=$("#score");
+  var timerfill=$("#timerfill");
+
+  // עומק-מיקום לפי "תור" (0=הכי קרוב)
+  var SLOTS=[ {d:0.95}, {d:0.6}, {d:0.42}, {d:0.3} ];
+  var HOR=30, BAND=66;
+  var WAVE=12, QTIME=8.0;
+  var state={running:false, score:0, health:3, left:0, slots:[], locked:false, t:0, tInt:null, cur:null, queue:[]};
+
+  function enemySVG(color){
+    return '<svg viewBox="0 0 80 120" width="80">'+
+      '<ellipse cx="40" cy="116" rx="24" ry="5" fill="rgba(0,0,0,.4)"/>'+
+      '<rect x="22" y="44" width="36" height="50" rx="10" fill="'+color+'" stroke="#0a0c0f" stroke-width="2"/>'+ /* גוף */
+      '<path d="M14 56 q-4 16 4 30 l8 -4 q-6 -12 -2 -24 z" fill="'+color+'" stroke="#0a0c0f" stroke-width="1.5"/>'+ /* יד */
+      '<circle cx="40" cy="28" r="15" fill="#5a4a3a" stroke="#0a0c0f" stroke-width="2"/>'+ /* ראש */
+      '<path d="M25 26 a15 12 0 0 1 30 0 z" fill="#2a2520"/>'+ /* קסדה */
+      '<rect x="28" y="30" width="24" height="7" rx="2" fill="#15110d"/>'+ /* מסכה */
+      '<rect x="6" y="60" width="40" height="6" rx="3" fill="#15171b" stroke="#000"/>'+ /* רובה מכוון אלינו */
+      '<rect x="40" y="90" width="9" height="26" fill="#2a2520"/><rect x="31" y="90" width="9" height="26" fill="#2a2520"/>'+ /* רגליים */
+      '<span></span>'+
+      '</svg><span class="flash"></span>';
+  }
+
+  function placeSlot(enemyObj){
+    var d=SLOTS[enemyObj.slot].d;
+    var top=HOR + d*(BAND-HOR);
+    var scale=0.32 + d*0.95;
+    var lane=(enemyObj.slot%2===0?1:-1)*(enemyObj.slot)*7;  // פיזור קל
+    enemyObj.el.style.top=top+"%";
+    enemyObj.el.style.left=(50+lane)+"%";
+    enemyObj.el.style.transform="translate(-50%,-100%) scale("+scale.toFixed(3)+")";
+    enemyObj.el.style.zIndex=String(20-enemyObj.slot);
+  }
+  function spawnAt(slot){
+    if(state.left<=0) return null;
+    state.left--;
+    var color=COLORS[Math.floor(Math.random()*COLORS.length)];
+    var el=document.createElement("div"); el.className="enemy"; el.innerHTML=enemySVG(color);
+    enemiesEl.appendChild(el);
+    var obj={el:el, slot:slot}; placeSlot(obj); return obj;
+  }
+  function fillSlots(){
+    for(var i=0;i<SLOTS.length;i++){ if(!state.slots[i]){ var e=spawnAt(i); if(e) state.slots[i]=e; } }
+  }
+
+  // ----- שמע -----
+  var actx=null; function ac(){ if(!actx){try{actx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}} return actx; }
+  function tone(f,d,t,v){var c=ac();if(!c)return;var o=c.createOscillator(),g=c.createGain();o.type=t||"sine";o.frequency.value=f;g.gain.setValueAtTime(v||.25,c.currentTime);g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+(d||.2));o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+(d||.2)+.02);}
+  function noise(v,dur){var c=ac();if(!c)return;var sr=c.sampleRate,b=c.createBuffer(1,sr*dur,sr),d=b.getChannelData(0);for(var i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2);var s=c.createBufferSource();s.buffer=b;var g=c.createGain();g.gain.value=v;s.connect(g);g.connect(c.destination);s.start();}
+  function shot(){ noise(.4,.12); }
+  function good(){ tone(700,.08,"square",.25); }
+  function hit(){ tone(120,.3,"sawtooth",.3); noise(.5,.25); }
+  function tick(){ tone(1200,.04,"square",.12); }
+
+  function recoil(){ mg.classList.remove("recoil"); void mg.offsetWidth; mg.classList.add("recoil");
+    muzzle.classList.remove("flash"); void muzzle.offsetWidth; muzzle.classList.add("flash"); shot(); }
+
+  function setHearts(){ heartsEl.textContent="❤️".repeat(state.health)+"🖤".repeat(3-state.health); }
+
+  // ----- שאלות + טיימר -----
+  function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+  function startTimer(){
+    state.t=QTIME; timerfill.style.transform="scaleX(1)";
+    clearInterval(state.tInt);
+    state.tInt=setInterval(function(){
+      state.t-=0.1;
+      var f=Math.max(0,state.t/QTIME); timerfill.style.transform="scaleX("+f+")";
+      if(state.t<=3 && Math.abs(state.t%1)<0.06) tick();
+      if(state.t<=0){ clearInterval(state.tInt); timeUp(); }
+    },100);
+  }
+  function nextQuestion(){
+    if(!state.running) return;
+    if(!state.slots[0]){ // אם נגמרו האויבים
+      if(state.left<=0 && !anyEnemy()){ return win(); }
+    }
+    state.locked=false;
+    if(state.queue.length===0) state.queue=shuffle(QUESTIONS.map(function(_,i){return i;}));
+    var q=QUESTIONS[state.queue.shift()]; state.cur=q;
+    qEl.innerHTML=q.q; fbEl.textContent=""; fbEl.className="feedback";
+    var idx=shuffle(q.o.map(function(_,i){return i;})); optsEl.innerHTML="";
+    idx.forEach(function(oi){ var b=document.createElement("button"); b.className="opt"; b.type="button"; b.innerHTML=q.o[oi];
+      b.addEventListener("click",function(){answer(oi===q.a,b);}); optsEl.appendChild(b); });
+    startTimer();
+  }
+  function anyEnemy(){ for(var i=0;i<state.slots.length;i++) if(state.slots[i]) return true; return false; }
+
+  function advance(){ // אחרי הסרת הקרוב — כולם מתקדמים תור
+    state.slots.shift(); state.slots.push(null);
+    for(var i=0;i<state.slots.length;i++){ if(state.slots[i]){ state.slots[i].slot=i; placeSlot(state.slots[i]); } }
+    fillSlots();
+  }
+
+  function answer(correct, btn){
+    if(state.locked||!state.running) return; state.locked=true; clearInterval(state.tInt);
+    var front=state.slots[0];
+    if(correct){
+      btn.classList.add("correct"); recoil(); good();
+      if(front){ front.el.classList.add("down"); good();
+        (function(el){ setTimeout(function(){ if(el&&el.parentNode) el.parentNode.removeChild(el); },500); })(front.el); }
+      state.score++; scoreEl.textContent=state.score;
+      fbEl.textContent="פגיעה! 🎯"; fbEl.className="feedback good";
+      setTimeout(function(){ advance(); afterTurn(); }, 360);
+    } else {
+      btn.classList.add("wrong");
+      Array.prototype.forEach.call(optsEl.children,function(b){ if(b.innerHTML===state.cur.o[state.cur.a])b.classList.add("correct"); b.disabled=true; });
+      enemyShoots();
+    }
+  }
+  function timeUp(){
+    if(state.locked||!state.running) return; state.locked=true;
+    Array.prototype.forEach.call(optsEl.children,function(b){ if(b.innerHTML===state.cur.o[state.cur.a])b.classList.add("correct"); b.disabled=true; });
+    enemyShoots();
+  }
+  function enemyShoots(){
+    var front=state.slots[0];
+    if(front) front.el.classList.add("fire");
+    hit();
+    dmg.classList.add("show"); setTimeout(function(){ dmg.classList.remove("show"); },140);
+    state.health--; setHearts();
+    fbEl.textContent="נפגעת! ❤️ ירד"; fbEl.className="feedback bad";
+    if(front){ setTimeout(function(){ front.el.classList.remove("fire"); front.el.classList.add("down");
+      (function(el){ setTimeout(function(){ if(el&&el.parentNode) el.parentNode.removeChild(el); },500); })(front.el); },200); }
+    setTimeout(function(){
+      if(state.health<=0){ return lose(); }
+      advance(); afterTurn();
+    }, 700);
+  }
+  function afterTurn(){
+    if(!state.running) return;
+    if(!anyEnemy() && state.left<=0){ return win(); }
+    nextQuestion();
+  }
+
+  // ----- ניהול -----
+  function start(){
+    state.running=true; state.score=0; state.health=3; state.left=WAVE; state.slots=[null,null,null,null]; state.queue=[]; state.locked=false;
+    scoreEl.textContent="0"; setHearts(); enemiesEl.innerHTML="";
+    fillSlots(); nextQuestion();
+    $("#intro").classList.add("hide"); $("#end").classList.add("hide");
+  }
+  function win(){ if(!state.running)return; state.running=false; clearInterval(state.tInt);
+    $("#end-kicker").textContent="הגל נהדף!"; $("#end-title").textContent="נִיצַּחְתָּ! 🏆";
+    $("#end-num").textContent="חוסלו "+state.score+" אויבים"; $("#end-msg").textContent="עצרת את כל הגל עם "+state.health+" חיים שנותרו!";
+    $("#end").classList.remove("hide"); }
+  function lose(){ if(!state.running)return; state.running=false; clearInterval(state.tInt);
+    $("#end-kicker").textContent="העמדה נפלה"; $("#end-title").textContent="נפגעת 💥";
+    $("#end-num").textContent="חוסלו "+state.score+" אויבים"; $("#end-msg").textContent="נגמרו החיים — נסה שוב להחזיק מעמד!";
+    $("#end").classList.remove("hide"); }
+
+  $("#btn-start").addEventListener("click",function(){ac();start();});
+  $("#btn-again").addEventListener("click",function(){ac();start();});
+  $("#btn-restart").addEventListener("click",function(){ac();start();});
+
+  // תצוגה מקדימה (אויב אחד ברקע)
+  state.left=4; fillSlots();
+})();
+</script>
+</body>
+</html>
