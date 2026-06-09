@@ -223,7 +223,7 @@ body{ font-family:var(--serif); color:var(--ink); direction:rtl; user-select:non
     <!-- מחוון מהירות -->
     <div class="gauge speed"><div class="lbl">קמ״ש</div><div class="big" id="spd">0</div><div class="needle" id="needle"></div></div>
     <!-- מחוון זמן/מקום -->
-    <div class="gauge info" id="infoGauge"><div class="lbl">זמן</div><div class="big" id="timer">1:00</div><div class="sub" id="place">מקום 6/6</div></div>
+    <div class="gauge info" id="infoGauge"><div class="lbl">זמן</div><div class="big" id="timer">2:00</div><div class="sub" id="place">מקום 6/6</div></div>
     <!-- הגה -->
     <svg class="wheel" viewBox="0 0 200 200" aria-hidden="true">
       <circle cx="100" cy="100" r="92" fill="none" stroke="#14161a" stroke-width="22"/>
@@ -255,7 +255,7 @@ body{ font-family:var(--serif); color:var(--ink); direction:rtl; user-select:non
     <div class="kicker">משחק · TFV</div>
     <h1>מֵרוֹץ הַפְּסוּקִים</h1>
     <p>אתה מאחורי ההגה. <b style="color:var(--gold)">רמזור אדום עוצר אותך</b> — תשובה נכונה מדליקה ירוק, ואתה מאיץ ועוקף את היריבים שלפניך.</p>
-    <div class="how">🚦 ענה נכון → ירוק → האצה ועקיפה<br>🏎️ עקוף את כל 5 היריבים<br>⏱️ יש לך <b style="color:var(--gold)">דקה</b></div>
+    <div class="how">🚦 ענה נכון → ירוק → האצה ועקיפה<br>🏎️ עקוף את כל 5 היריבים<br>⏱️ יש לך <b style="color:var(--gold)">שתי דקות</b> — בלי לחץ</div>
     <button class="cta" id="btn-start" type="button">הַתְנֵעַ!</button>
   </div>
 </div>
@@ -292,7 +292,8 @@ body{ font-family:var(--serif); color:var(--ink); direction:rtl; user-select:non
   var dashes=$("#dashes");
 
   var HOR=44; // אחוז הגובה של קו האופק
-  var rivals=[], you=0, state={running:false,t:60,queue:[],streak:0,locked:false,loop:null,clock:null,spd:0};
+  var RACE_TIME=120; // משך המרוץ בשניות (שתי דקות)
+  var rivals=[], you=0, state={running:false,t:RACE_TIME,queue:[],streak:0,locked:false,loop:null,clock:null,spd:0};
 
   function rearCar(color){
     var c2=color;
@@ -313,7 +314,7 @@ body{ font-family:var(--serif); color:var(--ink); direction:rtl; user-select:non
     for(var i=0;i<5;i++){
       var el=document.createElement("div"); el.className="rival"; el.innerHTML=rearCar(COLORS[i]);
       rivalsEl.appendChild(el);
-      rivals.push({prog:0.10+Math.random()*0.06, lane:(i-2)*0.9, speed:0.0035+Math.random()*0.004, el:el});
+      rivals.push({prog:0.10+Math.random()*0.06, lane:(i-2)*0.9, speed:0.0011+Math.random()*0.0009, el:el});
     }
     you=0;
   }
@@ -395,8 +396,8 @@ body{ font-family:var(--serif); color:var(--ink); direction:rtl; user-select:non
   }
 
   function startRace(){
-    state.running=true; state.t=60; state.queue=[]; state.streak=0; state.locked=false;
-    elTimer.textContent="1:00"; infoGauge.classList.remove("low"); setSpeed(40);
+    state.running=true; state.t=RACE_TIME; state.queue=[]; state.streak=0; state.locked=false;
+    elTimer.textContent="2:00"; infoGauge.classList.remove("low"); setSpeed(40);
     buildRivals(); renderRivals(); placeNum(); nextQuestion();
     clearInterval(state.loop); state.loop=setInterval(loop,160);
     clearInterval(state.clock); state.clock=setInterval(clock,1000);
