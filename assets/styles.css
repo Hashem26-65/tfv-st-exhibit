@@ -343,6 +343,9 @@ body:not(.started) .brand-mark{ display:none; }
 .word:focus-visible{ outline:none; border-color:var(--gold); box-shadow:0 0 18px var(--glow); }
 .word.in{ opacity:1; transform:none; }
 .word.hot{ box-shadow:0 0 22px var(--glow); border-color:var(--gold-soft); }
+/* המילה שמדברים עליה כעת — מתנפחת בעדינות וחוזרת לגודלה כשמסיימים */
+.word.speaking{ transform:scale(1.13); border-color:var(--gold-soft);
+  box-shadow:0 0 26px var(--glow); z-index:2; }
 .word .he{ font-size:clamp(18px,3vw,26px); color:var(--ink); order:1; }
 /* תעתיק אנגלי של המילה — מוצג רק במצב אנגלית, מתחת לכל מה שבעברית */
 .word-en{ display:none; order:3; font-family:var(--serif); font-style:italic;

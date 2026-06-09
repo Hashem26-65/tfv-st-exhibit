@@ -29,6 +29,7 @@
   let firedKey = "";       // "actIndex:cueIndex" של ה-cue האחרון שהופעל
   const firedSet = new Set();
   let started = false;
+  let speakTimer = null;   // טיימר להחזרת המילה המדוברת לגודלה
 
   // ---- אלמנטים קבועים ----
   const intro = $("#intro");
@@ -224,9 +225,19 @@
     revealValue(i) {
       const el = wordEls[i];
       if (!el) return;
-      el.classList.add("hot");
+      // החזרת כל המילים לגודל המקורי, והגדלה עדינה של המילה הנוכחית
+      wordEls.forEach((w) => w.classList.remove("speaking"));
+      el.classList.add("hot", "speaking");
       $(".val", el).classList.add("show");
       setTimeout(() => el.classList.remove("hot"), 900);
+      if (speakTimer) { clearTimeout(speakTimer); speakTimer = null; }
+      if (instant) {
+        // בקפיצת-זמן: לא להשאיר מילה מוגדלת
+        el.classList.remove("speaking");
+      } else {
+        // בתום הדיבור על המילה — חזרה לגודל המקורי (גם אם זו המילה האחרונה)
+        speakTimer = setTimeout(() => el.classList.remove("speaking"), 2300);
+      }
     },
 
     // ---------- אקט 2 ----------
@@ -574,8 +585,9 @@
   // ---- איפוס מצב חזותי של כל האקטים (לקראת קפיצה-בזמן / ניגון חוזר) ----
   function resetAllVisuals() {
     // אקט 1
+    if (speakTimer) { clearTimeout(speakTimer); speakTimer = null; }
     $$(".word", verseRow).forEach((el) => {
-      el.classList.remove("in", "hot");
+      el.classList.remove("in", "hot", "speaking");
       const v = $(".val", el); if (v) v.classList.remove("show");
     });
     // אקט 2
@@ -839,7 +851,8 @@
   function resetActVisuals(i) {
     // איפוס מצב חזותי בסיסי לפי אקט (לא ממצה — מספיק לניגון חוזר נקי)
     if (i === 0) {
-      $$(".word", verseRow).forEach(el => { el.classList.remove("in", "hot"); $(".val", el).classList.remove("show"); });
+      if (speakTimer) { clearTimeout(speakTimer); speakTimer = null; }
+      $$(".word", verseRow).forEach(el => { el.classList.remove("in", "hot", "speaking"); $(".val", el).classList.remove("show"); });
     }
   }
 
