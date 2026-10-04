@@ -2049,6 +2049,9 @@ body.daily-bg{background:linear-gradient(rgba(235,232,220,.35),rgba(235,232,220,
 .rm-time{display:flex;align-items:center;justify-content:center;gap:10px;font-weight:700;color:#1e3153}
 .rm-time select{font:inherit;padding:6px 10px;border-radius:10px;border:1px solid rgba(40,55,78,.18);background:#f6f8fc;direction:ltr}
 #remind-modal .btn-main,#remind-modal .btn-ghost{width:100%;font-size:clamp(15px,1.8vw,17px) !important;padding:12px 14px !important;line-height:1.3}
+.rm-small{font-size:12.5px;line-height:1.45;margin-top:-4px}
+#rm-push-note.hl{background:#fff6dc;border-radius:12px;padding:8px 10px;color:#6b4e00}
+.rm-or{font-size:12px;color:#8a97ab;margin-top:4px}
 .rm-close{position:absolute;top:10px;inset-inline-end:12px;width:32px;height:32px;border-radius:50%;border:none;background:#eef2f7;color:#46566e;cursor:pointer}
 
 /* השמעת הפסוק */
@@ -2149,7 +2152,7 @@ var LANGS=[
   {c:"de",n:"Deutsch",h:"גרמנית"},
   {c:"pt",n:"Português",h:"פורטוגזית"}
 ];
-var I18N_V="9"; /* להעלות בכל עדכון של קבצי המילון, כדי שהדפדפן לא ישתמש בגרסה ישנה */
+var I18N_V="10"; /* להעלות בכל עדכון של קבצי המילון, כדי שהדפדפן לא ישתמש בגרסה ישנה */
 var KEY="tfv_bq_lang";
 function getLang(){ try{ return localStorage.getItem(KEY); }catch(e){ return null; } }
 function langInfo(c){ for(var i=0;i<LANGS.length;i++) if(LANGS[i].c===c) return LANGS[i]; return LANGS[0]; }
@@ -5500,6 +5503,7 @@ function endLevel(){
   if(curLevel._daily){
     var okd=correctCount>=DAILY_PASS;
     var p=activeProf(); if(p){ p.dailyDone=todayStr(); p.dailyOk=okd; p.dailyScore=correctCount; p.dailyRes=RUN_LOG.map(function(r){ return r.ok?"1":"0"; }).join(""); saveProfiles(); }
+    setTimeout(pushSync, 300);
     addWeekPts(score); lbPublish(); /* האתגר היומי נספר בתחרות השבועית */
     $("end-grade").textContent = okd ? "🌟 האתגר היומי — הושלם!" : "🌟 האתגר היומי";
     $("end-score").textContent = score;
@@ -7242,12 +7246,18 @@ var ACHIEVEMENTS=[
   {id:"correct100",icon:"🎓", title:"מלומד",       desc:"100 תשובות נכונות בסך הכל",  check:function(c){return c.totalCorrect>=100;}},
   {id:"streak3",   icon:"🔥", title:"בוער",        desc:"רצף 3 ימים",                check:function(c){return c.bestStreak>=3;}},
   {id:"streak7",   icon:"📅", title:"נאמן",        desc:"רצף 7 ימים",                check:function(c){return c.bestStreak>=7;}},
-  {id:"daily",     icon:"🌟", title:"שאלת היום",   desc:"ענית על שאלת היום",          check:function(c){return c.dailyDone;}}
+  {id:"daily",     icon:"🌟", title:"שאלת היום",   desc:"ענית על שאלת היום",          check:function(c){return c.dailyDone;}},
+  {id:"chFirst",   icon:"⚔️", title:"מאתגר",       desc:"שלחת אתגר לחבר",             check:function(c){return c.chMade>=1;}},
+  {id:"chWin",     icon:"🏆", title:"ניצחון באתגר", desc:"ניצחת חבר באתגר שלו",        check:function(c){return c.chWins>=1;}},
+  {id:"chPerfect", icon:"🎯", title:"אתגר מושלם",  desc:"10 מתוך 10 באתגר חבר",       check:function(c){return c.chPerfect>=1;}},
+  {id:"ch5",       icon:"🤝", title:"חברותא",      desc:"שלחת 5 אתגרים לחברים",       check:function(c){return c.chMade>=5;}},
+  {id:"chUnbeaten",icon:"🛡️", title:"בלתי מנוצח",  desc:"3 חברים ענו על האתגר שלך — ואף אחד לא ניצח", check:function(c){return c.chUnbeaten>=1;}}
 ];
 function achieveCtx(){
   var p=activeProf()||{}, st=p.stats||{};
   return { stage:getStage(), bestCombo:st.bestCombo||0, totalCorrect:st.totalCorrect||0,
-    fastAnswers:st.fastAnswers||0, perfect:!!st.perfect, bestStreak:p.bestStreak||0, dailyDone:!!p.dailyDone };
+    fastAnswers:st.fastAnswers||0, perfect:!!st.perfect, bestStreak:p.bestStreak||0, dailyDone:!!p.dailyDone,
+    chMade:st.chMade||0, chWins:st.chWins||0, chPerfect:st.chPerfect||0, chUnbeaten:st.chUnbeaten||0 };
 }
 function bumpStat(key,val,mode){
   var p=activeProf(); if(!p) return; p.stats=p.stats||{};
@@ -7704,6 +7714,8 @@ function openRemind(){
   ov.innerHTML='<div class="rm-box"><div class="rm-ico">\ud83d\udd14</div>'+
     '<div class="rm-title">תזכורת יומית לאתגר</div>'+
     '<div class="rm-text">נוסיף ליומן שלכם תזכורת שחוזרת כל יום — כך הרצף לא נשבר.</div>'+
+    pushBlockHTML()+
+    '<div class="rm-or">או ביומן</div>'+
     '<label class="rm-time"><span>באיזו שעה?</span><select id="rm-hour">'+opts+'</select></label>'+
     '<button class="btn-main" id="rm-ics">\ud83d\udcc5 הוספה ליומן (אייפון, אאוטלוק ועוד)</button>'+
     '<button class="btn-ghost" id="rm-gcal">Google Calendar</button>'+
@@ -7713,8 +7725,82 @@ function openRemind(){
   $("rm-ics").addEventListener("click",function(){ remindIcs(hour()); ov.remove(); });
   $("rm-gcal").addEventListener("click",function(){ remindGoogle(hour()); ov.remove(); });
   $("rm-close").addEventListener("click",function(){ ov.remove(); });
+  var pb=$("rm-push"); if(pb) pb.addEventListener("click",function(){
+    if(pushOn()){ pushDisable().then(function(){ ov.remove(); }); return; }
+    if(isIOS() && !isStandalone()){ var n=$("rm-push-note"); if(n){ n.style.display=""; n.classList.add("hl"); } return; }
+    pb.disabled=true; pushEnable().then(function(ok){ pb.disabled=false; if(ok) ov.remove(); });
+  });
   ov.addEventListener("click",function(e){ if(e.target===ov) ov.remove(); });
 }
+/* ══════════ התראות בטלפון (Web Push) ══════════
+   ההרשמה נשמרת ב-/api/bq-store (push-sub); השרת שולח פעם ביום (/api/bq-push, Vercel Cron, בערב)
+   רק למי שעוד לא עשה את האתגר היומי, ומיד כשחבר עונה על האתגר שלך. באייפון — רק מתוך האפליקציה שהותקנה במסך הבית. */
+var PUSH_KEY="BK0meUsG0D4DWa8SOre3d_H3tkJL_gkFCB2xBEoQSPbqC7y6xeK9yZuWjjyAYkWK5-vU4f2XF1dOCZOx6F85mQ8";
+function pushSupported(){ return !STORE_OFF && ("serviceWorker" in navigator) && ("PushManager" in window) && ("Notification" in window); }
+function pushId(){ try{ return localStorage.getItem("tfv_bq_push")||""; }catch(e){ return ""; } }
+function pushOn(){ return !!pushId() && window.Notification && Notification.permission==="granted"; }
+function pushInfo(){
+  var p=activeProf()||{}, lg="he"; try{ lg=localStorage.getItem("tfv_bq_lang")||"he"; }catch(e){}
+  return {lang:lg, tz:new Date().getTimezoneOffset(), pid:PID, done:p.dailyDone||"", streak:p.streak||0};
+}
+function pushBlockHTML(){
+  var ios=isIOS() && !isStandalone();
+  if(!pushSupported() && !ios) return "";
+  return '<button class="btn-main" id="rm-push">'+(pushOn() ? "\ud83d\udd15 ביטול ההתראות בטלפון" : "\ud83d\udcf2 התראה יומית בטלפון")+'</button>'+
+    '<div class="rm-text rm-small">'+(pushOn() ? "ההתראות פעילות במכשיר הזה." : "פעם ביום, בערב — רק אם עוד לא עשיתם את האתגר היומי. ונודיע לכם כשחבר עונה על האתגר שלכם.")+'</div>'+
+    '<div class="rm-text rm-small" id="rm-push-note" style="display:none">\ud83d\udcf2 באייפון ההתראות עובדות רק מהאפליקציה: לחצו על כפתור השיתוף בספארי ← ״הוסף למסך הבית״, פתחו את החידון מהאייקון החדש — ושם הפעילו את ההתראה.</div>';
+}
+function pushReg(){
+  return navigator.serviceWorker.register("bq-sw.js",{scope:"./bereshit-quiz"}).then(function(){
+    return Promise.race([navigator.serviceWorker.ready, new Promise(function(_,rej){ setTimeout(function(){ rej(new Error("sw")); },10000); })]);
+  });
+}
+function pushKeyBytes(){
+  var b=atob(PUSH_KEY.replace(/-/g,"+").replace(/_/g,"/")), u=new Uint8Array(b.length);
+  for(var i=0;i<b.length;i++) u[i]=b.charCodeAt(i);
+  return u;
+}
+function pushEnable(){
+  return Notification.requestPermission().then(function(perm){
+    if(perm!=="granted"){ toast(perm==="denied" ? "\ud83d\udd15 ההתראות חסומות בדפדפן — אפשר לפתוח אותן בהגדרות האתר" : "ההתראות לא הופעלו"); return false; }
+    return pushReg().then(function(reg){
+      return reg.pushManager.getSubscription().then(function(old){
+        return old || reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:pushKeyBytes()});
+      });
+    }).then(function(sub){
+      return storeCall(Object.assign({op:"push-sub", sub:sub.toJSON()}, pushInfo()));
+    }).then(function(j){
+      if(!j || !j.id){ toast("\u26a0\ufe0f לא הצלחנו להפעיל את ההתראות — נסו שוב"); return false; }
+      try{ localStorage.setItem("tfv_bq_push", j.id); }catch(e){}
+      toast("\u2705 ההתראות הופעלו — נזכיר לכם בערב, אם עוד לא שיחקתם");
+      return true;
+    });
+  }).catch(function(){ toast("\u26a0\ufe0f הדפדפן הזה לא תומך בהתראות"); return false; });
+}
+function pushDisable(){
+  var id=pushId();
+  try{ localStorage.removeItem("tfv_bq_push"); }catch(e){}
+  var un=("serviceWorker" in navigator) ? navigator.serviceWorker.getRegistration("bereshit-quiz").then(function(reg){
+    return reg && reg.pushManager.getSubscription().then(function(s){ return s && s.unsubscribe(); });
+  }).catch(function(){}) : Promise.resolve();
+  return Promise.all([un, id ? storeCall({op:"push-del", id:id}) : null]).then(function(){ toast("\ud83d\udd15 ההתראות בוטלו"); });
+}
+/* עדכון השרת: מתי עשיתי את האתגר היומי (כדי שלא נקבל תזכורת סתם), שפה ואזור זמן */
+function pushSync(){
+  var id=pushId(); if(!id || STORE_OFF) return;
+  storeCall(Object.assign({op:"push-upd", id:id}, pushInfo())).then(function(j){
+    if(j && j.gone){   /* המנוי נמחק בשרת — נרשמים מחדש בשקט אם ההרשאה עדיין קיימת */
+      try{ localStorage.removeItem("tfv_bq_push"); }catch(e){}
+      if(window.Notification && Notification.permission==="granted" && pushSupported()){
+        pushReg().then(function(reg){ return reg.pushManager.getSubscription(); }).then(function(sub){
+          if(sub) storeCall(Object.assign({op:"push-sub", sub:sub.toJSON()}, pushInfo())).then(function(k){ if(k && k.id) try{ localStorage.setItem("tfv_bq_push", k.id); }catch(e){} });
+        }).catch(function(){});
+      }
+    }
+  });
+}
+setTimeout(pushSync, 4000);
+
 /* ══════════ הוספה למסך הבית (PWA) ══════════ */
 var INSTALL_EVT=null;
 window.addEventListener("beforeinstallprompt",function(e){ e.preventDefault(); INSTALL_EVT=e; });
@@ -8080,6 +8166,7 @@ function chEnd(){
   var resStr=RUN_LOG.map(function(r){ return r.ok?"1":"0"; }).join(""), nQ=questions.length, sc=score, cc=correctCount;
   $("end-record").style.display="none"; $("btn-next-lvl").style.display="none"; $("btn-again").style.display="none";
   $("end-score").textContent=sc;
+  if(nQ>=10 && cc===nQ) bumpStat("chPerfect",1,"max");
   if(CH.role==="maker"){
     $("end-grade").textContent="\u2694\ufe0f האתגר שלך מוכן!";
     $("end-stats").innerHTML='ענית נכון על <span>'+cc+'/'+nQ+'</span><br>⏳ שומרים את האתגר…';
@@ -8087,6 +8174,7 @@ function chEnd(){
     storeCall({op:"ch-new", by:{pid:PID,name:me}, deck:deck, score:sc, correct:cc, res:resStr}).then(function(j){
       if(!j || !j.id){ $("end-stats").innerHTML='ענית נכון על <span>'+cc+'/'+nQ+'</span><br>⚠️ לא הצלחנו לשמור את האתגר — נסו שוב'; return; }
       CH.id=j.id; SHARE_URL=GAME_URL+"?ch="+j.id;
+      bumpStat("chMade"); checkAchievements();
       shareText="\u2694\ufe0f "+me+" מאתגר/ת אותך בחידון בראשית!\n\ud83c\udfaf "+sc+" נקודות ("+cc+"/"+nQ+") — תצליחו יותר? \ud83d\udc47";
       $("end-stats").innerHTML='ענית נכון על <span>'+cc+'/'+nQ+'</span><br>\ud83d\udce4 שלחו את האתגר לחבר — כשהוא יסיים, התוצאה תופיע אצלכם בבית';
       updateShareBtn();
@@ -8098,10 +8186,12 @@ function chEnd(){
     $("end-stats").innerHTML='\ud83d\udd35 אתה: <span>'+sc+'</span> ('+cc+'/'+nQ+')<br>\ud83d\udd34 <b>'+esc(mk.name)+'</b>: <span>'+mk.score+'</span> ('+mk.correct+'/'+nQ+')'+
       '<br><button class="btn-main" id="ch-back">\u2694\ufe0f אתגרו אותם בחזרה</button>';
     storeCall({op:"ch-res", id:CH.id, pid:PID, name:getPlayerName(), score:sc, correct:cc, res:resStr});
+    if(win>0) bumpStat("chWins");
     shareText="\u2694\ufe0f "+sc+" מול "+mk.score+" באתגר חבר בחידון בראשית! \ud83d\udc47";
     updateShareBtn();
   }
   screenEnd.classList.remove("hidden"); fitScreen(screenEnd);
+  checkAchievements();
 }
 document.addEventListener("click",function(e){ if(e.target.closest && e.target.closest("#ch-back")){ screenEnd.classList.add("hidden"); startChallenge(); } });
 /* פתיחת אתגר מקישור */
@@ -8162,6 +8252,9 @@ function chRenderHome(){
   var box=$("hd-chl"); if(!box || STORE_OFF || !getPlayerName()) return;
   var draw=function(list){
     if(!list || !list.length){ box.innerHTML=""; return; }
+    if(list.some(function(c){ var r=c.res||[]; return r.length>=3 && r.every(function(x){ return x.score<=c.by.score; }); })){
+      var _ap=activeProf(); if(_ap && !(_ap.stats&&_ap.stats.chUnbeaten)){ bumpStat("chUnbeaten",1,"max"); checkAchievements(); }
+    }
     var rows=[];
     list.slice(0,3).forEach(function(c){
       var res=(c.res||[]).slice().sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
@@ -8289,6 +8382,9 @@ var DUEL_INV_EXISTING=null;
 /* אתגר חבר דרך קישור ?ch=<מזהה> */
 var CH_INV=(function(){ try{ var c=new URLSearchParams(location.search).get("ch"); return c ? c.replace(/[^A-Za-z0-9]/g,"").slice(0,16) : null; }catch(e){ return null; } })();
 if(CH_INV){ window.__chInvite=CH_INV; setTimeout(function(){ chOpen(CH_INV); },900); }
+var DAILY_INV=(function(){ try{ if(!new URLSearchParams(location.search).get("daily")) return false; history.replaceState(null,"",location.pathname); return true; }catch(e){ return false; } })();
+if(DAILY_INV){ var _dp=activeProf();
+  if(_dp && !isPending() && profileList().length<2 && (_dp.email || _dp.emailAsked)) setTimeout(function(){ var ld=$("screen-landing"); if(ld) ld.classList.add("hidden"); startDaily(); },900); }
 var DUEL_INV=(function(){
   try{ var q=new URLSearchParams(location.search); if(!q.get("duel")) return null;
        history.replaceState(null,"",location.pathname); /* רענון לא יפעיל שוב */

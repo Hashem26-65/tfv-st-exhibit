@@ -4,7 +4,9 @@
 //   visit-put / visits          : רשומות ביקור (שם, שלב, אימייל מוצפן בלבד) — לרשימת השחקנים במנהלים
 //   visit-del (קוד מנהל)        : מחיקת שחקן
 //   scores                      : רשומות לוח השיאים החתומות (נכתבות ב-bq-sign)
+//   push-sub / push-upd / push-del : מנוי להתראות בטלפון (bq:push), ההתראה היומית נשלחת מ-bq-push
 const crypto = require("crypto");
+const wp = require("./_webpush");
 
 const URL_ = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || "";
 const TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || "";
@@ -36,6 +38,33 @@ const okPid = p => /^u[a-z0-9]{4,14}$/.test(String(p || ""));
 const cleanName = n => String(n || "").replace(/[\u0000-\u001f<>]/g, "").trim().slice(0, 30) || "אנונימי";
 const int = (v, lo, hi) => { v = Math.floor(Number(v)); return isFinite(v) ? Math.max(lo, Math.min(hi, v)) : lo; };
 const noDeck = r => { if (!r) return r; const o = Object.assign({}, r); delete o.deck; return o; };
+const LANGS = ["he", "en", "ru", "ar", "zh", "fr", "es", "de", "pt"];
+const okPushId = s => /^[a-f0-9]{16}$/.test(String(s || ""));
+const okDay = s => /^\d{4}-\d{2}-\d{2}$/.test(String(s || ""));
+/* פרטי המנוי שהדפדפן שולח (שפה, אזור זמן, מי השחקן, מתי שיחק אחרון) — מסוננים */
+function pushFields(b, rec) {
+  if (LANGS.includes(b.lang)) rec.lang = b.lang;
+  if (b.tz != null) rec.tz = int(b.tz, -840, 840);
+  if (okPid(b.pid)) rec.pid = b.pid;
+  if (okDay(b.done)) rec.done = b.done;
+  if (b.streak != null) rec.streak = int(b.streak, 0, 10000);
+  rec.seen = Date.now();
+  return rec;
+}
+/* התראה לכל המכשירים של שחקן (למשל: חבר ענה על האתגר שלו). לא מפיל את הבקשה אם נכשל. */
+async function pushToPid(pid, makeMsg) {
+  try {
+    const ids = await redis(["SMEMBERS", "bq:pushpid:" + pid]) || [];
+    if (!ids.length) return;
+    const vals = await redis(["HMGET", "bq:push"].concat(ids)) || [];
+    await Promise.all(vals.map(async (v, i) => {
+      if (!v) { await redis(["SREM", "bq:pushpid:" + pid, ids[i]]); return; }
+      const r = JSON.parse(v); if (r.pid !== pid) return;
+      const st = await wp.send(r.sub, makeMsg(r.lang || "he"), 3 * 24 * 3600);
+      if (st === 404 || st === 410) await pipe([["HDEL", "bq:push", ids[i]], ["SREM", "bq:pushpid:" + pid, ids[i]]]);
+    }));
+  } catch (e) {}
+}
 
 module.exports = async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
@@ -95,8 +124,10 @@ module.exports = async (req, res) => {
       if (op === "ch-get") { res.status(200).json({ db: true, rec }); return; }
       if (!okPid(b.pid) || b.pid === rec.by.pid) { res.status(400).json({ error: "pid" }); return; }
       const mine = { pid: b.pid, name: cleanName(b.name), score: int(b.score, 0, 7000), correct: int(b.correct, 0, 12), res: String(b.res || "").slice(0, 12), ts: Date.now() };
+      const first = !(rec.res || []).some(x => x.pid === b.pid);
       rec.res = (rec.res || []).filter(x => x.pid !== b.pid).concat([mine]).slice(-30);
       await redis(["SET", "bq:ch:" + id, JSON.stringify(rec), "KEEPTTL"]);
+      if (first) await pushToPid(rec.by.pid, lang => wp.challengeMsg(lang, mine.name, rec.by.score, mine.score, id));
       res.status(200).json({ db: true, rec: noDeck(rec) }); return;
     }
     if (op === "ch-mine") {
@@ -105,6 +136,40 @@ module.exports = async (req, res) => {
       if (!ids.length) { res.status(200).json({ db: true, list: [] }); return; }
       const vals = await redis(["MGET"].concat(ids.map(i => "bq:ch:" + i))) || [];
       res.status(200).json({ db: true, list: vals.filter(Boolean).map(v => noDeck(JSON.parse(v))) }); return;
+    }
+    /* ── התראות בטלפון: הרשמה, עדכון (שפה/משחק אחרון), ביטול ── */
+    if (op === "push-sub") {
+      const sub = b.sub && { endpoint: String(b.sub.endpoint || ""), keys: { p256dh: String((b.sub.keys || {}).p256dh || ""), auth: String((b.sub.keys || {}).auth || "") } };
+      if (!sub || !wp.validSub(sub)) { res.status(400).json({ error: "sub" }); return; }
+      const id = crypto.createHash("sha256").update(sub.endpoint).digest("hex").slice(0, 16);
+      const old = await redis(["HGET", "bq:push", id]);
+      if (!old && (await redis(["HLEN", "bq:push"])) >= 20000) { res.status(429).json({ error: "full" }); return; }
+      const prev = old ? JSON.parse(old) : {};
+      const rec = pushFields(b, { sub, lang: prev.lang || "he", tz: prev.tz || 0, pid: prev.pid, done: prev.done, streak: prev.streak, ts: prev.ts || Date.now() });
+      const cmds = [["HSET", "bq:push", id, JSON.stringify(rec)]];
+      if (prev.pid && prev.pid !== rec.pid) cmds.push(["SREM", "bq:pushpid:" + prev.pid, id]);
+      if (rec.pid) cmds.push(["SADD", "bq:pushpid:" + rec.pid, id]);
+      await pipe(cmds);
+      res.status(200).json({ db: true, id }); return;
+    }
+    if (op === "push-upd" || op === "push-del") {
+      const id = String(b.id || "");
+      if (!okPushId(id)) { res.status(400).json({ error: "id" }); return; }
+      const old = await redis(["HGET", "bq:push", id]);
+      if (!old) { res.status(200).json({ db: true, gone: true }); return; }
+      const prev = JSON.parse(old);
+      if (op === "push-del") {
+        const cmds = [["HDEL", "bq:push", id]];
+        if (prev.pid) cmds.push(["SREM", "bq:pushpid:" + prev.pid, id]);
+        await pipe(cmds);
+        res.status(200).json({ db: true, ok: true }); return;
+      }
+      const rec = pushFields(b, Object.assign({}, prev));
+      const cmds = [["HSET", "bq:push", id, JSON.stringify(rec)]];
+      if (prev.pid && prev.pid !== rec.pid) cmds.push(["SREM", "bq:pushpid:" + prev.pid, id]);
+      if (rec.pid) cmds.push(["SADD", "bq:pushpid:" + rec.pid, id]);
+      await pipe(cmds);
+      res.status(200).json({ db: true, ok: true }); return;
     }
     /* ── סטטיסטיקת שאלות: כמה ענו וכמה צדקו בכל שאלה ── */
     if (op === "qstat") {
