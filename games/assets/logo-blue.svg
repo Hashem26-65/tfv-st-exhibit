@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="The First Verse">
+  <defs>
+    <linearGradient id="disc" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3a86e6"/>
+      <stop offset="1" stop-color="#0a2554"/>
+    </linearGradient>
+    <linearGradient id="tri" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#67ccf5"/>
+      <stop offset="1" stop-color="#1e5fd0"/>
+    </linearGradient>
+    <linearGradient id="inner" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e6f6ff"/>
+      <stop offset="1" stop-color="#73b9f2"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- disc -->
+  <circle cx="100" cy="100" r="86" fill="url(#disc)"/>
+  <circle cx="100" cy="100" r="86" fill="none" stroke="#a9ddff" stroke-width="3"/>
+
+  <!-- upward triangle -->
+  <path d="M100 22 L38 150 L162 150 Z" fill="url(#tri)"
+        stroke="#d4ecff" stroke-width="2.2" stroke-linejoin="round"/>
+
+  <!-- inner downward triangle (the beam) -->
+  <path d="M69 86 L131 86 L100 150 Z" fill="url(#inner)" opacity="0.95"
+        stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round"/>
+
+  <!-- luminous centre -->
+  <circle cx="100" cy="105" r="15" fill="url(#glow)"/>
+  <circle cx="100" cy="105" r="4.2" fill="#ffffff"/>
+</svg>

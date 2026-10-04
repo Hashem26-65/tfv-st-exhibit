@@ -61,7 +61,7 @@ body{
 
 <header class="head">
   <a class="brand" href="https://thefirstverse.com" target="_blank" rel="noopener">
-    <img src="../assets/logo.svg" alt="The First Verse">
+    <img src="assets/logo.svg" alt="The First Verse">
     <span class="sitename">אֲתַר הַפָּסוּק הָרִאשׁוֹן</span>
   </a>
   <h1 class="title">מִשְׂחֲקֵי הַפָּסוּק הָרִאשׁוֹן</h1>
@@ -71,7 +71,7 @@ body{
 
 <main class="grid" id="grid"></main>
 
-<p class="foot">The First Verse · <a href="https://thefirstverse.com" target="_blank" rel="noopener">thefirstverse.com</a> · <a href="../index.html">↩ למצגת</a></p>
+<p class="foot"><a href="https://thefirstverse.com" target="_blank" rel="noopener">אתר הפסוק הראשון</a> · <a href="https://tfv-st-exhibit.vercel.app/" target="_blank" rel="noopener">↩ למצגת</a></p>
 
 <script>
 var GAMES=[
@@ -88,7 +88,12 @@ var GAMES=[
   {f:"sort.html",           i:"📊", t:"סדר עולה",       d:"סדר את המילים לפי ערך גימטרי מהקטן לגדול.", tag:"מיון"},
   {f:"whack.html",          i:"🔨", t:"הכה את הערך",    d:"הכה את המספר הנכון שצץ מהחורים — מהר!", tag:"רפלקסים"},
   {f:"catch.html",          i:"🧺", t:"תפוס את הנכון",  d:"הזז את הסל ותפוס את הערכים הנכונים שנופלים.", tag:"זריזות"},
-  {f:"quiz-blitz.html",     i:"⚡", t:"חידון בזק",      d:"נכון או לא נכון? ענה מהר על שאלות גימטריה.", tag:"חידון"}
+  {f:"quiz-blitz.html",     i:"⚡", t:"חידון בזק",      d:"נכון או לא נכון? ענה מהר על שאלות גימטריה.", tag:"חידון"},
+  {f:"bereshit-quiz.html",  i:"📜", t:"חידון בראשית",   d:"ארבע רמות — ממתחילים ועד מומחים. ענה נכון לפני שהזמן נגמר.", tag:"חידון"},
+  {f:"ark-defense.html",    i:"🏹", t:"הגנת התיבה",     d:"בנה מגדלים, שגר פצצות וטילים והשתלט על חיות — 15 גלים על התיבה שעליה הפסוק.", tag:"אסטרטגיה"},
+  {f:"matrix-games.html?g=chess",      i:"♞", t:"שחמט · מטריקס",  d:"שחמט ניאון בסגנון המטריקס — נגד המחשב ב־4 רמות, מול חבר, או אונליין.", tag:"לוח"},
+  {f:"matrix-games.html?g=backgammon", i:"🎲", t:"שש־בש · מטריקס", d:"שש־בש ניאון — קוביות, בר והוצאה, מחשב שמחשב תוחלת, ומשחק אונליין עם קוד חדר.", tag:"לוח"},
+  {f:"matrix-games.html?g=draughts",   i:"⛃", t:"דמקה · מטריקס",  d:"דמקה ישראלית — אכילה חובה ומלך מעופף, נגד המחשב או אונליין.", tag:"לוח"}
 ];
 var grid=document.getElementById("grid");
 GAMES.forEach(function(g){

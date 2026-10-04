@@ -13,3 +13,7 @@ _tools/
 # Editors
 .vscode/
 .idea/
+
+# Local Vercel link & env (never commit)
+.vercel
+.env*

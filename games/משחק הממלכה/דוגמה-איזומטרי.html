@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>דוגמה — סגנון איזומטרי (SimCity)</title>
+<style>
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  body{margin:0; font-family:"Segoe UI",Arial,sans-serif; overflow:hidden;
+       background:linear-gradient(#7fc4ff,#cfeeff); color:#22303a; user-select:none;}
+  #bar{position:fixed; top:0; right:0; left:0; padding:8px 12px; background:#1d2b3aee; color:#fff;
+       display:flex; gap:8px; align-items:center; flex-wrap:wrap; z-index:10; border-bottom:3px solid #d4af37;}
+  #bar b{color:#d4af37;}
+  .pick{background:#2e4a66; border:2px solid transparent; border-radius:10px; padding:6px 10px; cursor:pointer; font-size:14px;}
+  .pick.sel{border-color:#d4af37; background:#3a5a7a;}
+  #hint{margin-right:auto; font-size:12px; opacity:.85;}
+  canvas{display:block;}
+</style>
+</head>
+<body>
+<div id="bar">
+  <b>👑 דוגמה איזומטרית</b>
+  <span class="pick sel" data-t="house">🏠 בית</span>
+  <span class="pick" data-t="shul">🕍 בית כנסת</span>
+  <span class="pick" data-t="factory">🏭 מפעל</span>
+  <span class="pick" data-t="mall">🏬 מרכז מסחרי</span>
+  <span class="pick" data-t="park">🌳 פארק</span>
+  <span class="pick" data-t="road">🛣️ כביש</span>
+  <span class="pick" data-t="erase">🗑️ מחיקה</span>
+  <span id="hint">לחצו על משבצת כדי לבנות · גלגלת = זום · גרירה בכפתור ימני = הזזה</span>
+</div>
+<canvas id="c"></canvas>
+
+<script>
+"use strict";
+/* דוגמה לציור עיר בזווית איזומטרית (כמו SimCity), הכל מצויר בקוד — בלי תמונות */
+const cv=document.getElementById("c"), ctx=cv.getContext("2d");
+const COLS=14, ROWS=14, TW=64, TH=32;   // רוחב/גובה אריח-יהלום
+let cam={x:0,y:0,zoom:1};
+let sel="house";
+const grid=Array.from({length:ROWS},()=>Array(COLS).fill(null));
+
+// כמה בניינים התחלתיים כדי שייראה כמו עיר
+grid[5][5]="shul"; grid[5][6]="house"; grid[6][6]="house";
+grid[6][5]="park"; grid[4][6]="house"; grid[7][7]="mall";
+grid[8][6]="factory"; for(let c=3;c<11;c++) grid[9][c]="road";
+
+function resize(){ cv.width=innerWidth; cv.height=innerHeight; }
+addEventListener("resize",resize); resize();
+
+// מרכוז התצוגה
+cam.x=cv.width/2; cam.y=120;
+
+// המרת משבצת -> מסך
+function iso(col,row){
+  return { x: (col-row)*(TW/2)*cam.zoom + cam.x,
+           y: (col+row)*(TH/2)*cam.zoom + cam.y };
+}
+// המרת מסך -> משבצת (לבחירה בלחיצה)
+function pick(sx,sy){
+  const x=(sx-cam.x)/cam.zoom, y=(sy-cam.y)/cam.zoom;
+  const col=Math.round((x/(TW/2)+y/(TH/2))/2);
+  const row=Math.round((y/(TH/2)-x/(TW/2))/2);
+  return {col,row};
+}
+
+// ----- ציור אריח דשא (יהלום) -----
+function tile(col,row,top,light,dark){
+  const p=iso(col,row), hw=TW/2*cam.zoom, hh=TH/2*cam.zoom;
+  ctx.beginPath();
+  ctx.moveTo(p.x, p.y);
+  ctx.lineTo(p.x+hw, p.y+hh);
+  ctx.lineTo(p.x, p.y+hh*2);
+  ctx.lineTo(p.x-hw, p.y+hh);
+  ctx.closePath();
+  ctx.fillStyle=top; ctx.fill();
+  ctx.strokeStyle="#0001"; ctx.stroke();
+}
+
+// ----- ציור קופסת בניין תלת-ממדית -----
+function box(col,row,h,roof,wallL,wallR,opt={}){
+  const p=iso(col,row), hw=TW/2*cam.zoom, hh=TH/2*cam.zoom;
+  const H=h*cam.zoom;
+  const cx=p.x, topY=p.y+hh - H, baseY=p.y+hh;
+  // קיר שמאל
+  ctx.fillStyle=wallL;
+  ctx.beginPath();
+  ctx.moveTo(cx-hw, p.y+hh); ctx.lineTo(cx, p.y+hh*2);
+  ctx.lineTo(cx, p.y+hh*2-H); ctx.lineTo(cx-hw, p.y+hh-H);
+  ctx.closePath(); ctx.fill();
+  // קיר ימין
+  ctx.fillStyle=wallR;
+  ctx.beginPath();
+  ctx.moveTo(cx+hw, p.y+hh); ctx.lineTo(cx, p.y+hh*2);
+  ctx.lineTo(cx, p.y+hh*2-H); ctx.lineTo(cx+hw, p.y+hh-H);
+  ctx.closePath(); ctx.fill();
+  // גג (יהלום עליון)
+  ctx.fillStyle=roof;
+  ctx.beginPath();
+  ctx.moveTo(cx, p.y-H); ctx.lineTo(cx+hw, p.y+hh-H);
+  ctx.lineTo(cx, p.y+hh*2-H); ctx.lineTo(cx-hw, p.y+hh-H);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle="#0002"; ctx.stroke();
+
+  // חלונות (נקודות בהירות על הקירות)
+  if(opt.windows){
+    ctx.fillStyle="#bfe3ff";
+    const ww=6*cam.zoom, wh=8*cam.zoom;
+    for(let i=1;i<=2;i++){
+      const t=i/3;
+      ctx.fillRect(cx-hw*0.6, p.y+hh-H*0.7 + (cx*0)+ (i*H*0.28)-H*0.3, ww, wh);
+      ctx.fillRect(cx+hw*0.4, p.y+hh-H*0.7 + (i*H*0.28)-H*0.3, ww, wh);
+    }
+  }
+  // סמל על הגג
+  if(opt.emoji){
+    ctx.font=`${18*cam.zoom}px serif`; ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.fillText(opt.emoji, cx, p.y+hh-H);
+  }
+}
+
+// הגדרות הבניינים (צבעים בסגנון SimCity)
+const DEF={
+  house:  {h:34, roof:"#c0392b", l:"#e6d2a8", r:"#cdb98f", windows:true},
+  shul:   {h:54, roof:"#3a6ea5", l:"#efe6cf", r:"#d8cfb4", windows:true, emoji:"✡️"},
+  factory:{h:40, roof:"#7f8c8d", l:"#95a5a6", r:"#7c8a8b", windows:true, emoji:"🏭"},
+  mall:   {h:38, roof:"#16a085", l:"#48c9b0", r:"#3aa897", windows:true, emoji:"🛒"},
+  park:   {h:0,  roof:"", l:"", r:"", emoji:"🌳"},
+  road:   {h:0,  roof:"", l:"", r:""},
+};
+
+function draw(){
+  ctx.clearRect(0,0,cv.width,cv.height);
+  // שמיים
+  const g=ctx.createLinearGradient(0,0,0,cv.height);
+  g.addColorStop(0,"#7fc4ff"); g.addColorStop(1,"#cfeeff");
+  ctx.fillStyle=g; ctx.fillRect(0,0,cv.width,cv.height);
+
+  // ציור מהאחורי לקדמי
+  for(let row=0;row<ROWS;row++){
+    for(let col=0;col<COLS;col++){
+      const k=grid[row][col];
+      // אריח קרקע
+      if(k==="road") tile(col,row,"#7d7d85");
+      else if((col+row)%2===0) tile(col,row,"#83cf57");
+      else tile(col,row,"#79c44e");
+
+      if(!k||k==="road") continue;
+      if(k==="park"){
+        const p=iso(col,row);
+        ctx.font=`${26*cam.zoom}px serif`; ctx.textAlign="center"; ctx.textBaseline="middle";
+        ctx.fillText("🌳", p.x, p.y+TH*cam.zoom*0.5);
+        continue;
+      }
+      const d=DEF[k];
+      box(col,row,d.h,d.roof,d.l,d.r,{windows:d.windows,emoji:d.emoji});
+    }
+  }
+}
+
+// ----- אינטראקציה -----
+document.querySelectorAll(".pick").forEach(el=>{
+  el.onclick=()=>{ sel=el.dataset.t;
+    document.querySelectorAll(".pick").forEach(p=>p.classList.remove("sel"));
+    el.classList.add("sel"); };
+});
+let dragging=false,lx,ly;
+cv.addEventListener("pointerdown",e=>{
+  if(e.button===2){ dragging=true; lx=e.clientX; ly=e.clientY; return; }
+  const {col,row}=pick(e.clientX,e.clientY);
+  if(col<0||col>=COLS||row<0||row>=ROWS) return;
+  grid[row][col] = (sel==="erase") ? null : sel;
+  draw();
+});
+addEventListener("pointermove",e=>{
+  if(!dragging) return;
+  cam.x+=e.clientX-lx; cam.y+=e.clientY-ly; lx=e.clientX; ly=e.clientY; draw();
+});
+addEventListener("pointerup",()=>dragging=false);
+cv.addEventListener("contextmenu",e=>e.preventDefault());
+addEventListener("wheel",e=>{
+  cam.zoom = Math.max(0.5, Math.min(2.5, cam.zoom * (e.deltaY<0?1.1:0.9)));
+  draw();
+},{passive:true});
+
+draw();
+</script>
+</body>
+</html>

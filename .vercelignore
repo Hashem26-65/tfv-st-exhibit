@@ -1,0 +1,8 @@
+games/assets/matrix/raw
+*.url
+*.docx
+**/.git
+
+.env
+.env.*
+הוראות-לקולגה-הגדרת-Vercel.html

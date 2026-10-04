@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="The First Verse">
+  <g fill="none" stroke="#f0cf6a" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
+    <circle cx="100" cy="100" r="86"/>
+    <path d="M100 22 L38 150 L162 150 Z"/>
+    <path d="M69 86 L131 86 L100 150 Z"/>
+  </g>
+  <circle cx="100" cy="105" r="3.2" fill="#f0cf6a"/>
+</svg>

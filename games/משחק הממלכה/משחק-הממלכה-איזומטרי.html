@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>משחק הממלכה — עיר איזומטרית על פי התורה</title>
+<style>
+  :root{--gold:#d4af37;--panel:#243a52;--panel2:#2e4a66;--txt:#f3f6fb;}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:var(--txt);user-select:none;overflow:hidden;background:#0d1b2a;}
+  #game{display:flex;height:100vh;width:100vw;}
+
+  #side{width:280px;min-width:280px;background:var(--panel);display:flex;flex-direction:column;
+        border-left:3px solid var(--gold);overflow-y:auto;}
+  #title{text-align:center;padding:10px;font-size:20px;font-weight:bold;color:var(--gold);
+         border-bottom:2px solid #0003;background:#0002;}
+  #title small{display:block;font-size:11px;color:#cdd;font-weight:normal;}
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:8px;}
+  .stat{background:var(--panel2);border-radius:10px;padding:6px 8px;font-size:13px;display:flex;flex-direction:column;gap:2px;}
+  .stat b{font-size:16px;}
+  .stat .lbl{font-size:11px;color:#bcd;}
+  #torahBox{padding:6px 10px;}
+  #torahBar{height:18px;background:#0003;border-radius:10px;overflow:hidden;border:1px solid #0004;}
+  #torahFill{height:100%;width:50%;background:linear-gradient(90deg,#e5534b,#d4af37,#3fb950);transition:width .4s;}
+  #torahTxt{font-size:12px;text-align:center;margin-top:3px;}
+  .section-title{padding:6px 10px 2px;color:var(--gold);font-size:13px;font-weight:bold;}
+  #palette{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:6px 8px;}
+  .bld{background:var(--panel2);border:2px solid transparent;border-radius:10px;padding:6px 4px;
+       cursor:pointer;text-align:center;transition:.15s;font-size:11px;}
+  .bld:hover{background:#3a5a7a;}
+  .bld.sel{border-color:var(--gold);background:#3a5a7a;}
+  .bld .ico{font-size:22px;display:block;line-height:1.1;}
+  .bld .ico img{width:30px;height:30px;object-fit:contain;vertical-align:middle;}
+  .bld .cost{color:var(--gold);font-size:10px;}
+  #delMode{margin:6px 8px 0;text-align:center;background:#e5534b;border-radius:8px;padding:6px;cursor:pointer;font-size:13px;}
+  #delMode.on{background:#ff7b72;color:#1d2b3a;font-weight:bold;}
+  #time{padding:8px;border-top:2px solid #0003;margin-top:auto;}
+  #speedRow{display:flex;gap:4px;justify-content:center;margin-top:6px;}
+  .spd{flex:1;background:var(--panel2);border:2px solid transparent;border-radius:8px;padding:8px 0;cursor:pointer;text-align:center;font-size:14px;}
+  .spd.sel{border-color:var(--gold);background:#3a5a7a;}
+  #clock{text-align:center;font-size:14px;}
+  #clock b{color:var(--gold);font-size:18px;}
+
+  #main{flex:1;position:relative;overflow:hidden;}
+  #canvas{display:block;touch-action:none;cursor:crosshair;}
+  #weatherIco{position:absolute;top:12px;left:12px;font-size:30px;filter:drop-shadow(0 2px 4px #0008);z-index:5;pointer-events:none;}
+  #rotBtns{position:absolute;top:50px;left:12px;z-index:6;display:flex;gap:6px;}
+  .rotb{width:38px;height:38px;border-radius:50%;border:2px solid var(--gold);background:#243a52cc;color:#fff;
+        font-size:20px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;}
+  .rotb:hover{background:#3a5a7a;}
+  #hint{position:absolute;top:12px;right:12px;background:#0007;padding:6px 12px;border-radius:10px;font-size:12px;z-index:5;pointer-events:none;}
+  #toast{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);background:#000a;padding:10px 18px;
+         border-radius:12px;font-size:15px;border:1px solid var(--gold);opacity:0;transition:.4s;pointer-events:none;max-width:80%;text-align:center;z-index:10;}
+  #toast.show{opacity:1;}
+  #loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#0d1b2a;z-index:30;font-size:18px;color:var(--gold);}
+  #overlay{position:absolute;inset:0;background:#000a;display:none;align-items:center;justify-content:center;z-index:20;}
+  #event{background:var(--panel);border:3px solid var(--gold);border-radius:16px;padding:22px;max-width:430px;text-align:center;}
+  #event h2{margin:0 0 8px;color:var(--gold);}
+  #event p{font-size:15px;line-height:1.5;white-space:pre-line;}
+  #event button{background:var(--gold);color:#1d2b3a;border:none;border-radius:10px;padding:10px 24px;font-size:16px;font-weight:bold;cursor:pointer;margin-top:10px;}
+</style>
+</head>
+<body>
+<div id="game">
+  <div id="side">
+    <div id="title">👑 משחק הממלכה<small>עיר חרדית איזומטרית על פי התורה</small></div>
+    <div class="stats">
+      <div class="stat"><span class="lbl">💰 כסף</span><b id="sMoney">0</b></div>
+      <div class="stat"><span class="lbl">👨‍👩‍👧 תושבים</span><b id="sPop">0</b></div>
+      <div class="stat"><span class="lbl">😊 שמחה</span><b id="sHappy">0</b></div>
+      <div class="stat"><span class="lbl">💵 הכנסה/חודש</span><b id="sIncome">0</b></div>
+    </div>
+    <div id="torahBox">
+      <div class="lbl" style="font-size:12px;color:var(--gold);">📜 רמת התורה בעיר</div>
+      <div id="torahBar"><div id="torahFill"></div></div>
+      <div id="torahTxt">50%</div>
+    </div>
+    <div class="section-title">🏗️ בנו (בחרו ואז לחצו על המפה)</div>
+    <div id="palette"></div>
+    <div id="delMode">🗑️ מצב הריסה (כבוי)</div>
+    <div id="time">
+      <div id="clock">שנה <b id="sYear">5784</b> · <span id="sMonth">תשרי</span></div>
+      <div id="speedRow">
+        <div class="spd" data-spd="0">⏸️</div>
+        <div class="spd sel" data-spd="1">🐢</div>
+        <div class="spd" data-spd="3">▶️</div>
+        <div class="spd" data-spd="8">⏩</div>
+        <div class="spd" data-spd="20">🚀</div>
+      </div>
+      <div class="lbl" style="text-align:center;margin-top:4px;font-size:11px;">לאט ← → מהר · גלגלת=זום · ימני=הזזה</div>
+    </div>
+  </div>
+  <div id="main">
+    <canvas id="canvas"></canvas>
+    <div id="weatherIco">☀️</div>
+    <div id="rotBtns">
+      <button class="rotb" id="rotL" title="סובב שמאלה (R)">↺</button>
+      <button class="rotb" id="rotR" title="סובב ימינה">↻</button>
+    </div>
+    <div id="hint">בחרו מבנה והניחו על המפה · 🔄 לסיבוב</div>
+    <div id="toast"></div>
+    <div id="loading">⏳ טוען את העיר...</div>
+    <div id="overlay"><div id="event">
+      <h2 id="evTitle"></h2><p id="evText"></p><button id="evBtn">בסדר</button>
+    </div></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ============ משחק הממלכה — גרסה איזומטרית עם תמונות Nano Banana ============ */
+
+// ----- הגדרות מבנים -----
+const BUILDINGS = {
+  road:    {name:"כביש",        ico:"🛣️", cost:10,  income:0, happy:0, pop:0, torah:0, kind:"ground"},
+  house:   {name:"בית פרטי",    ico:"🏠", cost:100, income:5, happy:1, pop:4, torah:0, img:"house"},
+  shul:    {name:"בית כנסת",    ico:"🕍", cost:200, income:0, happy:4, pop:0, torah:8, img:"shul"},
+  midrash: {name:"בית מדרש",    ico:"📖", cost:250, income:0, happy:3, pop:0, torah:9, img:"midrash"},
+  ttorah:  {name:"תלמוד תורה",  ico:"🏫", cost:220, income:0, happy:3, pop:0, torah:7, img:"ttorah"},
+  mall:    {name:"מרכז מסחרי",  ico:"🏬", cost:400, income:40,happy:2, pop:0, torah:0, img:"mall"},
+  factory: {name:"מפעל",        ico:"🏭", cost:350, income:35,happy:-3,pop:0, torah:0, img:"factory"},
+  cityhall:{name:"בניין העירייה",ico:"🏛️",cost:500, income:0, happy:4, pop:0, torah:1, img:"cityhall"},
+  park:    {name:"שטח ירוק",    ico:"🌳", cost:80,  income:0, happy:5, pop:0, torah:1, img:"park", small:true},
+  field:   {name:"שדה",         ico:"🌾", cost:60,  income:8, happy:1, pop:0, torah:0, img:"field", small:true},
+  police:  {name:"משטרה",       ico:"🚓", cost:300, income:0, happy:3, pop:0, torah:0, img:"police"},
+  mada:    {name:'מד"א',        ico:"🚑", cost:300, income:0, happy:3, pop:0, torah:1, img:"mada"},
+  fire:    {name:"מכבי אש",     ico:"🚒", cost:300, income:0, happy:3, pop:0, torah:0, img:"fire"},
+  zaka:    {name:'זק"א',        ico:"🚐", cost:280, income:0, happy:2, pop:0, torah:2, img:"zaka"},
+  embassy: {name:"שגרירות",     ico:"🏤", cost:450, income:0, happy:2, pop:0, torah:0, img:"embassy"},
+  army:    {name:"צבא",         ico:"🪖", cost:400, income:0, happy:1, pop:0, torah:0, img:"army"},
+};
+
+// אילו קבצי תמונה לטעון (השם -> קובץ)
+const IMAGE_FILES = {
+  grass:"images/tile_grass.png", road:"images/tile_road_h.png",
+  road_v:"images/tile_road_v.png", road_cross:"images/tile_road_cross.png",
+  house:"images/house.png", shul:"images/shul.png", midrash:"images/midrash.png",
+  ttorah:"images/ttorah.png", mall:"images/mall.png", factory:"images/factory.png",
+  cityhall:"images/cityhall.png", tree:"images/deco_tree1.png", park:"images/park.png",
+  field:"images/field.png", police:"images/police.png", mada:"images/mada.png",
+  fire:"images/fire.png", zaka:"images/zaka.png", embassy:"images/embassy.png", army:"images/army.png",
+};
+const IMG = {}; // שם -> canvas מעובד (רקע מג'נטה הוסר)
+
+const COLS=12, ROWS=12, TW=96, TH=48;     // גודל אריח על המסך (זום=1)
+const ANCHOR=0.72, BSCALE=1.62;           // עיגון וגודל הבניינים
+const HEB_MONTHS=["תשרי","חשון","כסלו","טבת","שבט","אדר","ניסן","אייר","סיון","תמוז","אב","אלול"];
+
+const state = {
+  grid: Array.from({length:ROWS},()=>Array(COLS).fill(null)),
+  money:1500, pop:0, happy:50, torah:50, income:0,
+  year:5784, month:0, speed:1, selected:null, delMode:false,
+  weather:"sun", timeOfDay:0, warCooldown:6, drops:[],
+  cam:{x:0,y:0,zoom:1}, hover:null, rot:0,
+};
+
+const canvas=document.getElementById("canvas"), ctx=canvas.getContext("2d");
+function resize(){ const m=document.getElementById("main"); canvas.width=m.clientWidth; canvas.height=m.clientHeight; }
+addEventListener("resize",resize);
+
+// ---------- הסרת רקע מג'נטה והקטנה ----------
+function processImage(img){
+  const c=document.createElement("canvas"); c.width=img.width; c.height=img.height;
+  const x=c.getContext("2d"); x.drawImage(img,0,0);
+  const d=x.getImageData(0,0,c.width,c.height), p=d.data;
+  for(let i=0;i<p.length;i+=4){
+    const r=p[i],g=p[i+1],b=p[i+2];
+    // מג'נטה = אדום וכחול גבוהים, ירוק נמוך
+    if(r>g+32 && b>g+18 && r>80 && b>55){ p[i+3]=0; }
+    else if(r>g+15 && b>g+8 && r>70){ p[i+3]=Math.min(p[i+3],90); } // ריכוך שוליים
+  }
+  x.putImageData(d,0,0);
+  // הקטנה ל-256 לביצועים
+  const maxd=256, sc=Math.min(1,maxd/Math.max(c.width,c.height));
+  const o=document.createElement("canvas"); o.width=Math.round(c.width*sc); o.height=Math.round(c.height*sc);
+  o.getContext("2d").drawImage(c,0,0,o.width,o.height);
+  return o;
+}
+function loadAll(){
+  const keys=Object.keys(IMAGE_FILES);
+  let left=keys.length;
+  return new Promise(res=>{
+    const done=()=>{ if(--left===0) res(); };
+    keys.forEach(k=>{
+      const im=new Image();
+      im.onload=()=>{ try{ IMG[k]=processImage(im); }
+        catch(err){ IMG[k]=im; window._tainted=true; console.warn("no chroma-key:",err.message); }
+        done(); };
+      im.onerror=()=>{ console.warn("missing",IMAGE_FILES[k]); done(); };
+      im.src=IMAGE_FILES[k];
+    });
+  });
+}
+
+// ---------- פלטת הבנייה ----------
+const palette=document.getElementById("palette");
+function buildPalette(){
+  for(const key in BUILDINGS){
+    const b=BUILDINGS[key];
+    const el=document.createElement("div"); el.className="bld"; el.dataset.key=key;
+    const icoHtml = b.img && IMG[b.img] ? `<img src="${IMAGE_FILES[b.img]}">` : b.ico;
+    el.innerHTML=`<span class="ico">${icoHtml}</span>${b.name}<span class="cost">₪${b.cost}</span>`;
+    el.onclick=()=>{ state.delMode=false; updateDelBtn();
+      state.selected = state.selected===key ? null : key; refreshPalette(); };
+    palette.appendChild(el);
+  }
+}
+function refreshPalette(){ document.querySelectorAll(".bld").forEach(el=>el.classList.toggle("sel",el.dataset.key===state.selected)); }
+
+const delBtn=document.getElementById("delMode");
+delBtn.onclick=()=>{ state.delMode=!state.delMode; if(state.delMode) state.selected=null; refreshPalette(); updateDelBtn(); };
+function updateDelBtn(){ delBtn.classList.toggle("on",state.delMode);
+  delBtn.textContent=state.delMode?"🗑️ מצב הריסה (פעיל)":"🗑️ מצב הריסה (כבוי)"; }
+
+document.querySelectorAll(".spd").forEach(el=>el.onclick=()=>{
+  state.speed=Number(el.dataset.spd);
+  document.querySelectorAll(".spd").forEach(s=>s.classList.remove("sel")); el.classList.add("sel");
+});
+
+// ---------- מתמטיקה איזומטרית (עם סיבוב) ----------
+const N1C=COLS-1, N1R=ROWS-1;
+function viewOf(col,row){ switch(state.rot){
+  case 1: return [row, N1C-col];
+  case 2: return [N1C-col, N1R-row];
+  case 3: return [N1R-row, col];
+  default: return [col, row]; } }
+function unview(vx,vy){ switch(state.rot){
+  case 1: return [N1C-vy, vx];
+  case 2: return [N1C-vx, N1R-vy];
+  case 3: return [vy, N1R-vx];
+  default: return [vx, vy]; } }
+function iso(col,row){ const z=state.cam.zoom; const v=viewOf(col,row);
+  return { x:(v[0]-v[1])*(TW/2)*z + state.cam.x, y:(v[0]+v[1])*(TH/2)*z + state.cam.y }; }
+function depthOf(col,row){ const v=viewOf(col,row); return v[0]+v[1]; }
+function pickTile(sx,sy){ const z=state.cam.zoom;
+  const x=(sx-state.cam.x)/z, y=(sy-state.cam.y)/z;
+  const vx=Math.round((x/(TW/2)+y/(TH/2))/2), vy=Math.round((y/(TH/2)-x/(TW/2))/2);
+  const cr=unview(vx,vy); return {col:cr[0], row:cr[1]};
+}
+function rotate(dir){ state.rot=(state.rot+dir+4)%4; toast("🔄 סובבנו את העיר"); }
+
+// ---------- אינטראקציה עם המפה ----------
+let dragging=false,lx=0,ly=0,moved=false;
+canvas.addEventListener("pointerdown",e=>{
+  if(e.button===2){ dragging=true; lx=e.clientX; ly=e.clientY; moved=false; return; }
+  const r=canvas.getBoundingClientRect();
+  const {col,row}=pickTile(e.clientX-r.left,e.clientY-r.top);
+  if(col<0||col>=COLS||row<0||row>=ROWS) return;
+  if(state.delMode){ const cell=state.grid[row][col];
+    if(cell){ state.grid[row][col]=null; toast("🗑️ נהרס: "+BUILDINGS[cell].name); recalc(); } return; }
+  if(!state.selected){ toast("בחרו קודם מבנה מהתפריט 👈"); return; }
+  const b=BUILDINGS[state.selected];
+  if(state.grid[row][col]){ toast("המשבצת תפוסה!"); return; }
+  if(state.money<b.cost){ toast("אין מספיק כסף 💰 (חסר ₪"+(b.cost-state.money)+")"); return; }
+  state.money-=b.cost; state.grid[row][col]=state.selected; toast(b.ico+" נבנה "+b.name+"!"); recalc();
+});
+addEventListener("pointermove",e=>{
+  if(dragging){ state.cam.x+=e.clientX-lx; state.cam.y+=e.clientY-ly; lx=e.clientX; ly=e.clientY; moved=true; return; }
+  const r=canvas.getBoundingClientRect();
+  const t=pickTile(e.clientX-r.left,e.clientY-r.top);
+  state.hover=(t.col>=0&&t.col<COLS&&t.row>=0&&t.row<ROWS)?t:null;
+});
+addEventListener("pointerup",()=>dragging=false);
+canvas.addEventListener("contextmenu",e=>e.preventDefault());
+canvas.addEventListener("wheel",e=>{ e.preventDefault();
+  state.cam.zoom=Math.max(0.5,Math.min(2.2,state.cam.zoom*(e.deltaY<0?1.1:0.9))); },{passive:false});
+document.getElementById("rotL").onclick=()=>rotate(-1);
+document.getElementById("rotR").onclick=()=>rotate(1);
+addEventListener("keydown",e=>{ if(e.key==="r"||e.key==="R") rotate(1); });
+
+// ---------- חישוב נתונים ----------
+function recalc(){
+  let income=0,happy=50,pop=0,torahPts=0,holy=0,total=0,hasFactory=false,hasArmy=false;
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    const k=state.grid[r][c]; if(!k)continue; const b=BUILDINGS[k];
+    income+=b.income; happy+=b.happy; pop+=b.pop; torahPts+=b.torah;
+    if(k!=="road")total++;
+    if(["shul","midrash","ttorah"].includes(k))holy++;
+    if(k==="factory")hasFactory=true; if(k==="army")hasArmy=true;
+  }
+  income-=total*2;
+  let torah=50+torahPts-(hasFactory?5:0); if(total>0)torah+=(holy/total)*30;
+  torah=Math.max(0,Math.min(100,torah));
+  state.income=income; state.pop=pop; state.torah=Math.round(torah);
+  state._happyTarget=Math.max(0,Math.min(100,happy+(state.torah-50)/3));
+  state._hasArmy=hasArmy;
+  updateUI();
+}
+
+// ---------- מעבר חודש ----------
+let monthTimer=0;
+function monthTick(){
+  state.money+=state.income;
+  if(state._happyTarget!==undefined)
+    state.happy+=Math.sign(state._happyTarget-state.happy)*Math.min(2,Math.abs(state._happyTarget-state.happy));
+  state.month++; if(state.month>=12){ state.month=0; state.year++; yearEvent(); }
+  if(Math.random()<0.15+state.torah/400){ state.weather="rain"; makeRain(); }
+  else if(Math.random()<0.4){ state.weather="sun"; state.drops=[]; }
+  state.warCooldown--; if(state.warCooldown<=0){ maybeWar(); state.warCooldown=5+Math.floor(Math.random()*5); }
+  recalc();
+}
+function yearEvent(){
+  if(state.torah>=70){ const bonus=200+state.pop*3; state.money+=bonus;
+    showEvent("🎉 שנה טובה ומבורכת!",`בזכות שמירת התורה בעיר ירדה ברכה גדולה!\nקיבלתם ₪${bonus} וברכת שמיים. ☀️📜`); }
+  else if(state.torah<35){
+    showEvent("⚠️ שנה קשה","רמת התורה בעיר נמוכה. בנו עוד בתי כנסת, בתי מדרש ותלמודי תורה כדי להביא ברכה. 🕍📖"); }
+}
+function maybeWar(){
+  if(state.torah>=75){ if(Math.random()<0.5)
+    showEvent("🕊️ שלום ושלווה","עם ישראל הולך בדרך התורה — ולכן אין שום מלחמה! האויבים בורחים.\n\"ה' ילחם לכם ואתם תחרישון\". 🕊️📜"); return; }
+  const risk=(75-state.torah)/120; if(Math.random()>risk)return;
+  if(state.torah>=55){
+    showEvent("⚔️ ניצחתם במלחמה!","אויב ניסה לתקוף, אבל בזכות התורה והמצוות ניצחתם בקלות בלי נזק!\n'כי ה' אלוקיכם ההולך עמכם להילחם לכם'. 🛡️📜"); }
+  else if(state._hasArmy){ state.money=Math.max(0,state.money-150);
+    showEvent("⚔️ מלחמה — ניצחתם בעזרת הצבא","הצבא הגן על העיר וניצחתם! עלות ₪150.\nחזקו את התורה כדי שלא יהיו מלחמות בכלל. 🪖"); }
+  else { state.money=Math.max(0,state.money-300); state.happy=Math.max(0,state.happy-15);
+    showEvent("💥 העיר הותקפה","לא היה צבא וגם רמת התורה נמוכה. נגרם נזק (₪300 ושמחה).\nבנו צבא, ובעיקר חזקו את התורה! 🛡️📜"); }
+}
+function makeRain(){ state.drops=[]; for(let i=0;i<70;i++)
+  state.drops.push({x:Math.random()*1.2-0.1,y:Math.random(),s:0.5+Math.random()}); }
+
+// ---------- ציור ----------
+function isRoad(c,r){ return c>=0&&c<COLS&&r>=0&&r<ROWS && state.grid[r][c]==="road"; }
+function roadVariant(col,row){
+  const rowAxis=isRoad(col,row-1)||isRoad(col,row+1);
+  const colAxis=isRoad(col-1,row)||isRoad(col+1,row);
+  if(rowAxis&&colAxis) return "road_cross";
+  if(colAxis) return "road_v";
+  return "road"; // ציר-שורה או בודד
+}
+function tileImageFor(col,row){
+  return state.grid[row][col]==="road" ? roadVariant(col,row) : "grass";
+}
+function drawGroundTile(col,row,which){
+  const p=iso(col,row), z=state.cam.zoom, w=TW*z, h=w; // ריבוע שמכיל יהלום
+  const im=IMG[which];
+  if(im) ctx.drawImage(im, p.x-w/2, p.y-w/2, w, h);
+  else { // גיבוי: יהלום צבוע
+    const hw=TW/2*z, hh=TH/2*z;
+    ctx.beginPath(); ctx.moveTo(p.x,p.y-hh); ctx.lineTo(p.x+hw,p.y); ctx.lineTo(p.x,p.y+hh); ctx.lineTo(p.x-hw,p.y); ctx.closePath();
+    ctx.fillStyle = which.indexOf("road")===0?"#7d7d85":((col+row)%2?"#79c44e":"#83cf57"); ctx.fill();
+  }
+}
+function drawObject(col,row,k){
+  const p=iso(col,row), z=state.cam.zoom; const b=BUILDINGS[k];
+  if(b.img && IMG[b.img]){
+    const W=TW*BSCALE*z*(b.small?0.78:1), H=W;
+    const dx=p.x-W/2, dy=(p.y+TH*z*0.30)-ANCHOR*H;
+    ctx.drawImage(IMG[b.img], dx, dy, W, H);
+  } else {
+    // גיבוי אמוג'י על "כרית"
+    const hw=TW/2*z, hh=TH/2*z;
+    ctx.beginPath(); ctx.moveTo(p.x,p.y-hh); ctx.lineTo(p.x+hw,p.y); ctx.lineTo(p.x,p.y+hh); ctx.lineTo(p.x-hw,p.y); ctx.closePath();
+    ctx.fillStyle="#ffffff33"; ctx.fill();
+    ctx.font=`${30*z}px serif`; ctx.textAlign="center"; ctx.textBaseline="alphabetic";
+    ctx.fillText(b.ico, p.x, p.y-4*z);
+  }
+}
+function drawHover(){
+  if(!state.hover)return; const p=iso(state.hover.col,state.hover.row), z=state.cam.zoom;
+  const hw=TW/2*z, hh=TH/2*z;
+  ctx.beginPath(); ctx.moveTo(p.x,p.y-hh); ctx.lineTo(p.x+hw,p.y); ctx.lineTo(p.x,p.y+hh); ctx.lineTo(p.x-hw,p.y); ctx.closePath();
+  ctx.fillStyle=state.delMode?"#e5534b55":"#ffffff44"; ctx.fill();
+  ctx.strokeStyle=state.delMode?"#ff7b72":"#fff"; ctx.lineWidth=2; ctx.stroke();
+}
+function render(){
+  // שמיים לפי שעה ביום
+  const t=state.timeOfDay, night=t>0.5?Math.min(0.6,(t-0.5)*1.5):0;
+  const g=ctx.createLinearGradient(0,0,0,canvas.height);
+  if(night>0.3){ g.addColorStop(0,"#0b1430"); g.addColorStop(1,"#1b2b50"); }
+  else { g.addColorStop(0,"#7fc4ff"); g.addColorStop(1,"#cfeeff"); }
+  ctx.fillStyle=g; ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  // מיון תאים לפי עומק (מתחשב בסיבוב)
+  const cells=[];
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++) cells.push({c,r,d:depthOf(c,r)});
+  cells.sort((a,b)=>a.d-b.d);
+  // קרקע
+  for(const e of cells) drawGroundTile(e.c,e.r, tileImageFor(e.c,e.r));
+  drawHover();
+  // אובייקטים מאחור לקדמי
+  for(const e of cells){ const k=state.grid[e.r][e.c]; if(k && k!=="road") drawObject(e.c,e.r,k); }
+  // שכבת לילה
+  if(night>0){ ctx.fillStyle=`rgba(10,15,45,${night})`; ctx.fillRect(0,0,canvas.width,canvas.height); }
+  // גשם
+  if(state.weather==="rain"){ ctx.strokeStyle="#bfe3ff"; ctx.lineWidth=2;
+    for(const d of state.drops){ const x=d.x*canvas.width, y=d.y*canvas.height;
+      ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x-2,y+9); ctx.stroke(); } }
+}
+
+// ---------- ממשק ----------
+function updateUI(){
+  document.getElementById("sMoney").textContent=Math.round(state.money).toLocaleString();
+  document.getElementById("sPop").textContent=state.pop;
+  document.getElementById("sHappy").textContent=Math.round(state.happy)+"%";
+  const inc=Math.round(state.income), e=document.getElementById("sIncome");
+  e.textContent=(inc>=0?"+":"")+inc; e.style.color=inc>=0?"#3fb950":"#e5534b";
+  document.getElementById("sYear").textContent=state.year;
+  document.getElementById("sMonth").textContent=HEB_MONTHS[state.month];
+  document.getElementById("torahFill").style.width=state.torah+"%";
+  const lvl=state.torah>=75?"עיר של תורה! 🕊️ אין מלחמות":state.torah>=55?"מצב טוב 📜":
+            state.torah>=35?"בינוני — חזקו את התורה":"נמוך! בנו מוסדות תורה ⚠️";
+  document.getElementById("torahTxt").textContent=state.torah+"% — "+lvl;
+  document.getElementById("weatherIco").textContent=state.weather==="rain"?"🌧️":(state.timeOfDay>0.6?"🌙":"☀️");
+}
+let toastTimer=0;
+function toast(m){ const t=document.getElementById("toast"); t.textContent=m; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),2200); }
+let evPaused=false;
+function showEvent(title,text){ document.getElementById("evTitle").textContent=title;
+  document.getElementById("evText").textContent=text; document.getElementById("overlay").style.display="flex"; evPaused=true; }
+document.getElementById("evBtn").onclick=()=>{ document.getElementById("overlay").style.display="none"; evPaused=false; };
+
+// ---------- לולאה ----------
+let last=performance.now();
+function loop(now){
+  const dt=(now-last)/1000; last=now;
+  if(state.speed>0 && !evPaused){
+    monthTimer+=dt*state.speed; const spm=1.5;
+    while(monthTimer>=spm){ monthTimer-=spm; monthTick(); }
+    state.timeOfDay=(state.timeOfDay+dt*state.speed*0.05)%1;
+    if(state.weather==="rain") for(const d of state.drops){ d.y+=d.s*dt*1.1; d.x-=dt*0.05; if(d.y>1){d.y=-0.05;d.x=Math.random()*1.2-0.1;} }
+  }
+  render(); requestAnimationFrame(loop);
+}
+
+// ---------- התחלה ----------
+async function start(){
+  resize();
+  await loadAll();
+  document.getElementById("loading").style.display="none";
+  buildPalette();
+  // מרכוז המצלמה
+  state.cam.x=canvas.width/2; state.cam.y=canvas.height/2 - (ROWS*TH/2)*0.5;
+  // עיר התחלתית קטנה לדוגמה
+  const g=state.grid;
+  for(let c=2;c<10;c++) g[7][c]="road";        // רחוב ראשי
+  for(let r=3;r<11;r++) g[r][5]="road";        // רחוב מצטלב (צומת ב-7,5)
+  g[4][4]="cityhall"; g[3][6]="shul"; g[3][4]="midrash"; g[4][6]="ttorah";
+  g[5][3]="house"; g[5][4]="house"; g[6][3]="house"; g[5][7]="mall";
+  g[9][3]="park"; g[8][8]="mada"; g[9][6]="police"; g[9][8]="embassy"; g[10][8]="field";
+  updateDelBtn(); recalc();
+  showEvent("👑 ברוכים הבאים למשחק הממלכה!",
+    "אתם ראש העיר! בנו עיר חרדית יפה — בתים, מרכז מסחרי, מפעלים, ובעיקר בתי כנסת, בתי מדרש ותלמודי תורה.\n\nככל שתלכו לפי התורה, רמת התורה תעלה — וכשהיא גבוהה לא יהיו מלחמות בכלל ותקבלו ברכה! 📜☀️\n\nגלגלת=זום · כפתור ימני=הזזת מפה · למטה משנים מהירות זמן. בהצלחה!");
+  requestAnimationFrame(loop);
+}
+start();
+</script>
+</body>
+</html>

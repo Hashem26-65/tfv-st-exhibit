@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>זיכרון גימטרי · The First Verse</title>
+<title>זיכרון גימטרי · אתר הפסוק הראשון</title>
 <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -163,15 +163,19 @@ body::before{
   justify-content:space-between;
   gap:8px;
   margin-bottom:14px;
+  flex-wrap:wrap;
 }
 .hud-block{
   background:var(--panel);
   border:1px solid rgba(216,180,106,.15);
   border-radius:10px;
-  padding:8px 14px;
+  padding:7px 10px;
   text-align:center;
   flex:1;
+  min-width:62px;
 }
+.hud-val.warn{ color:#ff6b6b; animation:tick .55s steps(2,start) infinite; }
+@keyframes tick{ 50%{opacity:.45;} }
 .hud-label{
   font-size:.7rem;
   color:var(--muted);
@@ -199,6 +203,45 @@ body::before{
   white-space:nowrap;
 }
 #btn-restart:hover{background:var(--burgundy);color:var(--gold);}
+
+/* ── SETTINGS ── */
+#btn-settings{
+  position:fixed; top:12px; left:12px; z-index:60;
+  width:42px;height:42px; border-radius:50%;
+  background:var(--panel); border:1px solid rgba(216,180,106,.3);
+  color:var(--gold); font-size:1.15rem; cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 10px rgba(0,0,0,.5);
+  transition:transform .15s, background .15s, color .15s;
+}
+#btn-settings:hover{transform:scale(1.08) rotate(40deg);background:var(--burgundy);}
+#btn-settings.muted{color:var(--muted);opacity:.75;}
+
+#settings-panel{
+  position:fixed; top:62px; left:12px; z-index:60;
+  width:222px; background:var(--panel);
+  border:1px solid rgba(216,180,106,.3); border-radius:14px;
+  padding:14px; box-shadow:0 8px 30px rgba(0,0,0,.6);
+  transition:opacity .2s, transform .2s; transform-origin:top left;
+}
+#settings-panel.hidden{ opacity:0; transform:scale(.92); pointer-events:none; }
+.settings-head{
+  color:var(--gold); font-weight:700; font-size:1rem; text-align:center;
+  margin-bottom:12px; border-bottom:1px solid rgba(216,180,106,.18); padding-bottom:8px;
+}
+.settings-row{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:8px; margin-bottom:10px;
+}
+.settings-row:last-child{ margin-bottom:0; }
+.settings-label{ color:#c9b79c; font-size:.92rem; }
+.settings-btn{
+  background:rgba(92,21,48,.5); border:1px solid rgba(216,180,106,.25);
+  border-radius:8px; color:var(--gold); font-family:var(--serif);
+  font-size:.9rem; cursor:pointer; padding:7px 12px;
+  transition:background .15s,color .15s; white-space:nowrap;
+}
+.settings-btn:hover{ background:var(--burgundy); color:var(--gold); }
 
 /* ── GRID ── */
 #grid{
@@ -248,6 +291,8 @@ body::before{
   background:linear-gradient(145deg,#2a1620,#1a0e14);
   border:1px solid rgba(216,180,106,.2);
   box-shadow:0 3px 12px rgba(0,0,0,.5);
+  flex-direction:column;
+  gap:5px;
 }
 .card-back::after{
   content:"";
@@ -261,11 +306,24 @@ body::before{
       rgba(216,180,106,.04) 7px,rgba(216,180,106,.04) 8px
     );
 }
-.card-back-icon{
-  font-size:clamp(1.4rem,4vw,2rem);
-  color:rgba(216,180,106,.35);
+.card-back-logo{
+  width:48%;
+  max-width:60px;
   z-index:1;
   position:relative;
+  opacity:.92;
+  filter:drop-shadow(0 0 7px rgba(216,180,106,.4));
+}
+.card-back-name{
+  z-index:1;
+  position:relative;
+  color:var(--gold-soft);
+  font-size:clamp(.5rem,2vw,.72rem);
+  font-weight:500;
+  letter-spacing:.02em;
+  line-height:1.15;
+  text-align:center;
+  padding:0 4px;
 }
 
 /* FRONT */
@@ -358,35 +416,50 @@ footer{
 </head>
 <body>
 
+<button id="btn-settings" title="הגדרות">⚙️</button>
+<div id="settings-panel" class="hidden">
+  <div class="settings-head">הגדרות</div>
+  <div class="settings-row">
+    <span class="settings-label">מוזיקה</span>
+    <button class="settings-btn" id="btn-music-change"><span id="music-name">הֵיכָל</span> ⟳</button>
+  </div>
+  <div class="settings-row">
+    <span class="settings-label">שמע</span>
+    <button class="settings-btn" id="btn-music-mute">🔊 פועלת</button>
+  </div>
+</div>
+
 <!-- INTRO OVERLAY -->
 <div class="overlay" id="overlay-intro">
   <div class="panel">
     <div class="panel-title">זיכרון גימטרי</div>
-    <div class="panel-sub">The First Verse · משחק זיכרון</div>
+    <div class="panel-sub">אתר הפסוק הראשון · משחק זיכרון</div>
     <div class="panel-verse">
       בְּרֵאשִׁית בָּרָא אֱלֹהִים אֵת הַשָּׁמַיִם וְאֵת הָאָרֶץ
     </div>
     <div class="panel-howto">
       <b>כיצד משחקים:</b><br>
-      לוח ה־14 קלפים מורכב מ־7 מילים וה־7 ערכי הגימטריה שלהן.<br>
-      הפוך שני קלפים בתור — אם <b>מילה ומספרה</b> פנו אליך, הם נשארים גלויים.<br>
-      כדאי לזכור איפה כל קלף!<br>
+      הפוך שני קלפים — אם <b>מילה וערך הגימטריה שלה</b> פנו אליך, הם נשארים גלויים.<br>
+      המשחק בנוי <b>שלבים</b>: בשלושת הראשונים אין הגבלת זמן — מתרגלים בנחת.<br>
+      מהשלב הרביעי נכנס <b>טיימר</b>, וככל שמתקדמים יש <b>יותר מילים ופחות זמן</b>.<br>
       <br>
-      <b>סכום הגימטריה:</b> 2,701 = המספר המשולש ה-73.
+      שבע מילות הפסוק מסתכמות ל־<b>2,701</b> = המספר המשולש ה-73.
     </div>
+    <button class="btn" id="btn-continue" style="display:none;margin-bottom:12px;">המשך משחק</button>
+    <br>
     <button class="btn" id="btn-start">התחל משחק</button>
   </div>
 </div>
 
-<!-- WIN OVERLAY -->
-<div class="overlay hidden" id="overlay-win">
+<!-- RESULT OVERLAY (level complete / time up / final win) -->
+<div class="overlay hidden" id="overlay-result">
   <div class="panel">
-    <div class="panel-title">כל הכבוד! 🎉</div>
-    <div class="panel-sub">השלמת את הזיכרון הגימטרי</div>
-    <div class="win-msg" id="win-msg"></div>
-    <div class="win-score">מהלכים: <span id="win-moves">0</span> &nbsp;|&nbsp; זמן: <span id="win-time">0:00</span></div>
+    <div class="panel-title" id="res-title">כל הכבוד! 🎉</div>
+    <div class="panel-sub" id="res-sub">השלמת את השלב</div>
+    <div class="win-msg" id="res-msg"></div>
+    <div class="win-score">מהלכים: <span id="res-moves">0</span> &nbsp;|&nbsp; זמן: <span id="res-time">0:00</span></div>
     <br>
-    <button class="btn" id="btn-play-again">שחק שוב</button>
+    <button class="btn" id="btn-result">השלב הבא →</button>
   </div>
 </div>
 
@@ -394,6 +467,10 @@ footer{
 <div id="app">
   <!-- HUD -->
   <div id="hud">
+    <div class="hud-block">
+      <div class="hud-label">שלב</div>
+      <div class="hud-val" id="hud-level">1</div>
+    </div>
     <div class="hud-block">
       <div class="hud-label">מהלכים</div>
       <div class="hud-val" id="hud-moves">0</div>
@@ -412,15 +489,16 @@ footer{
   <!-- GRID -->
   <div id="grid"></div>
 
-  <footer>The First Verse · זיכרון גימטרי</footer>
+  <footer>אתר הפסוק הראשון · זיכרון גימטרי</footer>
 </div>
 
 <script>
 (function(){
 "use strict";
 
-/* ── DATA ── */
-var PAIRS = [
+/* ── DATA ──
+   7 מילות הפסוק הראשון, ואז מילות הבריאה (בראשית א׳) להרחבת השלבים. */
+var CORE = [
   {word:"בְּרֵאשִׁית", val:913},
   {word:"בָּרָא",       val:203},
   {word:"אֱלֹהִים",    val:86},
@@ -429,15 +507,73 @@ var PAIRS = [
   {word:"וְאֵת",       val:407},
   {word:"הָאָרֶץ",     val:296}
 ];
+var EXT = [
+  {word:"אוֹר",    val:207},
+  {word:"יוֹם",    val:56},
+  {word:"לַיְלָה", val:75},
+  {word:"מַיִם",   val:90},
+  {word:"רָקִיעַ", val:380},
+  {word:"תְהוֹם", val:451}
+];
+var POOL = CORE.concat(EXT);   // 13 זוגות זמינים בסך הכל
+
+/* ── LEVELS ── יותר מילים, פחות זמן; שלושת הראשונים ללא זמן ── */
+var LEVELS = [
+  {pairs:3,  time:0},
+  {pairs:4,  time:0},
+  {pairs:5,  time:0},
+  {pairs:6,  time:80},
+  {pairs:7,  time:70},
+  {pairs:9,  time:66},
+  {pairs:11, time:60},
+  {pairs:13, time:54}
+];
 
 /* ── STATE ── */
 var cards = [];
 var flipped = [];       // indices of currently face-up unmatched cards
 var matched = 0;
 var moves = 0;
-var seconds = 0;
-var timerID = null;
 var locked = false;     // true while checking a pair
+var level = 0;          // index into LEVELS
+var pairsCount = 0;     // pairs in the current level
+var timed = false;      // does the current level have a timer?
+var remaining = 0;      // seconds left (timed levels)
+var elapsed = 0;        // seconds passed (always tracked, for stats)
+var started = false;    // has the timer been kicked off this level?
+var timerID = null;
+
+/* ── SAVE / RESUME (localStorage — survives leaving or closing the tab) ── */
+var SAVE_KEY = "tfv_memory_save_v1";
+
+function serializeBoard(){
+  return cards.map(function(c){
+    return {t:c.data.type, w:c.data.word, v:c.data.val, p:c.data.pairId, m:c.isMatched};
+  });
+}
+function saveProgress(){
+  try{
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      level:level, moves:moves, elapsed:elapsed,
+      remaining:remaining, board:serializeBoard()
+    }));
+  }catch(e){}
+}
+function saveFreshLevel(){   // resume should restart this level cleanly (e.g. after time-up)
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify({level:level})); }catch(e){}
+}
+function clearProgress(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
+function loadProgress(){
+  try{
+    var d=JSON.parse(localStorage.getItem(SAVE_KEY));
+    if(!d || typeof d.level!=="number" || d.level<0 || d.level>=LEVELS.length) return null;
+    if(d.board){
+      // only resume mid-level if something is still unmatched
+      if(!d.board.some(function(c){return !c.m;})) return null;
+    }
+    return d;
+  }catch(e){ return null; }
+}
 
 /* ── AUDIO ── */
 var audioCtx = null;
@@ -493,19 +629,159 @@ function playBuzz(){
   }catch(e){}
 }
 
+/* ── BACKGROUND MUSIC ── gentle generative ambient, switchable tracks ── */
+var TRACKS = [
+  { name:"הֵיכָל", wave:"triangle", step:900,    // Hijaz / Ahava-Rabba — warm, liturgical
+    scale:[293.66,311.13,369.99,392.00,440.00,466.16,523.25,587.33],
+    seq:[0,2,3,4, 3,2,0,-1, 2,4,5,4, 3,1,2,0],
+    drone:[146.83,220.00] },
+  { name:"מַעְיָן", wave:"sine", step:760,        // bright major-pentatonic, flowing
+    scale:[261.63,293.66,329.63,392.00,440.00,523.25,587.33,659.25],
+    seq:[0,1,2,3, 4,5,4,3, 2,1,0,-1, 2,4,5,-1],
+    drone:[130.81,196.00] },
+  { name:"מִדְבָּר", wave:"triangle", step:1080,  // lower & slower, contemplative
+    scale:[220.00,233.08,277.18,293.66,329.63,349.23,415.30,440.00],
+    seq:[0,3,2,4, -1,5,4,2, 0,2,3,-1, 4,2,1,0],
+    drone:[110.00,164.81] }
+];
+var MUSIC_PREF_KEY = "tfv_memory_music_v1";
+var music = { muted:false, track:0, master:null, drones:null, timer:null, step:0 };
+
+function loadMusicPref(){
+  try{
+    var d=JSON.parse(localStorage.getItem(MUSIC_PREF_KEY));
+    if(d){
+      music.muted=!!d.muted;
+      if(typeof d.track==="number" && d.track>=0 && d.track<TRACKS.length) music.track=d.track;
+    }
+  }catch(e){}
+}
+function saveMusicPref(){
+  try{ localStorage.setItem(MUSIC_PREF_KEY, JSON.stringify({muted:music.muted, track:music.track})); }catch(e){}
+}
+
+function startMusic(){
+  if(music.muted) return;
+  var ctx=getCtx();
+  if(ctx.state==="suspended") ctx.resume();
+  if(music.master) return;                 // already playing
+  var tr=TRACKS[music.track];
+  music.master=ctx.createGain();
+  music.master.gain.setValueAtTime(0.0001,ctx.currentTime);
+  music.master.gain.linearRampToValueAtTime(0.15,ctx.currentTime+2.5); // gentle fade-in
+  music.master.connect(ctx.destination);
+
+  music.drones=[];
+  tr.drone.forEach(function(f){
+    var osc=ctx.createOscillator(), g=ctx.createGain();
+    osc.type="sine"; osc.frequency.value=f; g.gain.value=0.18;
+    osc.connect(g); g.connect(music.master); osc.start();
+    music.drones.push(osc);
+  });
+
+  music.step=0;
+  scheduleNote();
+  music.timer=setInterval(scheduleNote,tr.step);
+}
+
+function scheduleNote(){
+  if(!music.master) return;
+  var ctx=getCtx();
+  var tr=TRACKS[music.track];
+  var idx=tr.seq[music.step % tr.seq.length];
+  music.step++;
+  if(idx<0) return;                        // rest
+  var osc=ctx.createOscillator(), g=ctx.createGain();
+  osc.type=tr.wave; osc.frequency.value=tr.scale[idx];
+  var t=ctx.currentTime;
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(0.20,t+0.08);   // soft pluck
+  g.gain.exponentialRampToValueAtTime(0.0001,t+1.4);  // long tail → pad-like
+  osc.connect(g); g.connect(music.master);
+  osc.start(t); osc.stop(t+1.5);
+}
+
+function stopMusic(){
+  var ctx=audioCtx;
+  if(music.timer){ clearInterval(music.timer); music.timer=null; }
+  if(music.master && ctx){
+    var now=ctx.currentTime;
+    music.master.gain.cancelScheduledValues(now);
+    music.master.gain.setValueAtTime(music.master.gain.value,now);
+    music.master.gain.linearRampToValueAtTime(0.0001,now+0.6);
+  }
+  if(music.drones){
+    music.drones.forEach(function(o){ try{o.stop((ctx?ctx.currentTime:0)+0.7);}catch(e){} });
+    music.drones=null;
+  }
+  var m=music.master; music.master=null;
+  setTimeout(function(){ if(m){ try{m.disconnect();}catch(e){} } },800);
+}
+
+/* switch to the next track (restart if currently playing) */
+function changeMusic(){
+  music.track=(music.track+1)%TRACKS.length;
+  saveMusicPref();
+  updateMusicUI();
+  if(!music.muted){ stopMusic(); setTimeout(startMusic,140); }
+}
+
+/* mute / unmute */
+function toggleMute(){
+  music.muted=!music.muted;
+  saveMusicPref();
+  updateMusicUI();
+  if(music.muted) stopMusic(); else startMusic();
+}
+
+/* reflect music state in the settings panel + gear */
+function updateMusicUI(){
+  var nm=document.getElementById("music-name");
+  if(nm) nm.textContent=TRACKS[music.track].name;
+  var mb=document.getElementById("btn-music-mute");
+  if(mb) mb.textContent = music.muted ? "🔇 מושתק" : "🔊 פועלת";
+  var gear=document.getElementById("btn-settings");
+  if(gear) gear.classList.toggle("muted", music.muted);
+}
+
 /* ── TIMER ── */
 function startTimer(){
   clearInterval(timerID);
+  updateTimeDisplay();
   timerID=setInterval(function(){
-    seconds++;
-    document.getElementById("hud-time").textContent=formatTime(seconds);
+    elapsed++;
+    if(timed){
+      remaining--;
+      if(remaining<=0){ remaining=0; updateTimeDisplay(); stopTimer(); onTimeout(); return; }
+    }
+    updateTimeDisplay();
+    saveProgress();   // keep elapsed/remaining fresh for resume
   },1000);
 }
 function stopTimer(){clearInterval(timerID);timerID=null;}
+function updateTimeDisplay(){
+  var el=document.getElementById("hud-time");
+  if(timed){
+    el.textContent=formatTime(remaining);
+    if(remaining<=10) el.classList.add("warn"); else el.classList.remove("warn");
+  } else {
+    el.textContent="∞";
+    el.classList.remove("warn");
+  }
+}
 function formatTime(s){
   var m=Math.floor(s/60);
   var ss=s%60;
   return m+":"+(ss<10?"0":"")+ss;
+}
+
+/* ── COLUMNS ── balance the grid + keep cards tappable on small screens ── */
+function colsFor(cardCount){
+  var w=window.innerWidth, c;
+  if(cardCount<=6) c=3; else if(cardCount<=12) c=4; else if(cardCount<=20) c=5; else c=6;
+  if(w<400 && c>4) c=4;
+  if(w<320 && c>3) c=3;
+  return c;
 }
 
 /* ── SHUFFLE ── */
@@ -518,28 +794,62 @@ function shuffle(arr){
   return a;
 }
 
-/* ── BUILD GRID ── */
-function buildGrid(){
+/* ── START / RESET A LEVEL ──
+   Pass a saved object to resume mid-level; omit it to start the level fresh. */
+function startLevel(resume){
+  var cfg=LEVELS[level];
+  pairsCount=cfg.pairs;
+  timed=cfg.time>0;
+  var board=null;
+  if(resume && resume.board){
+    remaining=resume.remaining;
+    elapsed=resume.elapsed;
+    moves=resume.moves;
+    board=resume.board;
+  } else {
+    remaining=cfg.time;
+    elapsed=0;
+    moves=0;
+  }
+  matched=0;
+  flipped=[];
+  locked=false;
+  started=false;
+  stopTimer();
+  buildGrid(board);
+  // count already-matched pairs (each pair = 2 cards)
+  cards.forEach(function(c){ if(c.isMatched) matched++; });
+  matched=Math.floor(matched/2);
+  document.getElementById("hud-level").textContent=(level+1);
+  document.getElementById("hud-moves").textContent=moves;
+  document.getElementById("hud-pairs").textContent=matched+"/"+pairsCount;
+  updateTimeDisplay();
+  saveProgress();
+}
+
+/* ── BUILD GRID ──
+   With savedBoard → rebuild the exact layout (positions + matched cards). */
+function buildGrid(savedBoard){
   var grid=document.getElementById("grid");
   grid.innerHTML="";
   cards=[];
-  flipped=[];
-  matched=0;
-  moves=0;
-  locked=false;
-  seconds=0;
-  stopTimer();
-  document.getElementById("hud-moves").textContent="0";
-  document.getElementById("hud-time").textContent="0:00";
-  document.getElementById("hud-pairs").textContent="0/7";
 
-  // Create 14 card data objects
-  var raw=[];
-  PAIRS.forEach(function(p,i){
-    raw.push({type:"word",word:p.word,pairId:i});
-    raw.push({type:"num", val:p.val,  pairId:i});
-  });
-  raw=shuffle(raw);
+  var raw;
+  if(savedBoard){
+    raw=savedBoard.map(function(c){
+      return {type:c.t, word:c.w, val:c.v, pairId:c.p, matched:c.m};
+    });
+  } else {
+    // first `pairsCount` pairs of the pool → 2 cards each
+    var chosen=POOL.slice(0,pairsCount);
+    raw=[];
+    chosen.forEach(function(p,i){
+      raw.push({type:"word",word:p.word,pairId:i});
+      raw.push({type:"num", val:p.val,  pairId:i});
+    });
+    raw=shuffle(raw);
+  }
+  grid.style.gridTemplateColumns="repeat("+colsFor(raw.length)+",1fr)";
 
   raw.forEach(function(data,idx){
     var card=document.createElement("div");
@@ -552,7 +862,8 @@ function buildGrid(){
     // BACK
     var back=document.createElement("div");
     back.className="card-face card-back";
-    back.innerHTML='<span class="card-back-icon">✡</span>';
+    back.innerHTML='<img class="card-back-logo" src="assets/logo.svg" alt="">'+
+      '<span class="card-back-name">אֲתַר הַפָּסוּק הָרִאשׁוֹן</span>';
 
     // FRONT
     var front=document.createElement("div");
@@ -573,7 +884,9 @@ function buildGrid(){
     card.addEventListener("click",function(){onCardClick(idx);});
     card.addEventListener("touchend",function(e){e.preventDefault();onCardClick(idx);},{passive:false});
 
-    cards.push({el:card,data:data,faceUp:false,isMatched:false});
+    var isM=!!data.matched;
+    if(isM) card.classList.add("matched");   // restore as solved (front shown, green)
+    cards.push({el:card,data:data,faceUp:isM,isMatched:isM});
   });
 }
 
@@ -588,8 +901,9 @@ function onCardClick(idx){
   // Resume audio ctx on first interaction
   if(audioCtx && audioCtx.state==="suspended") audioCtx.resume();
 
-  // Start timer on first flip
-  if(flipped.length===0 && matched===0 && moves===0 && seconds===0){
+  // Start timer on the first flip of the level
+  if(!started){
+    started=true;
     startTimer();
   }
 
@@ -624,10 +938,11 @@ function checkPair(){
       b.el.classList.remove("matched-anim");
     },700);
     matched++;
-    document.getElementById("hud-pairs").textContent=matched+"/7";
+    document.getElementById("hud-pairs").textContent=matched+"/"+pairsCount;
     flipped=[];
     locked=false;
-    if(matched===7) onWin();
+    saveProgress();
+    if(matched===pairsCount) onLevelComplete();
   } else {
     playBuzz();
     a.el.classList.add("shake");
@@ -639,49 +954,137 @@ function checkPair(){
       b.faceUp=false;
       flipped=[];
       locked=false;
+      saveProgress();
     },900);
   }
 }
 
-/* ── WIN ── */
-function onWin(){
+/* ── RESULT OVERLAY HELPERS ── */
+function showResult(){
+  document.getElementById("res-moves").textContent=moves;
+  document.getElementById("res-time").textContent=formatTime(elapsed);
+}
+function setResultButton(label,fn){
+  var b=document.getElementById("btn-result");
+  b.textContent=label;
+  // clone to drop any previous click handler
+  var nb=b.cloneNode(true);
+  b.parentNode.replaceChild(nb,b);
+  nb.addEventListener("click",fn);
+}
+function openResult(){ document.getElementById("overlay-result").classList.remove("hidden"); }
+function hideResult(){ document.getElementById("overlay-result").classList.add("hidden"); }
+
+/* ── LEVEL COMPLETE ── */
+function onLevelComplete(){
   stopTimer();
   playWin();
-  var msgs=[
-    "מדהים! שלטת בגימטריה של פסוק הבראשית!",
-    "עבודה נפלאה! זכרון חד כחרב!",
-    "ברכות! שבעת המילים נחשפו בפניך!"
-  ];
-  var msg=msgs[Math.floor(Math.random()*msgs.length)];
-  document.getElementById("win-msg").textContent=msg;
-  document.getElementById("win-moves").textContent=moves;
-  document.getElementById("win-time").textContent=formatTime(seconds);
-  setTimeout(function(){
-    document.getElementById("overlay-win").classList.remove("hidden");
-  },600);
+  showResult();
+  var last=(level>=LEVELS.length-1);
+  if(last){
+    clearProgress();   // finished everything — nothing left to resume
+    document.getElementById("res-title").textContent="ניצחת! 🎉";
+    document.getElementById("res-sub").textContent="סיימת את כל "+LEVELS.length+" השלבים";
+    document.getElementById("res-msg").textContent="שלטת בגימטריה — מהפסוק הראשון ועד מילות הבריאה!";
+    setResultButton("שחק מחדש",function(){ level=0; hideResult(); startLevel(); });
+  } else {
+    var next=LEVELS[level+1];
+    document.getElementById("res-title").textContent="שלב "+(level+1)+" הושלם ✓";
+    document.getElementById("res-sub").textContent="מצוין! ממשיכים הלאה";
+    document.getElementById("res-msg").textContent=
+      "שלב "+(level+2)+": "+next.pairs+" מילים · "+(next.time>0?(next.time+" שניות"):"ללא הגבלת זמן");
+    setResultButton("השלב הבא →",function(){ level++; hideResult(); startLevel(); });
+  }
+  setTimeout(openResult,600);
 }
 
-/* ── RESTART ── */
-function restartGame(){
-  document.getElementById("overlay-win").classList.add("hidden");
-  buildGrid();
+/* ── TIME UP ── */
+function onTimeout(){
+  playBuzz();
+  locked=true;
+  saveFreshLevel();   // resume should restart this level with full time
+  showResult();
+  document.getElementById("res-title").textContent="נגמר הזמן ⏳";
+  document.getElementById("res-sub").textContent="שלב "+(level+1);
+  document.getElementById("res-msg").textContent="כמעט! נסה שוב — הפעם מהר יותר.";
+  setResultButton("נסה שוב",function(){ hideResult(); startLevel(); });
+  setTimeout(openResult,400);
 }
 
 /* ── EVENT LISTENERS ── */
+// "התחל משחק" / "התחל מחדש" — always a fresh game from level 1
 document.getElementById("btn-start").addEventListener("click",function(){
+  clearProgress();
+  level=0;
+  startLevel();
   document.getElementById("overlay-intro").classList.add("hidden");
-  buildGrid();
+  startMusic();   // kick off background music on this user gesture
 });
-document.getElementById("btn-play-again").addEventListener("click",restartGame);
-document.getElementById("btn-restart").addEventListener("click",restartGame);
+// "המשך משחק" — board was already restored behind the overlay; just resume
+document.getElementById("btn-continue").addEventListener("click",function(){
+  document.getElementById("overlay-intro").classList.add("hidden");
+  startMusic();
+});
+document.getElementById("btn-restart").addEventListener("click",function(){
+  hideResult();
+  startLevel();   // restart the current level
+});
+
+/* settings controls (bind click + touch so they work on mobile too) */
+function tap(el,fn){
+  el.addEventListener("click",function(e){ e.stopPropagation(); fn(); });
+  el.addEventListener("touchend",function(e){ e.preventDefault(); e.stopPropagation(); fn(); },{passive:false});
+}
+tap(document.getElementById("btn-settings"),function(){
+  document.getElementById("settings-panel").classList.toggle("hidden");
+});
+tap(document.getElementById("btn-music-change"),changeMusic);
+tap(document.getElementById("btn-music-mute"),toggleMute);
+/* close the settings panel when tapping elsewhere */
+document.addEventListener("click",function(e){
+  var panel=document.getElementById("settings-panel");
+  var gear=document.getElementById("btn-settings");
+  if(!panel.classList.contains("hidden") && !panel.contains(e.target) && !gear.contains(e.target)){
+    panel.classList.add("hidden");
+  }
+});
+
+/* re-balance columns on resize/rotate */
+window.addEventListener("resize",function(){
+  if(cards.length){
+    document.getElementById("grid").style.gridTemplateColumns="repeat("+colsFor(cards.length)+",1fr)";
+  }
+});
+
+/* save when the tab is hidden or about to close (belt-and-suspenders) */
+window.addEventListener("pagehide",function(){ if(cards.length) saveProgress(); });
+document.addEventListener("visibilitychange",function(){
+  if(document.visibilityState==="hidden" && cards.length) saveProgress();
+});
 
 /* prevent double-tap zoom on iOS */
 document.addEventListener("touchend",function(e){
   e.preventDefault();
 },{passive:false});
 
-/* ── INIT: build grid immediately so layout is visible behind intro overlay ── */
-buildGrid();
+/* ── INIT ──
+   If there's saved progress, restore it behind the intro and offer "המשך". */
+loadMusicPref();
+updateMusicUI();
+(function init(){
+  var saved=loadProgress();
+  if(saved){
+    level=saved.level;
+    startLevel(saved.board ? saved : undefined);
+    var cont=document.getElementById("btn-continue");
+    cont.textContent="המשך · שלב "+(saved.level+1);
+    cont.style.display="";
+    document.getElementById("btn-start").textContent="התחל מחדש";
+  } else {
+    level=0;
+    startLevel();
+  }
+})();
 
 })();
 </script>

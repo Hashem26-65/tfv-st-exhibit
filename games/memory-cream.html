@@ -1,0 +1,1589 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>זיכרון גימטרי · גרסת שמנת · אתר הפסוק הראשון</title>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* color — royal navy + burgundy + gold (one unified family) */
+  --bg:#050c24;
+  --bg-2:#0b1a40;
+  --panel:#11214d;
+  --panel-2:#0d1a3c;
+  --gold:#d8b46a;
+  --gold-soft:#b9924a;
+  --gold-hi:#eccf86;
+  --burgundy:#5c1530;
+  --burgundy-2:#7a1c3f;
+  --ink:#f4e9d8;
+  --muted:#98a4c2;
+  --green:#d8b46a;            /* match state is GOLD now, not green */
+  --line:rgba(216,180,106,.18);
+  --line-2:rgba(216,180,106,.30);
+
+  /* spacing (4-based) */
+  --s-1:4px; --s-2:8px; --s-3:12px; --s-4:16px; --s-6:24px; --s-7:32px;
+
+  /* radius */
+  --r-sm:8px; --r-md:12px; --r-lg:16px; --r-pill:999px;
+
+  /* shadows */
+  --sh-1:0 2px 8px rgba(0,0,0,.35);
+  --sh-2:0 6px 18px rgba(0,0,0,.40);
+  --sh-3:0 24px 64px rgba(0,0,0,.60);
+  --sh-inset:inset 0 1px 0 rgba(216,180,106,.12);
+  --glow-gold:0 0 18px rgba(216,180,106,.30);
+
+  /* easing */
+  --ease:cubic-bezier(.4,0,.2,1);
+  --ease-out:cubic-bezier(.16,1,.3,1);
+  --ease-flip:cubic-bezier(.34,1.2,.4,1);
+
+  --serif:"Frank Ruhl Libre",serif;
+  --mono:"Roboto Mono",monospace;
+}
+/* brand-correct focus + reduced-motion guard */
+:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; }
+@media (prefers-reduced-motion:reduce){ *{animation:none!important; transition:none!important;} }
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{
+  height:100%;
+  overflow:hidden;               /* אין גלילה בשום מכשיר */
+  background:var(--bg);
+  font-family:var(--serif);
+  color:var(--ink);
+  direction:rtl;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── BACKGROUND ORNAMENT ── */
+body::before{
+  content:"";
+  position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 90% 55% at 50% -8%, rgba(216,180,106,.07) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(92,21,48,.18) 0%, transparent 70%),
+    radial-gradient(ellipse 70% 45% at 50% 108%, rgba(11,26,64,.6) 0%, transparent 70%);
+  pointer-events:none;
+  z-index:0;
+}
+
+/* ── OVERLAYS ── */
+.overlay{
+  position:fixed;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(5,12,36,.94);
+  backdrop-filter:blur(7px);
+  z-index:100;
+  transition:opacity .35s;
+}
+.overlay.hidden{opacity:0;pointer-events:none;}
+
+.panel{
+  background:linear-gradient(180deg,var(--panel),var(--panel-2));
+  border:1px solid var(--line-2);
+  border-radius:var(--r-lg);
+  padding:var(--s-7) var(--s-6);
+  max-width:420px;
+  width:90%;
+  text-align:center;
+  box-shadow:var(--sh-3), var(--sh-inset);
+  animation:panelIn .4s var(--ease-out) both;
+  position:relative;
+}
+@keyframes panelIn{ from{ opacity:0; transform:translateY(12px) scale(.985); } }
+.panel::before{
+  content:"";
+  position:absolute;top:0;left:0;right:0;height:3px;
+  border-radius:var(--r-lg) var(--r-lg) 0 0;
+  background:linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+
+.panel-title{
+  font-size:clamp(1.7rem,6vw,2.4rem);
+  font-weight:900;
+  color:var(--gold);
+  line-height:1.2;
+  margin-bottom:6px;
+  text-shadow:0 2px 12px rgba(216,180,106,.4);
+}
+.panel-sub{
+  font-size:.95rem;
+  color:var(--muted);
+  margin-bottom:20px;
+  font-style:italic;
+}
+.panel-verse{
+  font-size:1.1rem;
+  color:var(--ink);
+  background:rgba(255,255,255,.04);
+  border-radius:10px;
+  padding:12px 16px;
+  margin-bottom:20px;
+  line-height:1.9;
+  letter-spacing:.04em;
+}
+.panel-howto{
+  font-size:.9rem;
+  color:var(--muted);
+  line-height:1.7;
+  margin-bottom:26px;
+  text-align:right;
+}
+.panel-howto b{color:var(--ink);}
+
+/* stacked actions — replaces <br>-driven button layout */
+.panel-actions{ display:flex; flex-direction:column; gap:var(--s-3); margin-top:var(--s-6); }
+
+/* PRIMARY — gold with black text */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:var(--s-2);
+  padding:14px 28px; min-height:48px;
+  background:linear-gradient(180deg,#eccf86,#c79b45);
+  border:1px solid rgba(216,180,106,.6);
+  border-radius:var(--r-md);
+  color:#1a1206;
+  font:700 1.08rem/1 var(--serif);
+  cursor:pointer;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.30), var(--sh-2);
+  transition:transform .18s var(--ease), box-shadow .18s var(--ease), filter .18s var(--ease);
+}
+.btn:hover{ transform:translateY(-1px); filter:brightness(1.05);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4), 0 10px 26px rgba(0,0,0,.45), var(--glow-gold); }
+.btn:active{ transform:translateY(0); filter:brightness(.96); }
+
+/* SECONDARY — gold-outline ghost */
+.btn-2{
+  display:inline-flex; align-items:center; justify-content:center; gap:var(--s-2);
+  padding:11px 22px; min-height:44px;
+  background:transparent;
+  border:1px solid var(--line-2);
+  border-radius:var(--r-md);
+  color:var(--gold-soft);
+  font:600 1rem/1 var(--serif);
+  cursor:pointer;
+  transition:background .18s var(--ease), color .18s var(--ease), border-color .18s var(--ease);
+}
+.btn-2:hover{ background:rgba(216,180,106,.10); color:var(--gold); border-color:var(--gold); }
+
+/* giant call-to-action button (demo-done) */
+.btn-giant{
+  width:100%; padding:22px 28px; min-height:68px;
+  font-size:clamp(1.4rem,5vw,1.9rem);
+  letter-spacing:.02em;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35), 0 10px 30px rgba(0,0,0,.5), var(--glow-gold);
+  animation:giantPulse 1.6s var(--ease) infinite;
+}
+@keyframes giantPulse{ 50%{ box-shadow:inset 0 1px 0 rgba(255,255,255,.45), 0 12px 36px rgba(0,0,0,.55), 0 0 28px rgba(216,180,106,.55); } }
+.btn-giant:hover{ animation:none; }
+
+/* ── DEMO BANNER ── */
+#demo-banner{
+  position:fixed; top:12px; left:50%; transform:translateX(-50%);
+  z-index:70; display:flex; align-items:center; gap:14px;
+  background:linear-gradient(180deg,var(--panel),var(--panel-2));
+  border:1px solid var(--line-2); border-radius:var(--r-pill);
+  padding:8px 10px 8px 18px; box-shadow:var(--sh-2); max-width:94vw;
+  animation:panelIn .3s var(--ease-out) both;
+}
+#demo-banner.hidden{ display:none; }
+#demo-text{ color:var(--gold); font-size:.95rem; white-space:nowrap; }
+#demo-banner .btn-2{ padding:7px 16px; min-height:36px; }
+
+/* ── LEARN / DEMO PANEL ── */
+/* mobile: single column, scroll allowed (background covers the whole area) */
+.learn-panel{ width:100%; max-width:520px; max-height:88dvh; overflow-y:auto; -webkit-overflow-scrolling:touch; text-align:right; }
+.learn-grid{ display:grid; grid-template-columns:1fr; gap:14px 26px; }
+/* wide: use the screen width, columns side by side → fits without scrolling */
+@media(min-width:760px){
+  .learn-panel{ max-width:min(1080px,95vw); max-height:94dvh; }
+  .learn-grid{ grid-template-columns:1fr 1fr; align-items:start; }
+}
+@media(min-width:1180px){
+  .learn-grid{ grid-template-columns:repeat(3,1fr); }
+}
+.learn-sec{
+  background:var(--panel-2); border:1px solid var(--line);
+  border-radius:var(--r-md); padding:var(--s-4); margin:0;
+}
+.learn-sec h3{
+  color:var(--gold); font-size:1.1rem; margin-bottom:12px;
+  border-bottom:1px solid var(--line); padding-bottom:8px;
+}
+.learn-sec p{ color:#c9b79c; font-size:.95rem; line-height:1.7; }
+.learn-sec p b{ color:var(--gold-soft); }
+
+/* gematria calculator */
+#gem-input{
+  width:100%; margin:6px 0 12px; padding:12px 16px;
+  background:rgba(0,0,0,.25); border:1px solid rgba(216,180,106,.35);
+  border-radius:12px; color:var(--ink); font-family:var(--serif);
+  font-size:1.5rem; text-align:center; direction:rtl; outline:none;
+}
+#gem-input:focus{ border-color:var(--gold); }
+.gem-total-box{ text-align:center; font-size:1.0rem; color:#c9b79c; margin-bottom:10px; }
+.gem-total-box span{
+  font-family:var(--mono); font-size:2rem; font-weight:700; color:var(--gold);
+  display:block; margin-top:2px;
+}
+.gem-breakdown{ display:flex; flex-wrap:wrap; gap:6px; justify-content:center; }
+.gem-chip{
+  background:rgba(92,21,48,.4); border:1px solid rgba(216,180,106,.22);
+  border-radius:8px; padding:4px 8px; text-align:center; min-width:34px;
+}
+.gem-chip .l{ font-size:1.1rem; color:var(--ink); display:block; }
+.gem-chip .v{ font-family:var(--mono); font-size:.72rem; color:var(--gold-soft); }
+
+/* gematria table */
+.gem-table{ display:grid; grid-template-columns:repeat(auto-fill, minmax(50px,1fr)); gap:6px; margin-top:12px; }
+.gem-cell{
+  background:rgba(0,0,0,.22); border:1px solid var(--line);
+  border-radius:var(--r-sm); aspect-ratio:1;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  transition:background .15s, border-color .15s;
+}
+.gem-cell:hover{ border-color:var(--line-2); background:rgba(216,180,106,.06); }
+.gem-cell .l{ font-size:1.3rem; color:var(--gold); display:block; line-height:1; }
+.gem-cell .v{ font-family:var(--mono); font-size:.8rem; color:#c9b79c; }
+
+/* verse demo */
+.verse-demo{ display:flex; flex-direction:column; gap:5px; }
+.verse-row{
+  display:flex; justify-content:space-between; align-items:center;
+  background:rgba(0,0,0,.18); border-radius:8px; padding:7px 12px;
+}
+.verse-row .w{ font-size:1.25rem; color:var(--ink); }
+.verse-row .v{ font-family:var(--mono); color:var(--gold); font-weight:700; }
+.verse-sum{
+  display:flex; justify-content:space-between; align-items:center;
+  margin-top:6px; padding:10px 12px; border-radius:var(--r-sm);
+  background:rgba(216,180,106,.10); border:1px solid var(--line-2); font-weight:700;
+}
+.verse-sum .w{ color:var(--gold); }
+.verse-sum .v{ font-family:var(--mono); color:var(--gold); font-size:1.3rem; }
+
+/* win overlay extras */
+.win-score{
+  font-size:1.0rem;
+  color:var(--muted);
+  margin-bottom:8px;
+}
+.win-score span{
+  color:var(--gold);
+  font-weight:700;
+  font-family:var(--mono);
+}
+.win-msg{
+  font-size:1.15rem;
+  color:var(--ink);
+  margin-bottom:24px;
+  line-height:1.6;
+}
+
+/* ── MAIN LAYOUT ── */
+#app{
+  position:relative;
+  z-index:1;
+  height:100dvh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:8px 8px 4px;
+  overflow:hidden;
+}
+
+/* ── HUD ── */
+#hud{
+  width:100%;
+  max-width:700px;
+  display:flex;
+  align-items:stretch;
+  justify-content:center;
+  gap:7px;
+  margin-bottom:10px;
+  flex:0 0 auto;
+}
+.hud-block{
+  background:linear-gradient(180deg,#16295c,#0c1a40);
+  border:1px solid var(--line-2);
+  border-radius:14px;
+  padding:7px 5px 8px;
+  flex:1 1 0;
+  min-width:0;
+  overflow:hidden;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+  box-shadow:inset 0 1px 0 rgba(216,180,106,.15), 0 3px 8px rgba(0,0,0,.4);
+}
+.hud-ico{ color:var(--gold-soft); opacity:.9; line-height:0; }
+.hud-ico svg{ width:clamp(13px,3.4vw,17px); height:clamp(13px,3.4vw,17px); }
+.hud-label{
+  font-size:clamp(.5rem,2vw,.62rem);
+  color:var(--muted);
+  letter-spacing:.02em;
+  font-weight:500;
+  white-space:nowrap;
+}
+.hud-val{
+  font-family:var(--mono);
+  font-size:clamp(.9rem,3.6vw,1.2rem);
+  font-weight:700;
+  color:var(--gold);
+  white-space:nowrap;
+  line-height:1.1;
+}
+
+/* TIME — enlarged & emphasized */
+.hud-time-block{
+  flex:1.7 1 0;
+  background:linear-gradient(180deg,#1c3469,#0e2150);
+  border-color:rgba(216,180,106,.5);
+  box-shadow:inset 0 1px 0 rgba(216,180,106,.22), 0 4px 12px rgba(0,0,0,.45), 0 0 14px rgba(216,180,106,.12);
+}
+.hud-time-block .hud-ico{ color:var(--gold); opacity:1; }
+#hud-time{ font-size:clamp(1.4rem,6vw,2.1rem); color:var(--gold-hi); }
+#hud-time.warn{ color:#ff8f6a; animation:warnpulse .9s var(--ease) infinite; }
+@keyframes warnpulse{ 50%{ text-shadow:0 0 14px rgba(255,120,90,.85); transform:scale(1.06); } }
+
+/* juice — a value pops when it changes */
+@keyframes hudBump{ 0%{transform:scale(1);} 40%{transform:scale(1.22);} 100%{transform:scale(1);} }
+.hud-val.bump{ animation:hudBump .35s var(--ease-out); }
+
+#btn-restart{
+  flex:0 0 auto;
+  display:flex; align-items:center; justify-content:center; gap:6px;
+  background:linear-gradient(180deg,#7a1c3f,#56142e);
+  border:1px solid var(--line-2);
+  border-radius:14px;
+  color:var(--gold);
+  font-family:var(--serif);
+  font-size:.9rem;
+  cursor:pointer;
+  padding:0 14px;
+  box-shadow:inset 0 1px 0 rgba(216,180,106,.18), 0 3px 8px rgba(0,0,0,.4);
+  transition:filter .15s, transform .12s;
+  white-space:nowrap;
+}
+#btn-restart:hover{ filter:brightness(1.1); }
+#btn-restart:active{ transform:scale(.96); }
+@media(max-width:430px){
+  #btn-restart span{ display:none; }   /* icon-only on small phones */
+  #btn-restart{ padding:0 12px; }
+}
+
+/* ── SETTINGS ── */
+#btn-settings{
+  position:fixed; top:12px; left:12px; z-index:60;
+  width:42px;height:42px; border-radius:50%;
+  background:var(--panel); border:1px solid rgba(216,180,106,.3);
+  color:var(--gold); font-size:1.15rem; cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 10px rgba(0,0,0,.5);
+  transition:transform .15s, background .15s, color .15s;
+}
+#btn-settings:hover{transform:scale(1.08) rotate(40deg);background:var(--burgundy);}
+#btn-settings.muted{color:var(--muted);opacity:.75;}
+
+#settings-panel{
+  position:fixed; top:62px; left:12px; z-index:60;
+  width:222px; background:var(--panel);
+  border:1px solid rgba(216,180,106,.3); border-radius:14px;
+  padding:14px; box-shadow:0 8px 30px rgba(0,0,0,.6);
+  transition:opacity .2s, transform .2s; transform-origin:top left;
+}
+#settings-panel.hidden{ opacity:0; transform:scale(.92); pointer-events:none; }
+.settings-head{
+  color:var(--gold); font-weight:700; font-size:1rem; text-align:center;
+  margin-bottom:12px; border-bottom:1px solid rgba(216,180,106,.18); padding-bottom:8px;
+}
+.settings-row{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:8px; margin-bottom:10px;
+}
+.settings-row:last-child{ margin-bottom:0; }
+.settings-label{ color:#c9b79c; font-size:.92rem; }
+.settings-btn{
+  background:rgba(92,21,48,.5); border:1px solid rgba(216,180,106,.25);
+  border-radius:8px; color:var(--gold); font-family:var(--serif);
+  font-size:.9rem; cursor:pointer; padding:7px 12px;
+  transition:background .15s,color .15s; white-space:nowrap;
+}
+.settings-btn:hover{ background:var(--burgundy); color:var(--gold); }
+
+/* ── GRID ── */
+#grid{
+  flex:1 1 auto;
+  min-height:0;
+  width:100%;
+  max-width:1100px;
+  display:grid;
+  justify-content:center;
+  align-content:center;
+  gap:12px;
+}
+
+/* ── CARD ── */
+.card{
+  aspect-ratio:3/4;
+  perspective:900px;
+  cursor:pointer;
+  position:relative;
+}
+
+/* prevent extra flip during lock */
+.card.locked{pointer-events:none;}
+.card.matched{pointer-events:none;}
+
+.card-inner{
+  position:absolute;inset:0;
+  transform-style:preserve-3d;
+  transition:transform .5s var(--ease-flip);
+  border-radius:12px;
+}
+.card.flipped .card-inner,
+.card.matched .card-inner{
+  transform:rotateY(180deg);
+}
+
+.card-face{
+  position:absolute;inset:0;
+  border-radius:12px;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+  display:flex;align-items:center;justify-content:center;
+  text-align:center;
+  padding:8px 6px;
+}
+
+/* BACK — deep royal navy velvet card */
+.card-back{
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(216,180,106,.12), transparent 55%),
+    linear-gradient(160deg,#152c63 0%, #0b1a40 58%, #050c24 100%);
+  border:1px solid rgba(216,180,106,.30);
+  box-shadow:0 3px 14px rgba(0,0,0,.55), inset 0 1px 0 rgba(216,180,106,.12);
+  flex-direction:column;
+  gap:6px;
+}
+.card-back::after{
+  content:"";
+  position:absolute;inset:6px;
+  border-radius:8px;
+  border:1px solid rgba(216,180,106,.20);     /* מסגרת זהב דקה — מלכותית */
+  /* תקסטורה קטיפתית עדינה מאוד — ברק רך, בלי משבצות */
+  background:
+    radial-gradient(75% 55% at 30% 18%, rgba(255,255,255,.06), transparent 60%),
+    radial-gradient(90% 70% at 78% 92%, rgba(0,0,0,.22), transparent 60%);
+  pointer-events:none;
+}
+/* hover/press gold sheen sweeping across the back */
+.card-back::before{
+  content:""; position:absolute; inset:0; border-radius:12px; z-index:2;
+  background:linear-gradient(115deg,transparent 40%,rgba(216,180,106,.16) 50%,transparent 60%);
+  transform:translateX(-120%); transition:transform .6s var(--ease); pointer-events:none;
+}
+.card:hover .card-back::before{ transform:translateX(120%); }
+
+/* staggered deal-in + press feedback */
+@keyframes dealIn{ from{ opacity:0; transform:translateY(10px) scale(.96); } }
+.card{ animation:dealIn .35s var(--ease-out) backwards; }
+.card:not(.flipped):not(.matched):active .card-inner{ transform:scale(.97); }
+
+.card-back-logo{
+  width:75%;
+  max-width:none;
+  z-index:1;
+  position:relative;
+  opacity:1;
+  filter:drop-shadow(0 2px 6px rgba(0,0,0,.45));
+}
+.card-back-name{
+  z-index:1;
+  position:relative;
+  color:#eccf86;
+  font-size:clamp(.95rem,5vw,1.7rem);
+  font-weight:700;
+  letter-spacing:.01em;
+  line-height:1.18;
+  text-align:center;
+  text-shadow:0 1px 3px rgba(0,0,0,.5);
+  padding:0 6px;
+}
+
+/* FRONT — brighter navy than the back (flip = turning toward the light) */
+.card-front{
+  transform:rotateY(180deg);
+  background:linear-gradient(150deg,#1d356f,#0e1f47);
+  border:1px solid var(--line-2);
+  box-shadow:0 4px 14px rgba(0,0,0,.45), inset 0 1px 0 rgba(216,180,106,.10);
+  flex-direction:column;
+  gap:4px;
+  transition:background .4s var(--ease), border-color .4s var(--ease), box-shadow .4s var(--ease);
+}
+.card-front::before{                       /* inset gold frame mirrors the back */
+  content:""; position:absolute; inset:6px; border-radius:8px;
+  border:1px solid rgba(216,180,106,.16);
+  background:radial-gradient(80% 50% at 50% 0%, rgba(255,255,255,.06), transparent 60%);
+  pointer-events:none;
+}
+/* MATCHED — bold solid-gold tile with black text + a check seal */
+.card.matched .card-front{
+  background:linear-gradient(155deg,#f1d896,#cca04e);
+  border-color:rgba(255,255,255,.55);
+  box-shadow:0 0 24px rgba(216,180,106,.55), 0 6px 18px rgba(0,0,0,.45),
+             inset 0 1px 0 rgba(255,255,255,.5);
+}
+.card.matched .card-front::before{
+  border-color:rgba(26,18,6,.28);
+  background:radial-gradient(85% 55% at 50% 0%, rgba(255,255,255,.4), transparent 60%);
+}
+.card.matched .card-front::after{          /* ✓ seal badge in the corner */
+  content:"✓";
+  position:absolute; top:7px; inset-inline-start:7px;
+  width:clamp(16px, calc(var(--cw,120px)*0.17), 28px);
+  height:clamp(16px, calc(var(--cw,120px)*0.17), 28px);
+  display:flex; align-items:center; justify-content:center;
+  border-radius:50%; background:#1a1206; color:#f1d896;
+  font-size:clamp(10px, calc(var(--cw,120px)*0.1), 16px); font-weight:700;
+  box-shadow:0 1px 4px rgba(0,0,0,.45);
+}
+
+/* word card text — scales with the computed card width (--cw) */
+.card-word{
+  font-size:calc(var(--cw,120px) * 0.17);
+  font-weight:700;
+  color:var(--ink);
+  line-height:1.15;
+  letter-spacing:.02em;
+  transition:color .4s var(--ease);
+}
+.card.matched .card-word,
+.card.matched .card-num{
+  color:#1a1206;
+  text-shadow:0 1px 0 rgba(255,255,255,.3);
+}
+.card.matched .card-num-label{ color:rgba(26,18,6,.7); }
+
+/* number card text */
+.card-num{
+  font-family:var(--mono);
+  font-size:calc(var(--cw,120px) * 0.26);
+  font-weight:700;
+  color:var(--gold);
+  letter-spacing:.04em;
+  transition:color .4s var(--ease);
+}
+.card-num-label{
+  font-size:calc(var(--cw,120px) * 0.085);
+  color:var(--muted);
+  letter-spacing:.06em;
+}
+
+/* ── FOOTER ── */
+footer{
+  width:100%;
+  text-align:center;
+  padding:4px 0 2px;
+  color:var(--muted);
+  font-size:.7rem;
+  letter-spacing:.06em;
+  border-top:1px solid rgba(216,180,106,.08);
+  flex:0 0 auto;
+  position:relative;
+  z-index:1;
+}
+
+/* ── SHAKE ANIMATION ── */
+@keyframes shake{
+  0%,100%{transform:translateX(0);}
+  20%{transform:translateX(-7px);}
+  40%{transform:translateX(7px);}
+  60%{transform:translateX(-5px);}
+  80%{transform:translateX(5px);}
+}
+.card.shake .card-inner{
+  animation:shake .35s ease;
+}
+
+/* ── MATCH POP — scale + gold ring ── */
+@keyframes matchPop{
+  0%{   transform:rotateY(180deg) scale(1);    box-shadow:0 0 0 0 rgba(216,180,106,.55); }
+  45%{  transform:rotateY(180deg) scale(1.08);  box-shadow:0 0 0 12px rgba(216,180,106,0); }
+  100%{ transform:rotateY(180deg) scale(1);    box-shadow:0 0 0 0 rgba(216,180,106,0); }
+}
+.card.matched-anim .card-inner{
+  animation:matchPop .5s var(--ease-out);
+}
+
+/* ── RESPONSIVE ── */
+@media(max-width:360px){
+  #grid{gap:12px;}
+}
+@media(min-width:500px){
+  #grid{gap:20px;}
+}
+</style>
+</head>
+<body>
+
+<button id="btn-settings" title="הגדרות" aria-label="הגדרות"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 13.5a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V20a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 8 18.3a1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H2a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 3.7 8a1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H8a1.7 1.7 0 0 0 1-1.5V2a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V8a1.7 1.7 0 0 0 1.5 1H22a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+<div id="settings-panel" class="hidden">
+  <div class="settings-head">הגדרות</div>
+  <div class="settings-row">
+    <span class="settings-label">מוזיקה</span>
+    <button class="settings-btn" id="btn-music-change"><span id="music-name">הֵיכָל</span> ⟳</button>
+  </div>
+  <div class="settings-row">
+    <span class="settings-label">שמע</span>
+    <button class="settings-btn" id="btn-music-mute">🔊 פועלת</button>
+  </div>
+  <div class="settings-row">
+    <span class="settings-label">מהירות</span>
+    <button class="settings-btn" id="btn-speed"><span id="speed-name">רגיל</span> ⟳</button>
+  </div>
+</div>
+
+<!-- INTRO OVERLAY -->
+<div class="overlay" id="overlay-intro">
+  <div class="panel">
+    <div class="panel-title">זיכרון גימטרי</div>
+    <div class="panel-sub">אתר הפסוק הראשון · משחק זיכרון</div>
+    <div class="panel-verse">
+      בְּרֵאשִׁית בָּרָא אֱלֹהִים אֵת הַשָּׁמַיִם וְאֵת הָאָרֶץ
+    </div>
+    <div class="panel-howto">
+      <b>כיצד משחקים:</b><br>
+      הפוך שני קלפים — אם <b>מילה וערך הגימטריה שלה</b> פנו אליך, הם נשארים גלויים.<br>
+      המשחק בנוי <b>שלבים</b>: בשלושת הראשונים אין הגבלת זמן — מתרגלים בנחת.<br>
+      מהשלב הרביעי נכנס <b>טיימר</b>, וככל שמתקדמים יש <b>יותר מילים ופחות זמן</b>.<br>
+      <br>
+      שבע מילות הפסוק מסתכמות ל־<b>2,701</b> = המספר המשולש ה-73.
+    </div>
+    <div class="panel-actions">
+      <button class="btn" id="btn-continue" style="display:none;">המשך משחק</button>
+      <button class="btn" id="btn-start">כניסה ישירה למשחק</button>
+      <button class="btn-2" id="btn-learn">הדגמה והסברים</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT OVERLAY (level complete / time up / final win) -->
+<div class="overlay hidden" id="overlay-result">
+  <div class="panel">
+    <div class="panel-title" id="res-title">כל הכבוד! 🎉</div>
+    <div class="panel-sub" id="res-sub">השלמת את השלב</div>
+    <div class="win-msg" id="res-msg"></div>
+    <div class="win-score">מהלכים: <span id="res-moves">0</span> &nbsp;|&nbsp; זמן: <span id="res-time">0:00</span></div>
+    <br>
+    <button class="btn" id="btn-result">השלב הבא →</button>
+  </div>
+</div>
+
+<!-- LEARN / DEMO OVERLAY -->
+<div class="overlay hidden" id="overlay-learn">
+  <div class="panel learn-panel">
+    <div class="panel-title">הדגמה והסברים</div>
+    <div class="panel-sub">גימטריה · הפסוק הראשון</div>
+
+    <div class="learn-grid">
+    <!-- 1 · מהי גימטריה + טבלת האותיות -->
+    <div class="learn-sec">
+      <h3>מהי גימטריה?</h3>
+      <p>לכל אות בעברית יש <b>ערך מספרי</b>. הגימטריה של מילה היא <b>סכום</b> ערכי האותיות שלה.</p>
+      <div class="gem-table" id="gem-table"></div>
+    </div>
+
+    <!-- 2 · הדגמה — המחשב משחק -->
+    <div class="learn-sec">
+      <h3>הדגמה</h3>
+      <p>צפו כיצד <b>המחשב משחק</b> את השלב הראשון — מתאים כל מילה לערך הגימטרי שלה.</p>
+      <button class="btn" id="btn-watch-demo" style="width:100%;margin:12px 0 14px;"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>צפו בהדגמה</button>
+      <div class="verse-demo" id="verse-demo"></div>
+    </div>
+
+    <!-- 3 · מחשבון גימטריה -->
+    <div class="learn-sec">
+      <h3>מחשבון גימטריה</h3>
+      <input id="gem-input" type="text" placeholder="הקלידו מילה בעברית…" autocomplete="off" spellcheck="false">
+      <div class="gem-total-box">סך הכול<span id="gem-total">0</span></div>
+      <div class="gem-breakdown" id="gem-breakdown"></div>
+    </div>
+    </div><!-- /learn-grid -->
+
+    <div class="panel-actions">
+      <button class="btn" id="btn-learn-play">התחל לשחק</button>
+      <button class="btn-2" id="btn-learn-back">חזרה</button>
+    </div>
+  </div>
+</div>
+
+<!-- DEMO DONE OVERLAY -->
+<div class="overlay hidden" id="overlay-demo-done">
+  <div class="panel">
+    <div class="panel-title">כך משחקים!</div>
+    <div class="panel-sub">המחשב סיים את ההדגמה</div>
+    <div class="win-msg">עכשיו תורך — התאימו כל מילה לערך הגימטרי שלה.</div>
+    <div class="panel-actions">
+      <button class="btn btn-giant" id="btn-demo-selfplay">שַׂחֵק בעצמך</button>
+      <button class="btn-2" id="btn-demo-rewatch">צפו שוב בהדגמה</button>
+    </div>
+  </div>
+</div>
+
+<!-- DEMO BANNER -->
+<div id="demo-banner" class="hidden">
+  <span id="demo-text">הדגמה · המחשב משחק…</span>
+  <button class="btn-2" id="btn-demo-play">שחק בעצמך</button>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- HUD -->
+  <div id="hud">
+    <div class="hud-block">
+      <span class="hud-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg></span>
+      <div class="hud-label">שלב</div>
+      <div class="hud-val" id="hud-level">1</div>
+    </div>
+    <div class="hud-block">
+      <span class="hud-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"><path d="M7 4 3 8l4 4"/><path d="M3 8h13"/><path d="M17 20l4-4-4-4"/><path d="M21 16H8"/></svg></span>
+      <div class="hud-label">מהלכים</div>
+      <div class="hud-val" id="hud-moves">0</div>
+    </div>
+    <div class="hud-block hud-time-block">
+      <span class="hud-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+      <div class="hud-label">זמן</div>
+      <div class="hud-val" id="hud-time">0:00</div>
+    </div>
+    <div class="hud-block">
+      <span class="hud-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"><path d="M9.5 12a3 3 0 0 1 3-3H15a3 3 0 0 1 0 6h-.5"/><path d="M14.5 12a3 3 0 0 1-3 3H9a3 3 0 0 1 0-6h.5"/></svg></span>
+      <div class="hud-label">זוגות</div>
+      <div class="hud-val" id="hud-pairs">0/7</div>
+    </div>
+    <button id="btn-restart" aria-label="התחל שלב מחדש"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.6-6.4"/><path d="M3 4v4h4"/></svg><span>מחדש</span></button>
+  </div>
+
+  <!-- GRID -->
+  <div id="grid"></div>
+
+  <footer>אתר הפסוק הראשון · זיכרון גימטרי · גרסת שמנת</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ── DATA ──
+   7 מילות הפסוק הראשון, ואז מילות הבריאה (בראשית א׳) להרחבת השלבים. */
+var CORE = [
+  {word:"בְּרֵאשִׁית", val:913},
+  {word:"בָּרָא",       val:203},
+  {word:"אֱלֹהִים",    val:86},
+  {word:"אֵת",         val:401},
+  {word:"הַשָּׁמַיִם", val:395},
+  {word:"וְאֵת",       val:407},
+  {word:"הָאָרֶץ",     val:296}
+];
+var EXT = [
+  {word:"אוֹר",    val:207},
+  {word:"יוֹם",    val:56},
+  {word:"לַיְלָה", val:75},
+  {word:"מַיִם",   val:90},
+  {word:"רָקִיעַ", val:380},
+  {word:"תְהוֹם", val:451}
+];
+var POOL = CORE.concat(EXT);   // 13 זוגות זמינים בסך הכל
+
+/* ── LEVELS ── יותר מילים, פחות זמן; שלושת הראשונים ללא זמן ── */
+var LEVELS = [
+  {pairs:3,  time:0},
+  {pairs:4,  time:0},
+  {pairs:5,  time:0},
+  {pairs:6,  time:80},
+  {pairs:7,  time:70},
+  {pairs:9,  time:66},
+  {pairs:11, time:60},
+  {pairs:13, time:54}
+];
+
+/* ── STATE ── */
+var cards = [];
+var flipped = [];       // indices of currently face-up unmatched cards
+var matched = 0;
+var moves = 0;
+var locked = false;     // true while checking a pair
+var level = 0;          // index into LEVELS
+var pairsCount = 0;     // pairs in the current level
+var timed = false;      // does the current level have a timer?
+var remaining = 0;      // seconds left (timed levels)
+var elapsed = 0;        // seconds passed (always tracked, for stats)
+var started = false;    // has the timer been kicked off this level?
+var timerID = null;
+
+/* ── SAVE / RESUME (localStorage — survives leaving or closing the tab) ── */
+var SAVE_KEY = "tfv_memory_save_v1";
+
+function serializeBoard(){
+  return cards.map(function(c){
+    return {t:c.data.type, w:c.data.word, v:c.data.val, p:c.data.pairId, m:c.isMatched};
+  });
+}
+function saveProgress(){
+  if(demoMode) return;                 // never persist the auto-play demo
+  try{
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      level:level, moves:moves, elapsed:elapsed,
+      remaining:remaining, board:serializeBoard()
+    }));
+  }catch(e){}
+}
+function saveFreshLevel(){   // resume should restart this level cleanly (e.g. after time-up)
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify({level:level})); }catch(e){}
+}
+function clearProgress(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
+function loadProgress(){
+  try{
+    var d=JSON.parse(localStorage.getItem(SAVE_KEY));
+    if(!d || typeof d.level!=="number" || d.level<0 || d.level>=LEVELS.length) return null;
+    if(d.board){
+      // only resume mid-level if something is still unmatched
+      if(!d.board.some(function(c){return !c.m;})) return null;
+    }
+    return d;
+  }catch(e){ return null; }
+}
+
+/* ── AUDIO ── */
+var audioCtx = null;
+function getCtx(){
+  if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+  return audioCtx;
+}
+function playDing(){
+  try{
+    var ctx = getCtx();
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type="triangle";
+    osc.frequency.setValueAtTime(880,ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1200,ctx.currentTime+.12);
+    gain.gain.setValueAtTime(.32,ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.45);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime+.45);
+  }catch(e){}
+}
+function playWin(){
+  try{
+    var ctx = getCtx();
+    var notes=[880,1100,1320,1760];
+    notes.forEach(function(f,i){
+      var osc=ctx.createOscillator();
+      var gain=ctx.createGain();
+      osc.connect(gain);gain.connect(ctx.destination);
+      osc.type="triangle";
+      osc.frequency.value=f;
+      var t=ctx.currentTime+i*.13;
+      gain.gain.setValueAtTime(.28,t);
+      gain.gain.exponentialRampToValueAtTime(.001,t+.4);
+      osc.start(t);osc.stop(t+.4);
+    });
+  }catch(e){}
+}
+function playBuzz(){
+  try{
+    var ctx = getCtx();
+    var osc=ctx.createOscillator();
+    var gain=ctx.createGain();
+    osc.connect(gain);gain.connect(ctx.destination);
+    osc.type="sawtooth";
+    osc.frequency.setValueAtTime(180,ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(80,ctx.currentTime+.18);
+    gain.gain.setValueAtTime(.18,ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.22);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime+.22);
+  }catch(e){}
+}
+
+/* ── BACKGROUND MUSIC ── gentle generative ambient, switchable tracks ── */
+var TRACKS = [
+  { name:"הֵיכָל", wave:"triangle", step:900,    // Hijaz / Ahava-Rabba — warm, liturgical
+    scale:[293.66,311.13,369.99,392.00,440.00,466.16,523.25,587.33],
+    seq:[0,2,3,4, 3,2,0,-1, 2,4,5,4, 3,1,2,0],
+    drone:[146.83,220.00] },
+  { name:"מַעְיָן", wave:"sine", step:760,        // bright major-pentatonic, flowing
+    scale:[261.63,293.66,329.63,392.00,440.00,523.25,587.33,659.25],
+    seq:[0,1,2,3, 4,5,4,3, 2,1,0,-1, 2,4,5,-1],
+    drone:[130.81,196.00] },
+  { name:"מִדְבָּר", wave:"triangle", step:1080,  // lower & slower, contemplative
+    scale:[220.00,233.08,277.18,293.66,329.63,349.23,415.30,440.00],
+    seq:[0,3,2,4, -1,5,4,2, 0,2,3,-1, 4,2,1,0],
+    drone:[110.00,164.81] }
+];
+var MUSIC_PREF_KEY = "tfv_memory_cream_music_v1";
+var music = { muted:false, track:0, master:null, drones:null, timer:null, step:0 };
+
+/* ── GAME SPEED ── scales how long cards stay revealed before the verdict ── */
+var SPEEDS = [ {name:"איטי", mult:1.5}, {name:"רגיל", mult:1}, {name:"מהיר", mult:0.6} ];
+var speedIdx = 1;
+function speedMult(){ return SPEEDS[speedIdx].mult; }
+function changeSpeed(){
+  speedIdx=(speedIdx+1)%SPEEDS.length;
+  saveMusicPref();
+  updateMusicUI();
+}
+
+function loadMusicPref(){
+  try{
+    var d=JSON.parse(localStorage.getItem(MUSIC_PREF_KEY));
+    if(d){
+      music.muted=!!d.muted;
+      if(typeof d.track==="number" && d.track>=0 && d.track<TRACKS.length) music.track=d.track;
+      if(typeof d.speed==="number" && d.speed>=0 && d.speed<SPEEDS.length) speedIdx=d.speed;
+    }
+  }catch(e){}
+}
+function saveMusicPref(){
+  try{ localStorage.setItem(MUSIC_PREF_KEY, JSON.stringify({muted:music.muted, track:music.track, speed:speedIdx})); }catch(e){}
+}
+
+function startMusic(){
+  if(music.muted) return;
+  var ctx=getCtx();
+  if(ctx.state==="suspended") ctx.resume();
+  if(music.master) return;                 // already playing
+  var tr=TRACKS[music.track];
+  music.master=ctx.createGain();
+  music.master.gain.setValueAtTime(0.0001,ctx.currentTime);
+  music.master.gain.linearRampToValueAtTime(0.15,ctx.currentTime+2.5); // gentle fade-in
+  music.master.connect(ctx.destination);
+
+  music.drones=[];
+  tr.drone.forEach(function(f){
+    var osc=ctx.createOscillator(), g=ctx.createGain();
+    osc.type="sine"; osc.frequency.value=f; g.gain.value=0.18;
+    osc.connect(g); g.connect(music.master); osc.start();
+    music.drones.push(osc);
+  });
+
+  music.step=0;
+  scheduleNote();
+  music.timer=setInterval(scheduleNote,tr.step);
+}
+
+function scheduleNote(){
+  if(!music.master) return;
+  var ctx=getCtx();
+  var tr=TRACKS[music.track];
+  var idx=tr.seq[music.step % tr.seq.length];
+  music.step++;
+  if(idx<0) return;                        // rest
+  var osc=ctx.createOscillator(), g=ctx.createGain();
+  osc.type=tr.wave; osc.frequency.value=tr.scale[idx];
+  var t=ctx.currentTime;
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(0.20,t+0.08);   // soft pluck
+  g.gain.exponentialRampToValueAtTime(0.0001,t+1.4);  // long tail → pad-like
+  osc.connect(g); g.connect(music.master);
+  osc.start(t); osc.stop(t+1.5);
+}
+
+function stopMusic(){
+  var ctx=audioCtx;
+  if(music.timer){ clearInterval(music.timer); music.timer=null; }
+  if(music.master && ctx){
+    var now=ctx.currentTime;
+    music.master.gain.cancelScheduledValues(now);
+    music.master.gain.setValueAtTime(music.master.gain.value,now);
+    music.master.gain.linearRampToValueAtTime(0.0001,now+0.6);
+  }
+  if(music.drones){
+    music.drones.forEach(function(o){ try{o.stop((ctx?ctx.currentTime:0)+0.7);}catch(e){} });
+    music.drones=null;
+  }
+  var m=music.master; music.master=null;
+  setTimeout(function(){ if(m){ try{m.disconnect();}catch(e){} } },800);
+}
+
+/* switch to the next track (restart if currently playing) */
+function changeMusic(){
+  music.track=(music.track+1)%TRACKS.length;
+  saveMusicPref();
+  updateMusicUI();
+  if(!music.muted){ stopMusic(); setTimeout(startMusic,140); }
+}
+
+/* mute / unmute */
+function toggleMute(){
+  music.muted=!music.muted;
+  saveMusicPref();
+  updateMusicUI();
+  if(music.muted) stopMusic(); else startMusic();
+}
+
+/* reflect music state in the settings panel + gear */
+function updateMusicUI(){
+  var nm=document.getElementById("music-name");
+  if(nm) nm.textContent=TRACKS[music.track].name;
+  var mb=document.getElementById("btn-music-mute");
+  if(mb) mb.textContent = music.muted ? "🔇 מושתק" : "🔊 פועלת";
+  var sp=document.getElementById("speed-name");
+  if(sp) sp.textContent=SPEEDS[speedIdx].name;
+  var gear=document.getElementById("btn-settings");
+  if(gear) gear.classList.toggle("muted", music.muted);
+}
+
+/* ── TIMER ── */
+function startTimer(){
+  clearInterval(timerID);
+  updateTimeDisplay();
+  timerID=setInterval(function(){
+    elapsed++;
+    if(timed){
+      remaining--;
+      if(remaining<=0){ remaining=0; updateTimeDisplay(); stopTimer(); onTimeout(); return; }
+    }
+    updateTimeDisplay();
+    saveProgress();   // keep elapsed/remaining fresh for resume
+  },1000);
+}
+function stopTimer(){clearInterval(timerID);timerID=null;}
+function hudBump(id){                 // juice: pop a HUD value when it changes
+  var el=document.getElementById(id);
+  if(!el) return;
+  el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump");
+}
+function updateTimeDisplay(){
+  var el=document.getElementById("hud-time");
+  if(!el) return;
+  if(timed){
+    el.textContent=formatTime(remaining);          // countdown
+    if(remaining<=10) el.classList.add("warn"); else el.classList.remove("warn");
+  } else {
+    el.textContent=formatTime(elapsed);            // stopwatch (no limit, but visible & running)
+    el.classList.remove("warn");
+  }
+}
+function formatTime(s){
+  var m=Math.floor(s/60);
+  var ss=s%60;
+  return m+":"+(ss<10?"0":"")+ss;
+}
+
+/* ── COLUMNS ── balance the grid + keep cards tappable on small screens ── */
+/* Fit ALL cards inside the grid's box (width AND height) — no scrolling ever.
+   Picks the column count that yields the largest cards that still fit. */
+function layoutGrid(){
+  var grid=document.getElementById("grid");
+  var N=cards.length;
+  if(!N) return;
+  var cs=getComputedStyle(grid);
+  var gap=parseFloat(cs.rowGap||cs.gap)||12;
+  var W=grid.clientWidth, H=grid.clientHeight;
+  if(W<=0||H<=0) return;
+  var best=null;
+  for(var c=1;c<=N;c++){
+    var rows=Math.ceil(N/c);
+    var cwW=(W-gap*(c-1))/c;            // width limit per card
+    var chH=(H-gap*(rows-1))/rows;      // height limit per card
+    if(cwW<=0||chH<=0) continue;
+    var cw=Math.min(cwW, chH*0.75);     // aspect 3/4 → width = 0.75 × height
+    if(!best || cw>best.cw) best={c:c, cw:cw};
+  }
+  if(best){
+    var w=Math.max(1, Math.floor(best.cw));
+    grid.style.setProperty("--cw", w+"px");
+    grid.style.gridTemplateColumns="repeat("+best.c+","+w+"px)";
+  }
+}
+
+/* ── SHUFFLE ── */
+function shuffle(arr){
+  var a=arr.slice();
+  for(var i=a.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1));
+    var t=a[i];a[i]=a[j];a[j]=t;
+  }
+  return a;
+}
+
+/* ── START / RESET A LEVEL ──
+   Pass a saved object to resume mid-level; omit it to start the level fresh. */
+function startLevel(resume){
+  var cfg=LEVELS[level];
+  pairsCount=cfg.pairs;
+  timed=cfg.time>0;
+  var board=null;
+  if(resume && resume.board){
+    remaining=resume.remaining;
+    elapsed=resume.elapsed;
+    moves=resume.moves;
+    board=resume.board;
+  } else {
+    remaining=cfg.time;
+    elapsed=0;
+    moves=0;
+  }
+  matched=0;
+  flipped=[];
+  locked=false;
+  started=false;
+  stopTimer();
+  buildGrid(board);
+  // count already-matched pairs (each pair = 2 cards)
+  cards.forEach(function(c){ if(c.isMatched) matched++; });
+  matched=Math.floor(matched/2);
+  document.getElementById("hud-level").textContent=(level+1);
+  document.getElementById("hud-moves").textContent=moves;
+  document.getElementById("hud-pairs").textContent=matched+"/"+pairsCount;
+  updateTimeDisplay();
+  saveProgress();
+}
+
+/* ── BUILD GRID ──
+   With savedBoard → rebuild the exact layout (positions + matched cards). */
+function buildGrid(savedBoard){
+  var grid=document.getElementById("grid");
+  grid.innerHTML="";
+  cards=[];
+
+  var raw;
+  if(savedBoard){
+    raw=savedBoard.map(function(c){
+      return {type:c.t, word:c.w, val:c.v, pairId:c.p, matched:c.m};
+    });
+  } else {
+    // first `pairsCount` pairs of the pool → 2 cards each
+    var chosen=POOL.slice(0,pairsCount);
+    raw=[];
+    chosen.forEach(function(p,i){
+      raw.push({type:"word",word:p.word,pairId:i});
+      raw.push({type:"num", val:p.val,  pairId:i});
+    });
+    raw=shuffle(raw);
+  }
+
+  raw.forEach(function(data,idx){
+    var card=document.createElement("div");
+    card.className="card";
+    card.dataset.idx=idx;
+    card.style.animationDelay=(idx*0.03)+"s";   /* staggered deal-in */
+
+    var inner=document.createElement("div");
+    inner.className="card-inner";
+
+    // BACK
+    var back=document.createElement("div");
+    back.className="card-face card-back";
+    back.innerHTML='<img class="card-back-logo" src="assets/tfv-logo.png" alt="">';
+
+    // FRONT
+    var front=document.createElement("div");
+    front.className="card-face card-front";
+    if(data.type==="word"){
+      front.innerHTML='<span class="card-word">'+data.word+'</span>';
+    } else {
+      front.innerHTML=
+        '<span class="card-num">'+data.val+'</span>'+
+        '<span class="card-num-label">גימטריה</span>';
+    }
+
+    inner.appendChild(back);
+    inner.appendChild(front);
+    card.appendChild(inner);
+    grid.appendChild(card);
+
+    card.addEventListener("click",function(){onCardClick(idx);});
+    card.addEventListener("touchend",function(e){e.preventDefault();onCardClick(idx);},{passive:false});
+
+    var isM=!!data.matched;
+    if(isM) card.classList.add("matched");   // restore as solved (front shown, green)
+    cards.push({el:card,data:data,faceUp:isM,isMatched:isM});
+  });
+
+  layoutGrid();
+  requestAnimationFrame(layoutGrid);   // re-measure once layout settles
+}
+
+/* ── CARD CLICK ── */
+function onCardClick(idx){
+  if(demoMode) return;                 // ignore taps while the demo plays
+  var c=cards[idx];
+  if(locked) return;
+  if(c.faceUp) return;
+  if(c.isMatched) return;
+  if(flipped.length>=2) return;
+
+  // Resume audio ctx on first interaction
+  if(audioCtx && audioCtx.state==="suspended") audioCtx.resume();
+
+  // Start timer on the first flip of the level
+  if(!started){
+    started=true;
+    startTimer();
+  }
+
+  // Flip card face up
+  c.faceUp=true;
+  c.el.classList.add("flipped");
+  flipped.push(idx);
+
+  if(flipped.length===2){
+    locked=true;
+    moves++;
+    document.getElementById("hud-moves").textContent=moves;
+    hudBump("hud-moves");
+    checkPair();
+  }
+}
+
+/* ── CHECK PAIR ── */
+function checkPair(){
+  var a=cards[flipped[0]];
+  var b=cards[flipped[1]];
+  var match=(a.data.pairId===b.data.pairId && a.data.type!==b.data.type);
+
+  // FIRST let the player SEE both card faces (the 2nd card finishes flipping),
+  // THEN show the feedback + play the sound — never the sound before the reveal.
+  var reveal=Math.round(480*speedMult());      // game-speed setting
+  var holdMiss=Math.round(800*speedMult());
+  setTimeout(function(){
+    if(match){
+      a.isMatched=true;
+      b.isMatched=true;
+      a.el.classList.add("matched","matched-anim");
+      b.el.classList.add("matched","matched-anim");
+      playDing();                              // visual first, sound right after
+      setTimeout(function(){
+        a.el.classList.remove("matched-anim");
+        b.el.classList.remove("matched-anim");
+      },700);
+      matched++;
+      document.getElementById("hud-pairs").textContent=matched+"/"+pairsCount;
+      hudBump("hud-pairs");
+      flipped=[];
+      locked=false;
+      saveProgress();
+      if(matched===pairsCount) onLevelComplete();
+    } else {
+      a.el.classList.add("shake");
+      b.el.classList.add("shake");
+      playBuzz();                              // visual first, sound right after
+      setTimeout(function(){
+        a.el.classList.remove("flipped","shake");
+        b.el.classList.remove("flipped","shake");
+        a.faceUp=false;
+        b.faceUp=false;
+        flipped=[];
+        locked=false;
+        saveProgress();
+      },holdMiss);
+    }
+  },reveal);
+}
+
+/* ── RESULT OVERLAY HELPERS ── */
+function showResult(){
+  document.getElementById("res-moves").textContent=moves;
+  document.getElementById("res-time").textContent=formatTime(elapsed);
+}
+function setResultButton(label,fn){
+  var b=document.getElementById("btn-result");
+  b.textContent=label;
+  // clone to drop any previous click handler
+  var nb=b.cloneNode(true);
+  b.parentNode.replaceChild(nb,b);
+  nb.addEventListener("click",fn);
+}
+function openResult(){ document.getElementById("overlay-result").classList.remove("hidden"); }
+function hideResult(){ document.getElementById("overlay-result").classList.add("hidden"); }
+
+/* ── LEVEL COMPLETE ── */
+function onLevelComplete(){
+  stopTimer();
+  playWin();
+  showResult();
+  var last=(level>=LEVELS.length-1);
+  if(last){
+    clearProgress();   // finished everything — nothing left to resume
+    document.getElementById("res-title").textContent="ניצחת! 🎉";
+    document.getElementById("res-sub").textContent="סיימת את כל "+LEVELS.length+" השלבים";
+    document.getElementById("res-msg").textContent="שלטת בגימטריה — מהפסוק הראשון ועד מילות הבריאה!";
+    setResultButton("שחק מחדש",function(){ level=0; hideResult(); startLevel(); });
+  } else {
+    var next=LEVELS[level+1];
+    document.getElementById("res-title").textContent="שלב "+(level+1)+" הושלם ✓";
+    document.getElementById("res-sub").textContent="מצוין! ממשיכים הלאה";
+    document.getElementById("res-msg").textContent=
+      "שלב "+(level+2)+": "+next.pairs+" מילים · "+(next.time>0?(next.time+" שניות"):"ללא הגבלת זמן");
+    setResultButton("השלב הבא →",function(){ level++; hideResult(); startLevel(); });
+  }
+  setTimeout(openResult,600);
+}
+
+/* ── TIME UP ── */
+function onTimeout(){
+  locked=true;
+  saveFreshLevel();   // resume should restart this level with full time
+  showResult();
+  document.getElementById("res-title").textContent="נגמר הזמן ⏳";
+  document.getElementById("res-sub").textContent="שלב "+(level+1);
+  document.getElementById("res-msg").textContent="כמעט! נסה שוב — הפעם מהר יותר.";
+  setResultButton("נסה שוב",function(){ hideResult(); startLevel(); });
+  openResult();                                   // show the screen FIRST
+  requestAnimationFrame(function(){ playBuzz(); }); // then the sound (next frame)
+}
+
+/* ── GEMATRIA + LEARN / DEMO ── */
+var GEM = {'א':1,'ב':2,'ג':3,'ד':4,'ה':5,'ו':6,'ז':7,'ח':8,'ט':9,'י':10,
+  'כ':20,'ך':20,'ל':30,'מ':40,'ם':40,'נ':50,'ן':50,'ס':60,'ע':70,
+  'פ':80,'ף':80,'צ':90,'ץ':90,'ק':100,'ר':200,'ש':300,'ת':400};
+var GEM_TABLE = [['א',1],['ב',2],['ג',3],['ד',4],['ה',5],['ו',6],['ז',7],['ח',8],['ט',9],
+  ['י',10],['כ',20],['ל',30],['מ',40],['נ',50],['ס',60],['ע',70],['פ',80],['צ',90],
+  ['ק',100],['ר',200],['ש',300],['ת',400]];
+var SEEN_KEY = "tfv_memory_seen_v1";
+
+function fmt(n){ return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,","); }
+function gematria(s){
+  var clean=s.replace(/[֑-ׇ]/g,""), total=0, parts=[];   // strip nikud
+  for(var i=0;i<clean.length;i++){
+    var v=GEM[clean[i]];
+    if(v){ total+=v; parts.push({l:clean[i],v:v}); }
+  }
+  return {total:total, parts:parts};
+}
+function updateCalc(){
+  var r=gematria(document.getElementById("gem-input").value);
+  document.getElementById("gem-total").textContent=fmt(r.total);
+  document.getElementById("gem-breakdown").innerHTML=r.parts.map(function(p){
+    return '<div class="gem-chip"><span class="l">'+p.l+'</span><span class="v">'+p.v+'</span></div>';
+  }).join("");
+}
+function buildLearn(){
+  document.getElementById("gem-table").innerHTML=GEM_TABLE.map(function(p){
+    return '<div class="gem-cell"><span class="l">'+p[0]+'</span><span class="v">'+p[1]+'</span></div>';
+  }).join("");
+  var rows=CORE.map(function(p){
+    return '<div class="verse-row"><span class="w">'+p.word+'</span><span class="v">'+p.val+'</span></div>';
+  }).join("");
+  rows+='<div class="verse-sum"><span class="w">סך הכול</span><span class="v">2,701</span></div>';
+  document.getElementById("verse-demo").innerHTML=rows;
+  updateCalc();
+}
+function markSeen(){ try{ localStorage.setItem(SEEN_KEY,"1"); }catch(e){} }
+function openLearn(){
+  markSeen();
+  buildLearn();
+  document.getElementById("overlay-intro").classList.add("hidden");
+  document.getElementById("overlay-learn").classList.remove("hidden");
+}
+function closeLearn(){ document.getElementById("overlay-learn").classList.add("hidden"); }
+
+/* ── AUTO-PLAY DEMO ── the computer plays level 1 while the user watches ── */
+var demoMode=false, demoTimer=null;
+
+function showDemoBanner(txt){
+  document.getElementById("demo-text").textContent=txt||"הדגמה · המחשב משחק…";
+  document.getElementById("demo-banner").classList.remove("hidden");
+}
+function hideDemoBanner(){ document.getElementById("demo-banner").classList.add("hidden"); }
+
+function startDemo(){
+  if(demoMode) return;
+  demoMode=true;
+  markSeen();
+  closeLearn();
+  document.getElementById("overlay-intro").classList.add("hidden");
+  clearProgress();
+  level=0;
+  startLevel();                       // builds the level-1 board (3 pairs)
+  showDemoBanner();
+  startMusic();
+  demoTimer=setTimeout(demoRun,1400); // let the cards deal in first
+}
+function endDemo(playNow){
+  demoMode=false;
+  if(demoTimer){ clearTimeout(demoTimer); demoTimer=null; }
+  hideDemoBanner();
+  if(playNow){ clearProgress(); level=0; startLevel(); }
+}
+
+function demoRun(){
+  if(!demoMode) return;
+  // map each pair → its word card index and its number card index
+  var byPair={};
+  cards.forEach(function(c,i){
+    var p=c.data.pairId; (byPair[p]=byPair[p]||{})[c.data.type]=i;
+  });
+  var ids=Object.keys(byPair);
+  // plan: one deliberate miss to show the rule, then solve every pair
+  var plan=[];
+  if(ids.length>=2) plan.push({a:byPair[ids[0]].word, b:byPair[ids[1]].num, match:false});
+  ids.forEach(function(p){ plan.push({a:byPair[p].word, b:byPair[p].num, match:true}); });
+
+  var i=0;
+  (function step(){
+    if(!demoMode) return;
+    if(i>=plan.length){ demoTimer=setTimeout(function(){
+      if(!demoMode) return;
+      hideDemoBanner();
+      document.getElementById("overlay-demo-done").classList.remove("hidden");
+      requestAnimationFrame(function(){ playWin(); });
+    },700); return; }
+    var mv=plan[i++];
+    demoReveal(mv.a);
+    demoTimer=setTimeout(function(){
+      if(!demoMode) return;
+      demoReveal(mv.b);
+      demoTimer=setTimeout(function(){
+        if(!demoMode) return;
+        if(mv.match) demoMatch(mv.a,mv.b); else demoMiss(mv.a,mv.b);
+        demoTimer=setTimeout(step, mv.match?800:1100);
+      }, 780);
+    }, 720);
+  })();
+}
+function demoReveal(idx){
+  var c=cards[idx];
+  if(!c||c.isMatched||c.faceUp) return;
+  c.faceUp=true; c.el.classList.add("flipped");
+}
+function demoMatch(a,b){
+  [a,b].forEach(function(idx){
+    var c=cards[idx]; c.isMatched=true;
+    c.el.classList.add("matched","matched-anim");
+    setTimeout(function(){ c.el.classList.remove("matched-anim"); },700);
+  });
+  matched++;
+  document.getElementById("hud-pairs").textContent=matched+"/"+pairsCount;
+  hudBump("hud-pairs");
+  playDing();
+}
+function demoMiss(a,b){
+  playBuzz();
+  [a,b].forEach(function(idx){ cards[idx].el.classList.add("shake"); });
+  setTimeout(function(){
+    [a,b].forEach(function(idx){
+      var c=cards[idx]; c.el.classList.remove("flipped","shake"); c.faceUp=false;
+    });
+  },850);
+}
+
+/* ── EVENT LISTENERS ── */
+// "התחל משחק" / "התחל מחדש" — always a fresh game from level 1
+document.getElementById("btn-start").addEventListener("click",function(){
+  markSeen();
+  clearProgress();
+  level=0;
+  startLevel();
+  document.getElementById("overlay-intro").classList.add("hidden");
+  startMusic();   // kick off background music on this user gesture
+});
+// "המשך משחק" — board was already restored behind the overlay; just resume
+document.getElementById("btn-continue").addEventListener("click",function(){
+  markSeen();
+  document.getElementById("overlay-intro").classList.add("hidden");
+  startMusic();
+});
+// "📖 הדגמה והסברים"
+document.getElementById("btn-learn").addEventListener("click",openLearn);
+document.getElementById("btn-learn-back").addEventListener("click",function(){
+  closeLearn();
+  document.getElementById("overlay-intro").classList.remove("hidden");
+});
+document.getElementById("btn-learn-play").addEventListener("click",function(){
+  closeLearn();
+  clearProgress(); level=0; startLevel();
+  startMusic();
+});
+document.getElementById("gem-input").addEventListener("input",updateCalc);
+document.getElementById("btn-watch-demo").addEventListener("click",startDemo);
+document.getElementById("btn-demo-play").addEventListener("click",function(){ endDemo(true); });
+// demo-done overlay
+document.getElementById("btn-demo-selfplay").addEventListener("click",function(){
+  document.getElementById("overlay-demo-done").classList.add("hidden");
+  endDemo(true);
+});
+document.getElementById("btn-demo-rewatch").addEventListener("click",function(){
+  document.getElementById("overlay-demo-done").classList.add("hidden");
+  demoMode=false;     // allow startDemo to re-arm
+  startDemo();
+});
+document.getElementById("btn-restart").addEventListener("click",function(){
+  hideResult();
+  startLevel();   // restart the current level
+});
+
+/* settings controls (bind click + touch so they work on mobile too) */
+function tap(el,fn){
+  el.addEventListener("click",function(e){ e.stopPropagation(); fn(); });
+  el.addEventListener("touchend",function(e){ e.preventDefault(); e.stopPropagation(); fn(); },{passive:false});
+}
+tap(document.getElementById("btn-settings"),function(){
+  document.getElementById("settings-panel").classList.toggle("hidden");
+});
+tap(document.getElementById("btn-music-change"),changeMusic);
+tap(document.getElementById("btn-music-mute"),toggleMute);
+tap(document.getElementById("btn-speed"),changeSpeed);
+/* close the settings panel when tapping elsewhere */
+document.addEventListener("click",function(e){
+  var panel=document.getElementById("settings-panel");
+  var gear=document.getElementById("btn-settings");
+  if(!panel.classList.contains("hidden") && !panel.contains(e.target) && !gear.contains(e.target)){
+    panel.classList.add("hidden");
+  }
+});
+
+/* re-fit on resize / rotate / viewport change */
+window.addEventListener("resize",layoutGrid);
+window.addEventListener("orientationchange",function(){ setTimeout(layoutGrid,200); });
+if(window.visualViewport) window.visualViewport.addEventListener("resize",layoutGrid);
+
+/* save when the tab is hidden or about to close (belt-and-suspenders) */
+window.addEventListener("pagehide",function(){ if(cards.length) saveProgress(); });
+document.addEventListener("visibilitychange",function(){
+  if(document.visibilityState==="hidden" && cards.length) saveProgress();
+});
+
+/* prevent double-tap zoom on iOS — but allow inputs/buttons/links + the learn panel */
+document.addEventListener("touchend",function(e){
+  if(e.target.closest("input,button,a,textarea,#overlay-learn")) return;
+  e.preventDefault();
+},{passive:false});
+
+/* ── INIT ──
+   If there's saved progress, restore it behind the intro and offer "המשך". */
+loadMusicPref();
+updateMusicUI();
+(function init(){
+  // first-time visitor → frame the intro as a question
+  var firstVisit=false;
+  try{ firstVisit=!localStorage.getItem(SEEN_KEY); }catch(e){}
+  if(firstVisit){
+    document.querySelector("#overlay-intro .panel-sub").textContent=
+      "ברוכים הבאים! רוצים הדגמה והסברים, או כניסה ישירה למשחק?";
+  }
+
+  var saved=loadProgress();
+  if(saved){
+    level=saved.level;
+    startLevel(saved.board ? saved : undefined);
+    var cont=document.getElementById("btn-continue");
+    cont.textContent="המשך · שלב "+(saved.level+1);
+    cont.style.display="";
+    document.getElementById("btn-start").textContent="התחל מחדש";
+  } else {
+    level=0;
+    startLevel();
+  }
+})();
+
+})();
+</script>
+</body>
+</html>
