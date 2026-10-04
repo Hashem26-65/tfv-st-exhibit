@@ -1558,6 +1558,40 @@ body.daily-bg{background:linear-gradient(rgba(235,232,220,.35),rgba(235,232,220,
 #lobby-status{color:#5b6a80 !important}
 #lobby-status.err{color:#c04a56 !important}
 #lobby-back{align-self:center;margin-top:2px}
+/* מצב קבוצות */
+.lobby-tabs{display:flex;gap:6px;background:#eef2f8;border-radius:14px;padding:4px}
+.lobby-tabs .lt{flex:1;border:none;background:transparent;border-radius:11px;padding:9px 6px;font:inherit;font-weight:800;
+  color:#5b6a80;cursor:pointer;font-size:clamp(13px,3.4vw,16px)}
+.lobby-tabs .lt.on{background:#fff;color:#1e3153;box-shadow:0 2px 8px rgba(30,49,83,.12)}
+#lobby-team{display:flex;flex-direction:column;gap:10px}
+#lobby-team.hidden,#lobby-1v1.hidden,#tm-out.hidden,#tm-in.hidden,.lobby-h2.hidden{display:none !important}
+#lobby-1v1,#tm-out,#tm-in{display:flex;flex-direction:column;gap:10px}
+.tm-join{display:flex;gap:8px;align-items:stretch}
+.tm-join input{flex:1;min-width:0;text-align:center;letter-spacing:.18em;font-weight:800;text-transform:uppercase}
+.tm-join .btn-ghost{white-space:nowrap}
+#tm-rooms{display:flex;flex-direction:column;gap:8px;max-height:30vh;overflow-y:auto}
+.tm-empty{color:#7a879b;font-size:14px;text-align:center;padding:6px}
+.tm-code{text-align:center;font-size:15px;color:#46566e}
+.tm-code b{display:block;font-family:var(--mono);font-size:clamp(30px,8vw,40px);letter-spacing:.2em;color:#1e3153;direction:ltr}
+.tm-lvl{text-align:center;font-size:14px;color:#5b6a80;margin-top:-6px}
+.tm-teams{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tm-col{border-radius:14px;padding:8px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.tm-col.tm-b{background:#eaf3fe;border:1.5px solid #b9d6f6}
+.tm-col.tm-r{background:#fdeef0;border:1.5px solid #f2c4ca}
+.tm-col>b{font-size:14px;color:#1e3153;text-align:center;margin-bottom:2px}
+.tm-row{display:flex;justify-content:space-between;gap:6px;font-size:13.5px;color:#20314e;background:rgba(255,255,255,.75);
+  border-radius:8px;padding:4px 8px;min-width:0}
+.tm-row span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tm-row i{font-style:normal;font-family:var(--mono);font-weight:700}
+.tm-row.me{outline:2px solid #f0b545}
+.tm-row.ph{opacity:.45;justify-content:center}
+.tm-need{text-align:center;font-size:14px;font-weight:700;color:#a0601a}
+.tm-need.ok{color:#2f8a4f}
+.tm-wait{text-align:center;font-size:14px;color:#5b6a80}
+#tm-in .btn-main,#tm-in .btn-ghost,#tm-out .btn-main{width:100%}
+#tm-start:disabled{opacity:.45;cursor:default}
+#end-stats .tm-teams{margin:8px auto 4px;max-width:440px;text-align:right}
+.tm-mvp{font-size:14px;color:#46566e;margin-top:4px}
 
 /* ══════════ כפתור עצור בסרגל + מסך הפסקה ══════════ */
 .hud-bar #btn-pause{position:static !important;top:auto !important;left:auto !important;z-index:auto !important;
@@ -2152,7 +2186,7 @@ var LANGS=[
   {c:"de",n:"Deutsch",h:"גרמנית"},
   {c:"pt",n:"Português",h:"פורטוגזית"}
 ];
-var I18N_V="10"; /* להעלות בכל עדכון של קבצי המילון, כדי שהדפדפן לא ישתמש בגרסה ישנה */
+var I18N_V="11"; /* להעלות בכל עדכון של קבצי המילון, כדי שהדפדפן לא ישתמש בגרסה ישנה */
 var KEY="tfv_bq_lang";
 function getLang(){ try{ return localStorage.getItem(KEY); }catch(e){ return null; } }
 function langInfo(c){ for(var i=0;i<LANGS.length;i++) if(LANGS[i].c===c) return LANGS[i]; return LANGS[0]; }
@@ -2329,7 +2363,10 @@ if(ACTIVE || COLLECT){
 var domReady=new Promise(function(r){ if(document.readyState!=="loading") r(); else document.addEventListener("DOMContentLoaded",r); });
 if(COLLECT){ domReady.then(function(){ boot(); start(); }); }
 else if(ACTIVE){
-  var dictP=fetch("assets/i18n/"+LANG+".json?v="+I18N_V).then(function(r){ return r.ok?r.json():{}; }).catch(function(){ return {}; });
+  /* רשת חלשה: עד 3 ניסיונות (אחרת המשחק נשאר בעברית) */
+  var dictGet=function(n){ return fetch("assets/i18n/"+LANG+".json?v="+I18N_V).then(function(r){ if(!r.ok) throw r.status; return r.json(); })
+    .catch(function(){ return n<2 ? new Promise(function(ok){ setTimeout(ok,1500*(n+1)); }).then(function(){ return dictGet(n+1); }) : {}; }); };
+  var dictP=dictGet(0);
   Promise.all([dictP,domReady]).then(function(res){
     DICT=res[0]||{};
     Object.keys(DICT).forEach(function(k){
@@ -2574,14 +2611,27 @@ html[dir=ltr] body{direction:ltr}
   <div id="lobby" class="hidden">
     <div class="lobby-head">
       <div class="lobby-h1">⚔️ דו־קרב</div>
-      <div class="lobby-h2">בחרו שחקן מחובר והזמינו אותו — שניכם עונים על אותן שאלות, מי שצובר יותר מנצח</div>
+      <div class="lobby-h2" id="lobby-h2-1">בחרו שחקן מחובר והזמינו אותו — שניכם עונים על אותן שאלות, מי שצובר יותר מנצח</div>
+      <div class="lobby-h2 hidden" id="lobby-h2-t">שתי קבוצות, לפחות 5 בכל אחת — כולם עונים על אותן שאלות, והקבוצה עם ממוצע הנקודות הגבוה מנצחת</div>
     </div>
+    <div class="lobby-tabs"><button class="lt on" id="lt-1v1">⚔️ 1 נגד 1</button><button class="lt" id="lt-team">👥 קבוצות · 5 נגד 5</button></div>
     <div class="lobby-row">השם שלך: <input id="lobby-name" maxlength="14" autocomplete="off"></div>
     <div id="lobby-levels"></div>
+    <div id="lobby-1v1">
     <div class="lobby-title">🟢 מחוברים עכשיו</div>
     <div id="lobby-list"></div>
     <button class="btn-main" id="lobby-invite">📲 הזמינו חבר לדו־קרב</button>
     <div class="lobby-invite-note">החבר מקבל קישור, נכנס — ומופיע כאן ברשימה. השאירו את המסך הזה פתוח.</div>
+    </div>
+    <div id="lobby-team" class="hidden">
+      <div id="tm-out">
+        <button class="btn-main" id="tm-create">🏠 פתחו חדר קבוצות</button>
+        <div class="tm-join"><input id="tm-code" class="name-field" maxlength="5" placeholder="קוד חדר" autocomplete="off" dir="ltr"><button class="btn-ghost" id="tm-join-btn">הצטרפות</button></div>
+        <div class="lobby-title">🏠 חדרים פתוחים</div>
+        <div id="tm-rooms"></div>
+      </div>
+      <div id="tm-in" class="hidden"></div>
+    </div>
     <div id="lobby-status"></div>
     <button class="btn-ghost" id="lobby-back">↩ חזרה</button>
   </div>
@@ -4003,11 +4053,11 @@ function startLevel(lv){
   updateHud();
   $("q-total").textContent=questions.length;
   if(ONLINE.match){
-    $("hud-score").innerHTML='🔵 <span id="duel-score-0">0</span> : <span id="duel-score-1">0</span> 🔴';
+    $("hud-score").innerHTML= ONLINE.match.team ? teamHudHTML() : '🔵 <span id="duel-score-0">0</span> : <span id="duel-score-1">0</span> 🔴';
     $("bots-panel").classList.remove("hidden");
     game.classList.add("duel");
     refreshOnlineCards();
-    oppMiniShow();
+    if(ONLINE.match.team) oppMiniHide(); else oppMiniShow();
   }else if(duelMode){
     duelState=[{score:0,correct:0},{score:0,correct:0}];
     curPlayer=0;
@@ -4084,7 +4134,7 @@ function loadQuestion(){
   else if(ONLINE.match){
     $("bot-status-0").innerHTML="ענו מהר!";
     refreshOnlineCards();
-    sendTo(ONLINE.match.oppId,{type:"qstart",q:qIdx});
+    matchSend({type:"qstart",q:qIdx});
   }
   fitScreen(game);
   var _lrn=learnOn(); $("learn-badge").classList.toggle("hidden",!_lrn); document.body.classList.toggle("learn-on",_lrn);
@@ -4095,7 +4145,7 @@ function loadQuestion(){
     var qp="שאלה "+(qIdx+1)+"/"+questions.length;
     if(curLevel._daily) setActivity("daily","🌟 שאלת היום · "+qp);
     else setActivity("play","🎮 שלב "+(curLevel.stage+1)+" · "+qp);
-  }else if(ONLINE.match){ setActivity("duel","🌐 משחק מקוון · שאלה "+(qIdx+1)); }
+  }else if(ONLINE.match){ setActivity("duel",(ONLINE.match.team?"👥 משחק קבוצות":"🌐 משחק מקוון")+" · שאלה "+(qIdx+1)); }
   else if(duelMode){ setActivity("duel","👥 חבר נגד חבר"); }
 }
 
@@ -4157,6 +4207,7 @@ function onlineLeave(){
   ONLINE.active=false;
   stopPresence();
   if(ONLINE.client){ try{ sendBye(); ONLINE.client.end(true); }catch(e){} }
+  if(TEAM.room) teamLeave();
   ONLINE.client=null; ONLINE.connected=false; ONLINE.players={}; ONLINE.pend=null;
 }
 
@@ -4171,12 +4222,16 @@ function connectMq(){
       ONLINE.connected=true;
       c.subscribe(MQ_ROOT+"/presence");
       c.subscribe(MQ_ROOT+"/to/"+ONLINE.id);
+      if(TEAM.mode) c.subscribe(MQ_ROOT+"/teams");
+      if(TEAM.room) c.subscribe(teamTopic(TEAM.room.code));
       lobbyStatus("מחובר ✓ — ממתין לשחקנים…");
       startPresence();
     });
     c.on("message",function(topic,payload){
       var m; try{ m=JSON.parse(payload.toString()); }catch(e){ return; }
       if(topic===MQ_ROOT+"/presence") onPresence(m);
+      else if(topic===MQ_ROOT+"/teams") teamOnAnn(m);
+      else if(topic.indexOf(MQ_ROOT+"/room/")===0){ if(TEAM.room && topic===teamTopic(TEAM.room.code)) teamOnRoom(m); }
       else onDirect(m);
     });
     c.on("error",function(){
@@ -4198,7 +4253,7 @@ function sendTo(pid,obj){
   obj.from=ONLINE.id; obj.fromName=ONLINE.name;
   try{ ONLINE.client.publish(MQ_ROOT+"/to/"+pid, JSON.stringify(obj)); }catch(e){}
 }
-function myStatus(){ return ONLINE.match ? "playing" : (ONLINE.pend?"busy":"idle"); }
+function myStatus(){ return ONLINE.match ? "playing" : ((ONLINE.pend||TEAM.room)?"busy":"idle"); }
 function publishPresence(){
   if(!ONLINE.client||!ONLINE.connected) return;
   try{
@@ -4226,7 +4281,7 @@ function stopPresence(){
   if(ONLINE.pruneIv){clearInterval(ONLINE.pruneIv);ONLINE.pruneIv=null;}
 }
 function sendBye(){
-  if(ONLINE.match) sendTo(ONLINE.match.oppId,{type:"bye"});
+  if(ONLINE.match) matchSend({type:"bye"});
   if(ONLINE.pend&&ONLINE.pend.dir==="out") sendTo(ONLINE.pend.id,{type:"cancel"});
 }
 
@@ -4306,7 +4361,7 @@ function sendInvite(pid){
 function onDirect(m){
   switch(m.type){
     case "invite":
-      if(ONLINE.match||ONLINE.pend){ sendTo(m.from,{type:"decline",busy:true}); return; }
+      if(ONLINE.match||ONLINE.pend||TEAM.room){ sendTo(m.from,{type:"decline",busy:true}); return; }
       ONLINE.pend={dir:"in",id:m.from,name:m.fromName,level:m.level,seed:m.seed};
       publishPresence();
       var lv=LEVELS[m.level]||LEVELS[0];
@@ -4385,6 +4440,7 @@ function startOnlineMatch(oppId,oppName,levelIdx,seed){
 }
 function refreshOnlineCards(){
   if(!ONLINE.match) return;
+  if(ONLINE.match.team){ teamCards(); return; }
   var m=ONLINE.match;
   document.querySelector("#bot-card-0 .bot-name").textContent="🔵 "+ONLINE.name+" (אני)";
   document.querySelector("#bot-card-1 .bot-name").textContent="🔴 "+m.oppName;
@@ -4398,6 +4454,7 @@ function refreshOnlineCards(){
 function onlineHud(){
   var e0=$("duel-score-0"), e1=$("duel-score-1");
   if(e0){ e0.textContent=score; }
+  if(ONLINE.match&&ONLINE.match.team){ var _t=(TEAM.room&&TEAM.room.myTeam)||"b"; if(e0) e0.textContent=teamAvg(_t); if(e1) e1.textContent=teamAvg(teamOther(_t)); return; }
   if(e1&&ONLINE.match){ e1.textContent=ONLINE.match.opp.score; }
 }
 function oppGone(){
@@ -4453,6 +4510,325 @@ function oppMiniResult(m){
   t.style.transition="none"; t.style.width=wNow;
   $("om-score").textContent=ONLINE.match.opp.score;
 }
+
+
+/* ══════════ קבוצות — לפחות 5 נגד 5 ══════════
+   חדר לפי קוד בן 5 תווים. כל שחקן בחדר מפרסם "דופק" לערוץ החדר כל 3 שניות (שם, קבוצה, התקדמות),
+   ככה כולם רואים את אותה רשימה בלי שרת. המארח מתחיל כשיש לפחות 5 בכל קבוצה; כולם מקבלים את אותה חפיסה
+   (seed משותף) ועונים כל אחד בקצב שלו. מנצחת הקבוצה עם ממוצע הנקודות הגבוה (הוגן גם כשהקבוצות לא שוות). */
+var TEAM_MIN=5, TEAM_MAX=10;
+var TEAM={mode:false, room:null, rooms:{}, iv:null, finalTO:null};
+var TEAM_NAMES={b:"🔵 כחולים", r:"🔴 אדומים"};
+function teamTopic(c){ return MQ_ROOT+"/room/"+c; }
+function teamNewCode(){ var A="ABCDEFGHJKMNPQRSTUVWXYZ23456789", s=""; for(var i=0;i<5;i++) s+=A[Math.floor(Math.random()*A.length)]; return s; }
+function teamPub(obj){
+  var r=TEAM.room; if(!r||!ONLINE.client||!ONLINE.connected) return;
+  obj.id=ONLINE.id; obj.name=ONLINE.name;
+  try{ ONLINE.client.publish(teamTopic(r.code), JSON.stringify(obj)); }catch(e){}
+}
+function teamOther(t){ return t==="b"?"r":"b"; }
+function teamList(t){   /* חברי קבוצה: לפני המשחק — מי שבחדר; במשחק — הרשימה הקבועה מרגע ההתחלה */
+  var r=TEAM.room; if(!r) return [];
+  var src=r.roster||r.members;
+  return Object.keys(src).filter(function(id){ return src[id].team===t; }).map(function(id){ var x=src[id]; x.id=id; return x; });
+}
+function teamScoreOf(x){ return x.id===ONLINE.id && ONLINE.match && ONLINE.match.team ? score : (x.score||0); }
+function teamAvg(t){ var l=teamList(t); if(!l.length) return 0; var s=0; l.forEach(function(x){ s+=teamScoreOf(x); }); return Math.round(s/l.length); }
+function teamDoneCount(){ var r=TEAM.room, n=0, all=0; if(!r||!r.roster) return [0,0];
+  Object.keys(r.roster).forEach(function(id){ all++; var x=r.roster[id]; if(x.done||x.gone||(id===ONLINE.id&&ONLINE.match&&ONLINE.match.myDone)) n++; }); return [n,all]; }
+
+/* ── חדר: פתיחה / הצטרפות / יציאה ── */
+function teamEnterRoom(code,host){
+  TEAM.room={code:code, host:host, hostId:host?ONLINE.id:null, hostTs:Date.now(), level:ONLINE.selLevel,
+             members:{}, myTeam:host?"b":null, st:"wait", roster:null, joinedAt:Date.now()};
+  if(ONLINE.client&&ONLINE.connected) ONLINE.client.subscribe(teamTopic(code));
+  if(host) TEAM.room.members[ONLINE.id]={name:ONLINE.name, team:"b", ts:Date.now()};
+  if(TEAM.iv) clearInterval(TEAM.iv);
+  TEAM.iv=setInterval(teamTick,3000);
+  teamTick(); publishPresence(); teamRender();
+  setActivity("duel","👥 בחדר קבוצות");
+}
+function teamCreate(){
+  if(!ONLINE.connected){ lobbyStatus("עוד לא מחובר לערוץ — רגע…",true); return; }
+  teamEnterRoom(teamNewCode(),true);
+}
+function teamJoin(code){
+  code=String(code||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
+  if(!/^[A-Z2-9]{5}$/.test(code)){ toast("קוד חדר הוא 5 תווים — בדקו שוב"); return; }
+  if(!ONLINE.connected){ lobbyStatus("עוד לא מחובר לערוץ — רגע…",true); return; }
+  if(TEAM.room) teamLeave();
+  teamEnterRoom(code,false);
+  lobbyStatus("מצטרף לחדר…");
+}
+function teamLeave(){
+  var r=TEAM.room; if(!r) return;
+  teamPub({type:"leave"});
+  try{ if(ONLINE.client) ONLINE.client.unsubscribe(teamTopic(r.code)); }catch(e){}
+  if(TEAM.iv){ clearInterval(TEAM.iv); TEAM.iv=null; }
+  if(TEAM.finalTO){ clearTimeout(TEAM.finalTO); TEAM.finalTO=null; }
+  TEAM.room=null; publishPresence(); teamRender();
+}
+function teamSwitch(){
+  var r=TEAM.room; if(!r||r.st!=="wait"||!r.myTeam) return;
+  var t=teamOther(r.myTeam);
+  if(teamList(t).length>=TEAM_MAX){ toast("הקבוצה השנייה מלאה ("+TEAM_MAX+" שחקנים)"); return; }
+  r.myTeam=t; r.members[ONLINE.id]={name:ONLINE.name, team:t, ts:Date.now()};
+  teamTick(); teamRender();
+}
+/* דופק כל 3 שניות + ניקוי מי שנעלם + הכרזה ברשימת החדרים */
+function teamTick(){
+  var r=TEAM.room; if(!r) return;
+  var now=Date.now();
+  if(!r.host && !r.myTeam){   /* מבקשים מהמארח לשבץ אותנו — הוא מחלק לפי סדר ההגעה, אז הקבוצות נשארות שוות */
+    if(now-r.joinedAt>9000){ teamLeave(); lobbyStatus("החדר לא נמצא — בדקו את הקוד",true); return; }
+    teamPub({type:"hello"});
+    return;
+  }
+  if(r.myTeam){
+    var me=r.members[ONLINE.id]=r.members[ONLINE.id]||{};
+    me.name=ONLINE.name; me.team=r.myTeam; me.ts=now;
+    var hb={type:"hb", team:r.myTeam, st:r.st};
+    if(r.st==="play" && ONLINE.match && ONLINE.match.team){ hb.q=qIdx; hb.score=score; hb.correct=correctCount; hb.done=!!ONLINE.match.myDone; }
+    if(r.host){ hb.isHost=1; hb.lvl=r.level; }
+    teamPub(hb);
+  }
+  Object.keys(r.members).forEach(function(id){
+    if(id===ONLINE.id) return;
+    if(now-(r.members[id].ts||0)>12000){
+      if(r.roster && r.roster[id] && !r.roster[id].done){ r.roster[id].gone=true; }
+      delete r.members[id];
+    }
+  });
+  if(!r.host && r.st==="wait" && r.hostId && now-r.hostTs>12000){ teamLeave(); lobbyStatus("המארח יצא — החדר נסגר",true); return; }
+  if(r.host && r.st==="wait" && ONLINE.client && ONLINE.connected){
+    try{ ONLINE.client.publish(MQ_ROOT+"/teams", JSON.stringify({code:r.code, host:ONLINE.name, b:teamList("b").length, r:teamList("r").length, lvl:r.level, ts:now})); }catch(e){}
+  }
+  if(r.st==="wait") teamRender(); else teamProgressChanged();
+}
+function teamOnRoom(m){
+  var r=TEAM.room; if(!r||!m||!m.id||m.id===ONLINE.id) return;
+  var now=Date.now(), nm=String(m.name||"שחקן").slice(0,20);
+  if(m.type==="hb"){
+    if(m.team!=="b" && m.team!=="r") return;
+    var x=r.members[m.id]=r.members[m.id]||{};
+    x.name=nm; x.team=m.team; x.ts=now;
+    if(m.isHost){ if(!r.hostId) r.hostId=m.id; if(r.hostId===m.id){ r.hostTs=now; if(!r.host) r.level=+m.lvl||0; } }
+    if(r.roster && r.roster[m.id] && m.st==="play"){ var y=r.roster[m.id]; y.q=+m.q||0; y.score=+m.score||0; y.correct=+m.correct||0; if(m.done) y.done=true; y.gone=false; teamProgressChanged(); }
+    else if(r.st==="wait") teamRender();
+  }else if(m.type==="hello"){
+    if(!r.host || r.st!=="wait") return;
+    var ex=r.members[m.id], t;
+    if(ex && ex.team) t=ex.team;
+    else{
+      var nb=teamList("b").length, nr=teamList("r").length;
+      if(nb>=TEAM_MAX && nr>=TEAM_MAX){ teamPub({type:"assign", to:m.id, full:1}); return; }
+      t = (nr<nb || nb>=TEAM_MAX) ? "r" : "b";
+    }
+    r.members[m.id]={name:nm, team:t, ts:now};
+    teamPub({type:"assign", to:m.id, team:t, lvl:r.level});
+    teamRender();
+  }else if(m.type==="assign"){
+    if(m.to!==ONLINE.id || r.host || r.myTeam) return;
+    if(m.full){ teamLeave(); lobbyStatus("החדר מלא",true); return; }
+    if(m.team!=="b" && m.team!=="r") return;
+    r.hostId=m.id; r.hostTs=now; r.level=+m.lvl||0; r.myTeam=m.team;
+    r.members[ONLINE.id]={name:ONLINE.name, team:m.team, ts:now};
+    lobbyStatus("נכנסת לחדר ✓");
+    teamTick(); teamRender();
+  }else if(m.type==="prog"){
+    if(r.roster && r.roster[m.id]){ var z=r.roster[m.id]; z.q=+m.q||0; z.score=+m.score||0; z.correct=+m.correct||0; if(m.done) z.done=true; z.gone=false; teamProgressChanged(); }
+  }else if(m.type==="leave"){
+    delete r.members[m.id];
+    if(r.roster && r.roster[m.id] && !r.roster[m.id].done) r.roster[m.id].gone=true;
+    if(r.st==="wait"){ if(m.id===r.hostId && !r.host){ teamLeave(); lobbyStatus("המארח יצא — החדר נסגר",true); return; } teamRender(); }
+    else teamProgressChanged();
+  }else if(m.type==="start"){
+    if(r.st!=="wait" || m.id!==r.hostId || !m.roster) return;
+    if(!m.roster[ONLINE.id]){ teamLeave(); lobbyStatus("המשחק בחדר התחיל בלעדיך — נסו חדר אחר",true); return; }
+    teamGo(+m.seed, +m.lvl||0, m.roster);
+  }
+}
+function teamOnAnn(m){
+  if(!m||!/^[A-Z2-9]{5}$/.test(String(m.code||""))) return;
+  TEAM.rooms[m.code]={code:m.code, host:String(m.host||"").slice(0,20), b:+m.b||0, r:+m.r||0, lvl:+m.lvl||0, ts:Date.now()};
+  teamRenderRooms();
+}
+/* המארח מתחיל */
+function teamStart(){
+  var r=TEAM.room; if(!r||!r.host||r.st!=="wait") return;
+  var nb=teamList("b").length, nr=teamList("r").length;
+  if(nb<TEAM_MIN||nr<TEAM_MIN){ toast("צריך לפחות "+TEAM_MIN+" בכל קבוצה"); return; }
+  var roster={}, now=Date.now();
+  Object.keys(r.members).forEach(function(id){ var x=r.members[id]; if(id===ONLINE.id||now-(x.ts||0)<12000) roster[id]={name:x.name, team:x.team}; });
+  var seed=Math.floor(Math.random()*1e9);
+  teamPub({type:"start", seed:seed, lvl:r.level, roster:roster});
+  teamGo(seed, r.level, roster);
+}
+function teamGo(seed,lvlIdx,roster){
+  var r=TEAM.room; if(!r||r.st!=="wait") return;
+  r.st="play"; r.level=lvlIdx; r.roster={};
+  Object.keys(roster).forEach(function(id){ var x=roster[id]; if(x && (x.team==="b"||x.team==="r")) r.roster[id]={name:String(x.name||"שחקן").slice(0,20), team:x.team, q:0, score:0, correct:0, done:false, gone:false}; });
+  if(r.roster[ONLINE.id]) r.myTeam=r.roster[ONLINE.id].team;
+  teamRender();
+  toast("👥 המשחק מתחיל בעוד 3 שניות!");
+  setTimeout(function(){
+    if(!TEAM.room||TEAM.room!==r) return;
+    var lv=LEVELS[lvlIdx]||LEVELS[0];
+    ONLINE.match={team:true, oppId:null, oppName:"", level:lvlIdx, seed:seed,
+                  opp:{score:0,correct:0,q:0,done:false}, myDone:false, oppGone:false};
+    publishPresence();
+    var rng=mulberry32(seed);
+    var deck=shuffleSeeded(BANK[lv.key].slice(),rng);
+    deck.forEach(function(q){ q._opts=shuffleSeeded([q.a].concat(q.w),rng); });
+    ONLINE.deck=deck;
+    startLevel(lv);
+  },3000);
+}
+/* שליחה לשאר המשחק — בדו־קרב ליריב, בקבוצות לכל החדר */
+function matchSend(obj){
+  var m=ONLINE.match; if(!m) return;
+  if(!m.team){ sendTo(m.oppId,obj); return; }
+  if(obj.type==="result"||obj.type==="done"){
+    var r=TEAM.room, me=r&&r.roster&&r.roster[ONLINE.id];
+    if(me){ me.q=qIdx+1; me.score=score; me.correct=correctCount; if(obj.type==="done") me.done=true; }
+    teamPub({type:"prog", q:qIdx+1, score:score, correct:correctCount, done:obj.type==="done"});
+    teamProgressChanged();
+  }else if(obj.type==="bye") teamPub({type:"leave"});
+}
+/* ── במשחק: כרטיסי הקבוצות, המונה, והמתנה לסיום ── */
+function teamHudHTML(){
+  var t=(TEAM.room&&TEAM.room.myTeam)||"b", o=teamOther(t), ic={b:"🔵",r:"🔴"};
+  return ic[t]+' <span id="duel-score-0">0</span> : <span id="duel-score-1">0</span> '+ic[o];
+}
+function teamCards(){
+  var r=TEAM.room; if(!r) return;
+  var t=r.myTeam||"b", o=teamOther(t);
+  var dn=function(k){ var l=teamList(k), n=0; l.forEach(function(x){ if(x.done||(x.id===ONLINE.id&&ONLINE.match&&ONLINE.match.myDone)) n++; }); return n+"/"+l.length; };
+  document.querySelector("#bot-card-0 .bot-name").textContent=TEAM_NAMES[t]+" (הקבוצה שלך) · ממוצע "+teamAvg(t);
+  document.querySelector("#bot-card-1 .bot-name").textContent=TEAM_NAMES[o]+" · ממוצע "+teamAvg(o);
+  $("bot-card-0").classList.add("turn"); $("bot-card-1").classList.remove("turn");
+  $("bot-status-1").innerHTML="סיימו "+dn(o);
+}
+function teamProgressChanged(){
+  var m=ONLINE.match; if(!m||!m.team||!TEAM.room) return;
+  teamCards(); onlineHud();
+  if(m.myDone && screenEnd && !screenEnd.classList.contains("hidden")){
+    var d=teamDoneCount();
+    if(d[0]>=d[1]) teamShowFinal(false); else teamShowWaiting();
+  }
+}
+function teamShowWaiting(){
+  var r=TEAM.room, t=r.myTeam||"b", o=teamOther(t), d=teamDoneCount();
+  $("end-grade").textContent="⏳ סיימת! ממתינים לשאר השחקנים…";
+  $("end-score").textContent=teamAvg(t)+" : "+teamAvg(o);
+  $("end-stats").innerHTML='הנקודות שלך: <span>'+score+'</span> ('+correctCount+'/'+questions.length+')<br>סיימו: <span>'+d[0]+'/'+d[1]+'</span>';
+}
+function teamAfterMyDone(){
+  if(TEAM.finalTO) clearTimeout(TEAM.finalTO);
+  /* אם מישהו נתקע — אחרי 2 דקות מציגים תוצאה לפי מה שיש */
+  TEAM.finalTO=setTimeout(function(){ if(ONLINE.match&&ONLINE.match.team&&!TEAM.room._final) teamShowFinal(true); },120000);
+  var d=teamDoneCount();
+  if(d[0]>=d[1]) teamShowFinal(false); else teamShowWaiting();
+}
+function teamShowFinal(partial){
+  var r=TEAM.room; if(!r) return;
+  r._final=true;
+  if(TEAM.finalTO){ clearTimeout(TEAM.finalTO); TEAM.finalTO=null; }
+  var t=r.myTeam||"b", o=teamOther(t), A=teamAvg(t), B=teamAvg(o);
+  $("end-grade").textContent = A>B ? "🏆 הקבוצה שלך ניצחה!" : A<B ? "😅 הקבוצה השנייה ניצחה" : "🤝 תיקו!";
+  $("end-score").textContent=A+" : "+B;
+  $("end-art").src="assets/podium.png"; $("end-art").style.display="block";
+  var best=null;
+  var col=function(k){
+    var l=teamList(k).slice().sort(function(a,b){ return teamScoreOf(b)-teamScoreOf(a); });
+    return '<div class="tm-col tm-'+k+'"><b>'+TEAM_NAMES[k]+' · ממוצע '+teamAvg(k)+'</b>'+l.map(function(x){
+      var sc=teamScoreOf(x); if(!best||sc>best.sc) best={n:x.name, sc:sc};
+      return '<div class="tm-row'+(x.id===ONLINE.id?" me":"")+'"><span class="tm-n">'+esc(x.name)+(x.gone&&!x.done?" ❌":"")+'</span><i class="tm-s">'+sc+'</i></div>';
+    }).join("")+'</div>';
+  };
+  var html='<div class="tm-teams">'+col(t)+col(o)+'</div>';
+  if(best) html+='<div class="tm-mvp"><span class="tm-ml">⭐ השחקן המצטיין:</span> <b class="tm-mn">'+esc(best.n)+'</b> <span class="tm-ms">— '+best.sc+' נק׳</span></div>';
+  if(partial) html+='<div class="tm-mvp">(חלק מהשחקנים עוד לא סיימו)</div>';
+  $("end-stats").innerHTML=html;
+  fitScreen(screenEnd);
+}
+/* ── הלובי: לשוניות, רשימת חדרים, החדר עצמו ── */
+function teamSetMode(on){
+  TEAM.mode=!!on;
+  $("lt-1v1").classList.toggle("on",!on); $("lt-team").classList.toggle("on",!!on);
+  $("lobby-1v1").classList.toggle("hidden",!!on); $("lobby-team").classList.toggle("hidden",!on);
+  $("lobby-h2-1").classList.toggle("hidden",!!on); $("lobby-h2-t").classList.toggle("hidden",!on);
+  if(ONLINE.client&&ONLINE.connected){ try{ if(on) ONLINE.client.subscribe(MQ_ROOT+"/teams"); else ONLINE.client.unsubscribe(MQ_ROOT+"/teams"); }catch(e){} }
+  teamRender(); fitScreen(screenMenu);
+}
+function teamRenderRooms(){
+  var w=$("tm-rooms"); if(!w) return;
+  var now=Date.now();
+  Object.keys(TEAM.rooms).forEach(function(c){ if(now-TEAM.rooms[c].ts>12000) delete TEAM.rooms[c]; });
+  var l=Object.keys(TEAM.rooms).map(function(c){ return TEAM.rooms[c]; });
+  if(!l.length){ w.innerHTML='<div class="tm-empty">אין כרגע חדרים פתוחים — פתחו חדר ושלחו לחברים את הקישור</div>'; return; }
+  w.innerHTML=l.map(function(x){
+    var lv=LEVELS[x.lvl]||LEVELS[0];
+    return '<div class="player-row"><span>🏠 '+esc(x.host)+' · 🔵'+x.b+' 🔴'+x.r+' · '+lv.icon+'</span><button class="p-invite" data-tmjoin="'+x.code+'">הצטרפות</button></div>';
+  }).join("");
+}
+function teamRender(){
+  var out=$("tm-out"), inn=$("tm-in"); if(!out||!inn) return;
+  var r=TEAM.room, lvls=$("lobby-levels");
+  if(lvls) lvls.style.display = (TEAM.mode && r) ? "none" : "";
+  out.classList.toggle("hidden",!!r); inn.classList.toggle("hidden",!r);
+  if(!r){ teamRenderRooms(); return; }
+  var lv=LEVELS[r.level]||LEVELS[0];
+  var col=function(k){
+    var l=teamList(k), rows=l.map(function(x){ return '<div class="tm-row'+(x.id===ONLINE.id?" me":"")+'"><span class="tm-n">'+esc(x.name)+(x.id===r.hostId?" 👑":"")+'</span></div>'; });
+    for(var i=l.length;i<TEAM_MIN;i++) rows.push('<div class="tm-row ph">·</div>');
+    return '<div class="tm-col tm-'+k+'"><b>'+TEAM_NAMES[k]+' ('+l.length+')</b>'+rows.join("")+'</div>';
+  };
+  var nb=Math.max(0,TEAM_MIN-teamList("b").length), nr=Math.max(0,TEAM_MIN-teamList("r").length);
+  var need = (!nb&&!nr) ? '<div class="tm-need ok">✅ יש מספיק שחקנים — אפשר להתחיל!</div>'
+    : '<div class="tm-need">'+(nb&&nr ? "חסרים עוד "+nb+" כחולים ו־"+nr+" אדומים" : nb ? "חסרים עוד "+nb+" כחולים" : "חסרים עוד "+nr+" אדומים")+'</div>';
+  var h='<div class="tm-code"><span class="tm-cl">קוד החדר</span><b>'+r.code+'</b></div><div class="tm-lvl"><span class="tm-ll">רמה:</span> <span class="tm-lv">'+lv.icon+' '+lv.name+'</span></div>';
+  if(r.st!=="wait"){ inn.innerHTML=h+'<div class="tm-wait">👥 המשחק בחדר מתחיל…</div>'; return; }
+  if(!r.myTeam){ inn.innerHTML=h+'<div class="tm-wait">⏳ מצטרפים לחדר…</div><button class="btn-ghost" data-tm="leave">ביטול</button>'; return; }
+  h+='<div class="tm-teams">'+col("b")+col("r")+'</div>'+need;
+  h+='<button class="btn-ghost" data-tm="switch">🔄 מעבר ל'+TEAM_NAMES[teamOther(r.myTeam)]+'</button>';
+  h+='<button class="btn-main" data-tm="invite">📲 הזמינו חברים לחדר</button>';
+  if(r.host) h+='<button class="btn-main" id="tm-start" data-tm="start"'+((nb||nr)?" disabled":"")+'>▶ התחילו את המשחק</button>';
+  else h+='<div class="tm-wait">⏳ ממתינים שהמארח יתחיל את המשחק…</div>';
+  h+='<button class="btn-ghost" data-tm="leave">יציאה מהחדר</button>';
+  inn.innerHTML=h;
+}
+function teamInviteLink(){ return GAME_URL+"?team="+(TEAM.room?TEAM.room.code:""); }
+function teamShareInvite(){
+  var r=TEAM.room; if(!r) return;
+  var url=teamInviteLink(), me=getPlayerName()||ONLINE.name||"חבר";
+  var txt="👥 "+me+" מזמין אותך למשחק קבוצות בחידון בראשית! קוד החדר: "+r.code+" — היכנסו מהקישור:";
+  if(navigator.share){ navigator.share({title:"משחק קבוצות בחידון בראשית",text:txt,url:url}).catch(function(){}); }
+  else{ openWin("https://wa.me/?text="+encodeURIComponent(txt+"\n"+url)); }
+}
+/* כניסה מקישור ?team=CODE — מחכים לחיבור ואז נכנסים לחדר */
+function teamJoinFromInvite(code){
+  navGo("duel"); teamSetMode(true);
+  var t0=Date.now();
+  (function wait(){
+    if(ONLINE.connected){ teamJoin(code); return; }
+    if(Date.now()-t0<15000) setTimeout(wait,400); else lobbyStatus("לא ניתן להתחבר לערוץ — נסו שוב",true);
+  })();
+}
+(function(){
+  var b;
+  if(b=$("lt-1v1")) b.addEventListener("click",function(){ teamSetMode(false); });
+  if(b=$("lt-team")) b.addEventListener("click",function(){ teamSetMode(true); });
+  if(b=$("tm-create")) b.addEventListener("click",teamCreate);
+  if(b=$("tm-join-btn")) b.addEventListener("click",function(){ teamJoin($("tm-code").value); });
+  if(b=$("tm-code")) b.addEventListener("keydown",function(e){ if(e.key==="Enter") teamJoin(this.value); });
+  if(b=$("lobby-team")) b.addEventListener("click",function(e){
+    var j=e.target.closest&&e.target.closest("[data-tmjoin]"); if(j){ teamJoin(j.getAttribute("data-tmjoin")); return; }
+    var a=e.target.closest&&e.target.closest("[data-tm]"); if(!a||a.disabled) return;
+    var k=a.getAttribute("data-tm");
+    if(k==="switch") teamSwitch(); else if(k==="invite") teamShareInvite(); else if(k==="start") teamStart(); else if(k==="leave") teamLeave();
+  });
+})();
 
 /* ══════════ לוח שיאים גלובלי ══════════
    כל שחקן מפרסם את השיאים שלו כהודעה שמורה (retained) על הברוקר —
@@ -5100,6 +5476,7 @@ function renderLb(){
 
 function onlineShowFinal(){
   var m=ONLINE.match; if(!m) return;
+  if(m.team){ teamShowFinal(false); return; }
   oppMiniHide();
   var o=m.opp;
   $("end-grade").textContent =
@@ -5334,7 +5711,7 @@ function onAnswer(btn){
       qCard.classList.remove("shake"); void qCard.offsetWidth; qCard.classList.add("shake");
     }
     onlineHud();
-    sendTo(ONLINE.match.oppId,{type:"result",q:qIdx,pts:right?pts:0,right:right,choice:btn._val});
+    matchSend({type:"result",q:qIdx,pts:right?pts:0,right:right,choice:btn._val});
     showExplain(right, pts, q.exp);
   }else if(duelMode){
     var st=duelState[curPlayer];
@@ -5390,7 +5767,7 @@ function onTimeout(){
   showExplain(null, 0, questions[qIdx].exp);
   if(ONLINE.match){
     $("bot-status-0").innerHTML='<span class="bad">⏱ ✗</span>';
-    sendTo(ONLINE.match.oppId,{type:"result",q:qIdx,pts:0,right:false,choice:null});
+    matchSend({type:"result",q:qIdx,pts:0,right:false,choice:null});
   }else if(duelMode){
     $("bot-status-"+curPlayer).innerHTML='<span class="bad">⏱ ✗</span>';
     expVerdict.textContent = PLAYERS[curPlayer].name+" — "+expVerdict.textContent;
@@ -5457,11 +5834,14 @@ function endLevel(){
   /* סיום משחק מקוון */
   if(ONLINE.match){
     ONLINE.match.myDone=true;
-    sendTo(ONLINE.match.oppId,{type:"done",score:score,correct:correctCount});
+    matchSend({type:"done",score:score,correct:correctCount});
     publishPresence();
     $("end-record").style.display="none";
     $("btn-next-lvl").style.display="none";
-    if(ONLINE.match.opp.done||ONLINE.match.oppGone){
+    if(ONLINE.match.team){
+      screenEnd.classList.remove("hidden");
+      teamAfterMyDone();
+    }else if(ONLINE.match.opp.done||ONLINE.match.oppGone){
       onlineShowFinal();
     }else{
       $("end-grade").textContent="⏳ סיימת! ממתין ל"+ONLINE.match.oppName+"…";
@@ -7096,8 +7476,10 @@ $("btn-next-lvl").addEventListener("click", function(){
 });
 $("btn-menu").addEventListener("click", function(){
   if(ONLINE.match){
-    if(!ONLINE.match.myDone) sendTo(ONLINE.match.oppId,{type:"bye"});
+    var _wasTeam=!!ONLINE.match.team;
+    if(!ONLINE.match.myDone) matchSend({type:"bye"});
     ONLINE.match=null; ONLINE.deck=null;
+    if(_wasTeam) teamLeave();
     publishPresence();
     renderLobbyList();
   }
@@ -7485,6 +7867,7 @@ function openTutorial(){ TUT_I=0; tutRender(); $("intro-modal").classList.remove
 function introSeenDevice(){ try{ return localStorage.getItem("tfv_bq_intro_seen")==="1"; }catch(e){ return false; } }
 function maybeShowIntro(){
   if(window.__chInvite) return; /* הגיעו מקישור אתגר — מתחילים ישר באתגר, בלי הדרכה */
+  if(window.__teamInvite){ var _tc=window.__teamInvite; window.__teamInvite=null; setTimeout(function(){ teamJoinFromInvite(_tc); },300); return; }
   if(window.__duelInvite){ var _inv=window.__duelInvite; window.__duelInvite=null; setTimeout(function(){ openDuelFromInvite(_inv); },300); return; }
   var p=activeProf();
   if(p ? p.seenIntro : introSeenDevice()) return;
@@ -8391,12 +8774,16 @@ var DUEL_INV=(function(){
        return {from:(q.get("from")||"").slice(0,30)}; }catch(e){ return null; }
 })();
 if(DUEL_INV && activeProf() && !isPending()){ setTimeout(function(){ openDuelFromInvite(DUEL_INV); },900); }
-if(!activeProf() && DUEL_INV){
+var TEAM_INV=(function(){ try{ var c=new URLSearchParams(location.search).get("team"); if(!c) return null;
+  history.replaceState(null,"",location.pathname); c=c.toUpperCase().replace(/[^A-Z0-9]/g,""); return /^[A-Z2-9]{5}$/.test(c)?c:null; }catch(e){ return null; } })();
+if(TEAM_INV && activeProf() && !isPending()){ setTimeout(function(){ teamJoinFromInvite(TEAM_INV); },900); }
+else if(TEAM_INV && !activeProf()){ window.__teamInvite=TEAM_INV; }
+if(!activeProf() && (DUEL_INV || TEAM_INV)){
   /* מוזמן חדש: רק שם — ואז ישר ללובי */
-  window.__duelInvite=DUEL_INV;
+  if(DUEL_INV) window.__duelInvite=DUEL_INV;
   openNameModal(false);
   var _pn=$("name-pending-note");
-  if(_pn){ _pn.textContent="\u2694\ufe0f "+(DUEL_INV.from||"חבר")+" הזמין אותך לדו־קרב! ספרו לנו מי אתם — ונכנסים ללובי."; _pn.style.display=""; }
+  if(_pn){ _pn.textContent= TEAM_INV ? "👥 הוזמנת למשחק קבוצות! ספרו לנו מי אתם — ונכנסים לחדר." : "\u2694\ufe0f "+(DUEL_INV.from||"חבר")+" הזמין אותך לדו־קרב! ספרו לנו מי אתם — ונכנסים ללובי."; _pn.style.display=""; }
 }else if(!activeProf()){
   openLanding();
   setTimeout(maybeShowIntro,350); /* ההוראות מופיעות מיד בכניסה הראשונה */
