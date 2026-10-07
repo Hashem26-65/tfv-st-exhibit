@@ -4533,7 +4533,8 @@ function teamList(t){   /* חברי קבוצה: לפני המשחק — מי ש�
   return Object.keys(src).filter(function(id){ return src[id].team===t; }).map(function(id){ var x=src[id]; x.id=id; return x; });
 }
 function teamScoreOf(x){ return x.id===ONLINE.id && ONLINE.match && ONLINE.match.team ? score : (x.score||0); }
-function teamAvg(t){ var l=teamList(t); if(!l.length) return 0; var s=0; l.forEach(function(x){ s+=teamScoreOf(x); }); return Math.round(s/l.length); }
+function teamAvgRaw(t){ var l=teamList(t); if(!l.length) return 0; var s=0; l.forEach(function(x){ s+=teamScoreOf(x); }); return s/l.length; }
+function teamAvg(t){ return Math.round(teamAvgRaw(t)); }
 function teamDoneCount(){ var r=TEAM.room, n=0, all=0; if(!r||!r.roster) return [0,0];
   Object.keys(r.roster).forEach(function(id){ all++; var x=r.roster[id]; if(x.done||x.gone||(id===ONLINE.id&&ONLINE.match&&ONLINE.match.myDone)) n++; }); return [n,all]; }
 
@@ -4734,9 +4735,11 @@ function teamShowFinal(partial){
   var r=TEAM.room; if(!r) return;
   r._final=true;
   if(TEAM.finalTO){ clearTimeout(TEAM.finalTO); TEAM.finalTO=null; }
-  var t=r.myTeam||"b", o=teamOther(t), A=teamAvg(t), B=teamAvg(o);
+  var t=r.myTeam||"b", o=teamOther(t), A=teamAvgRaw(t), B=teamAvgRaw(o);
   $("end-grade").textContent = A>B ? "🏆 הקבוצה שלך ניצחה!" : A<B ? "😅 הקבוצה השנייה ניצחה" : "🤝 תיקו!";
-  $("end-score").textContent=A+" : "+B;
+  /* הפרש קטן מנקודה — מציגים ספרה אחרי הנקודה, כדי שלא ייראה כמו תיקו */
+  var fm=function(v){ return (Math.round(A)===Math.round(B) && A!==B) ? v.toFixed(1) : String(Math.round(v)); };
+  $("end-score").textContent=fm(A)+" : "+fm(B);
   $("end-art").src="assets/podium.png"; $("end-art").style.display="block";
   var best=null;
   var col=function(k){
