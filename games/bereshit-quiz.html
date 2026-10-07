@@ -4206,46 +4206,50 @@ function onlineEnter(){
 function onlineLeave(){
   ONLINE.active=false;
   stopPresence();
-  if(ONLINE.client){ try{ sendBye(); ONLINE.client.end(true); }catch(e){} }
+  if(ONLINE.client){ try{ sendBye(); }catch(e){} }
   if(TEAM.room) teamLeave();
+  /* החיבור עצמו משותף עם לוח השיאים — רק יוצאים מערוצי הלובי */
+  if(ONLINE.client){ try{ var c=ONLINE.client;
+    c.unsubscribe(MQ_ROOT+"/presence"); c.unsubscribe(MQ_ROOT+"/to/"+ONLINE.id); c.unsubscribe(MQ_ROOT+"/teams"); }catch(e){} }
   ONLINE.client=null; ONLINE.connected=false; ONLINE.players={}; ONLINE.pend=null;
 }
 
+/* הלובי רוכב על החיבור של לוח השיאים: חיבור אחד בלבד לכל שחקן */
+var ONLINE_LISTEN=false;
+function onlineRoute(topic,payload){
+  if(!ONLINE.active) return;
+  var lobby = topic===MQ_ROOT+"/presence" || topic===MQ_ROOT+"/teams" || topic.indexOf(MQ_ROOT+"/room/")===0 || topic===MQ_ROOT+"/to/"+ONLINE.id;
+  if(!lobby) return;
+  var m; try{ m=JSON.parse(payload.toString()); }catch(e){ return; }
+  if(topic===MQ_ROOT+"/presence") onPresence(m);
+  else if(topic===MQ_ROOT+"/teams") teamOnAnn(m);
+  else if(topic.indexOf(MQ_ROOT+"/room/")===0){ if(TEAM.room && topic===teamTopic(TEAM.room.code)) teamOnRoom(m); }
+  else onDirect(m);
+}
+function onlineSubscribe(){
+  var c=LB.client; if(!c||!ONLINE.active) return;
+  ONLINE.client=c; ONLINE.connected=true;
+  c.subscribe(MQ_ROOT+"/presence");
+  c.subscribe(MQ_ROOT+"/to/"+ONLINE.id);
+  if(TEAM.mode) c.subscribe(MQ_ROOT+"/teams");
+  if(TEAM.room) c.subscribe(teamTopic(TEAM.room.code));
+  lobbyStatus("מחובר ✓ — ממתין לשחקנים…");
+  startPresence();
+}
 function connectMq(){
   lobbyStatus("מתחבר לערוץ…");
-  var url=MQ_BROKERS[ONLINE.brokerIdx%MQ_BROKERS.length];
-  try{
-    var c=mqtt.connect(url,{clientId:"tfvbq_"+ONLINE.id,clean:true,connectTimeout:8000,reconnectPeriod:4000});
-    ONLINE.client=c;
-    c.on("connect",function(){
-      if(!ONLINE.active) return;
-      ONLINE.connected=true;
-      c.subscribe(MQ_ROOT+"/presence");
-      c.subscribe(MQ_ROOT+"/to/"+ONLINE.id);
-      if(TEAM.mode) c.subscribe(MQ_ROOT+"/teams");
-      if(TEAM.room) c.subscribe(teamTopic(TEAM.room.code));
-      lobbyStatus("מחובר ✓ — ממתין לשחקנים…");
-      startPresence();
-    });
-    c.on("message",function(topic,payload){
-      var m; try{ m=JSON.parse(payload.toString()); }catch(e){ return; }
-      if(topic===MQ_ROOT+"/presence") onPresence(m);
-      else if(topic===MQ_ROOT+"/teams") teamOnAnn(m);
-      else if(topic.indexOf(MQ_ROOT+"/room/")===0){ if(TEAM.room && topic===teamTopic(TEAM.room.code)) teamOnRoom(m); }
-      else onDirect(m);
-    });
-    c.on("error",function(){
-      if(!ONLINE.connected){
-        ONLINE.brokerIdx++;
-        try{ c.end(true); }catch(e){}
-        if(ONLINE.active && ONLINE.brokerIdx<MQ_BROKERS.length) connectMq();
-        else lobbyStatus("לא ניתן להתחבר לערוץ — נסו שוב מאוחר יותר",true);
-      }
-    });
+  lbConnect();
+  var c=LB.client;
+  if(!c){ lobbyStatus("שגיאת חיבור",true); return; }
+  ONLINE.client=c;
+  if(!ONLINE_LISTEN){
+    ONLINE_LISTEN=true;
+    c.on("message",onlineRoute);
+    c.on("connect",function(){ if(ONLINE.active) onlineSubscribe(); });   /* גם אחרי ניתוק וחיבור מחדש */
     c.on("close",function(){ if(ONLINE.active&&ONLINE.connected) lobbyStatus("החיבור נותק — מתחבר מחדש…"); });
-  }catch(e){
-    lobbyStatus("שגיאת חיבור",true);
   }
+  if(LB.connected) onlineSubscribe();
+  setTimeout(function(){ if(ONLINE.active && !ONLINE.connected) lobbyStatus("לא ניתן להתחבר לערוץ — נסו שוב מאוחר יותר",true); },15000);
 }
 
 function sendTo(pid,obj){
@@ -4859,6 +4863,7 @@ function lbConnect(){
     });
     c.on("message",function(t,p){
       try{
+        if(t===MQ_ROOT+"/presence" || t===MQ_ROOT+"/teams" || t.indexOf(MQ_ROOT+"/room/")===0 || t.indexOf(MQ_ROOT+"/to/")===0) return; /* של הלובי */
         if(t.indexOf("/admin/")>-1){
           if(p && p.toString()) adminVerify(t,p.toString()).then(function(o){ if(o) applyAdminCmd(o); });
           return;
