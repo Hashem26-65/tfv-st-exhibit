@@ -34,7 +34,7 @@ self.addEventListener("fetch", function (e) {
     return;
   }
   if (!isAsset(u)) return;
-  e.respondWith(caches.match(req).then(function (hit) { return hit || fromNet(req); }));
+  e.respondWith(caches.match(req).then(function (hit) { return hit || fromNet(req).catch(function () { return Response.error(); }); }));
 });
 /* הורדה מראש של כל מה שצריך כדי לשחק בלי אינטרנט */
 self.addEventListener("message", function (e) {
