@@ -171,6 +171,33 @@ module.exports = async (req, res) => {
       await pipe(cmds);
       res.status(200).json({ db: true, ok: true }); return;
     }
+    /* ── דיווח "יש טעות בשאלה": נאסף לפי השאלה (כמה דיווחו + ההערות האחרונות), המנהל רואה ומסמן "טופל" ── */
+    if (op === "qrep") {
+      const t = String(b.t || "").trim().slice(0, 400);
+      if (!t) { res.status(400).json({ error: "t" }); return; }
+      const h = crypto.createHash("sha1").update(t).digest("hex").slice(0, 12);
+      const old = await redis(["HGET", "bq:qrep", h]);
+      if (!old && (await redis(["HLEN", "bq:qrep"])) >= 2000) { res.status(429).json({ error: "full" }); return; }
+      const rec = old ? JSON.parse(old) : { t, a: String(b.a || "").slice(0, 200), n: 0, notes: [], first: Date.now() };
+      const note = String(b.note || "").replace(/[\u0000-\u001f]/g, " ").trim().slice(0, 300);
+      rec.n = (rec.n || 0) + 1; rec.ts = Date.now();
+      rec.notes = (rec.notes || []).concat([{ note, name: cleanName(b.name), lang: LANGS.includes(b.lang) ? b.lang : "he", ts: rec.ts }]).slice(-8);
+      await redis(["HSET", "bq:qrep", h, JSON.stringify(rec)]);
+      res.status(200).json({ db: true, ok: true }); return;
+    }
+    if (op === "qreps" || op === "qrep-del") {
+      if (!isAdmin(b.code)) { await new Promise(r => setTimeout(r, 900)); res.status(403).json({ error: "code" }); return; }
+      if (op === "qrep-del") {
+        const h = String(b.h || "");
+        if (!/^[a-f0-9]{12}$/.test(h)) { res.status(400).json({ error: "h" }); return; }
+        await redis(["HDEL", "bq:qrep", h]);
+        res.status(200).json({ db: true, ok: true }); return;
+      }
+      const all = hashRaw(await redis(["HGETALL", "bq:qrep"]));
+      const rows = Object.keys(all).map(h => { try { const r = JSON.parse(all[h]); r.h = h; return r; } catch (e) { return null; } })
+        .filter(Boolean).sort((x, y) => (y.ts || 0) - (x.ts || 0));
+      res.status(200).json({ db: true, total: rows.length, rows: rows.slice(0, 60) }); return;
+    }
     /* ── סטטיסטיקת שאלות: כמה ענו וכמה צדקו בכל שאלה ── */
     if (op === "qstat") {
       const items = (Array.isArray(b.items) ? b.items : []).slice(0, 20);

@@ -1592,6 +1592,9 @@ body.daily-bg{background:linear-gradient(rgba(235,232,220,.35),rgba(235,232,220,
 #tm-start:disabled{opacity:.45;cursor:default}
 #end-stats .tm-teams{margin:8px auto 4px;max-width:440px;text-align:right}
 .tm-mvp{font-size:14px;color:#46566e;margin-top:4px}
+.tm-set{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px}
+.tm-set .tm-sl{font-size:14px;font-weight:700;color:#1e3153;margin-inline-end:4px}
+.tm-set .lvl-chip{padding:4px 12px !important;font-size:14px !important}
 
 /* ══════════ כפתור עצור בסרגל + מסך הפסקה ══════════ */
 .hud-bar #btn-pause{position:static !important;top:auto !important;left:auto !important;z-index:auto !important;
@@ -2070,7 +2073,7 @@ body.daily-bg{background:linear-gradient(rgba(235,232,220,.35),rgba(235,232,220,
 .dd-acts{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:4px 0 8px}
 .dd-acts .btn-ghost{padding:8px 14px;font-size:clamp(13px,1.5vw,15px)}
 /* הגדרות — כפתורים חדשים באותו סגנון של ההוראות */
-#btn-install,#btn-remind{background:#eef2f7;color:#1e3153;border:1px solid rgba(40,55,78,.12);border-radius:12px;padding:9px 14px;
+#btn-install,#btn-remind,#btn-offline{background:#eef2f7;color:#1e3153;border:1px solid rgba(40,55,78,.12);border-radius:12px;padding:9px 14px;
   font-family:var(--serif);font-weight:700;cursor:pointer;font-size:clamp(14px,3.4vw,16px)}
 /* חלון התזכורת */
 #remind-modal{position:fixed;inset:0;z-index:460;display:flex;align-items:center;justify-content:center;padding:16px;
@@ -2099,6 +2102,45 @@ body.can-say .verse-display .vw:hover{background:rgba(216,180,106,.18)}
 .say-btn.hidden{display:none !important}
 #q-card{position:relative}
 .q-say{position:absolute;top:10px;inset-inline-start:10px;margin:0;width:32px;height:32px;font-size:15px}
+/* ── נגישות ── */
+button:focus-visible,.opt:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #f0b545 !important;outline-offset:2px}
+body.a11y-hc{--muted:#1f2a3a;--ink:#000;--ink-dim:#111}
+body.a11y-hc #q-card,body.a11y-hc .opt,body.a11y-hc #explain,body.a11y-hc .rm-box,body.a11y-hc .settings-box,body.a11y-hc #lobby,body.a11y-hc .ch-box,body.a11y-hc .player-row,body.a11y-hc .tm-col{
+  background:#fff !important;color:#000 !important;border:2px solid #000 !important;box-shadow:none !important;text-shadow:none !important;backdrop-filter:none !important}
+body.a11y-hc #q-text,body.a11y-hc .opt .opt-t,body.a11y-hc .opt .opt-l,body.a11y-hc .exp-text,body.a11y-hc .verdict,body.a11y-hc .rm-text,body.a11y-hc .lobby-h2,body.a11y-hc .tm-row,body.a11y-hc .set-row span{color:#000 !important;text-shadow:none !important;opacity:1 !important}
+body.a11y-hc .opt.correct{background:#0b6b2e !important;border-color:#0b6b2e !important}
+body.a11y-hc .opt.correct .opt-t,body.a11y-hc .opt.correct .opt-l{color:#fff !important}
+body.a11y-hc .opt.wrong{opacity:.75}
+body.a11y-hc .opt.wrong .opt-t{text-decoration:line-through}
+body.a11y-hc .btn-main{background:#0b3d91 !important;color:#fff !important;border:2px solid #000 !important}
+body.a11y-hc .btn-ghost,body.a11y-hc .set-toggle,body.a11y-hc .lvl-chip{background:#fff !important;color:#000 !important;border:2px solid #000 !important}
+body.a11y-hc .lvl-chip.active,body.a11y-hc .set-toggle:not(.off){background:#000 !important;color:#fff !important}
+body.a11y-hc #toast{background:#000 !important;color:#fff !important}
+body.a11y-hc .bonus-btn,body.a11y-hc #hud{background:#fff !important;color:#000 !important;border:2px solid #000 !important;box-shadow:none !important}
+body.a11y-hc .bonus-head,body.a11y-hc .bonus-btn small,body.a11y-hc .q-head{color:#000 !important;opacity:1 !important}
+body.big-ui .opt{min-height:68px !important;font-size:1.18em !important;padding-block:14px !important}
+body.big-ui .btn-main,body.big-ui .btn-ghost,body.big-ui #btn-next{min-height:54px;font-size:1.12em !important}
+body.big-ui .say-btn{width:44px !important;height:44px !important;font-size:19px !important}
+body.big-ui #topnav button,body.big-ui .set-ctrl button{min-width:44px;min-height:44px}
+@media (prefers-reduced-motion: reduce){
+  *:not(#ring-bar):not(#om-timer),*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;scroll-behavior:auto !important}
+}
+.q-flag{position:absolute;top:10px;inset-inline-end:10px;margin:0;width:30px;height:30px;font-size:13px;opacity:.55}
+.q-flag:hover,.q-flag:focus-visible{opacity:1}
+.rv-flag{border:none;background:none;color:#8a6a2a;font:inherit;font-size:12.5px;cursor:pointer;padding:2px 0;margin-top:2px;text-decoration:underline}
+#qrep-modal{position:fixed;inset:0;z-index:470;display:flex;align-items:center;justify-content:center;padding:16px;
+  background:rgba(20,28,44,.5);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+#qrep-modal .rm-box{gap:9px}
+.qr-q{background:#f6f8fc;border-radius:12px;padding:10px 12px;color:#1e3153;font-weight:700;font-size:15px;text-align:start}
+.qr-a{font-size:13.5px;color:#46566e;text-align:start}
+#qrep-note{width:100%;min-height:76px;border-radius:12px;border:1.5px solid rgba(40,55,78,.18);padding:9px 11px;font:inherit;font-size:14px;resize:vertical;box-sizing:border-box}
+#qrep-modal .btn-main,#qrep-modal .btn-ghost{width:100%}
+.qr-list{display:flex;flex-direction:column;gap:8px}
+.qr-row{background:#fff8ec;border:1px solid #f1d9a8;border-radius:12px;padding:9px 11px;display:flex;flex-direction:column;gap:4px;text-align:start}
+.qr-row .qr-t{font-weight:700;color:#1e3153}
+.qr-row .qr-n{font-size:12.5px;color:#7a5a1a}
+.qr-row .qr-note{font-size:13px;color:#33425c;background:#fff;border-radius:8px;padding:4px 8px}
+.qr-row .btn-ghost{align-self:flex-start;padding:5px 12px !important;font-size:13px !important}
 
 /* לוח שיאים — לשוניות כללי/השבוע, אלוף השבוע */
 .lb-tabs{display:flex;gap:6px;justify-content:center;margin:2px 0 6px}
@@ -2186,7 +2228,7 @@ var LANGS=[
   {c:"de",n:"Deutsch",h:"גרמנית"},
   {c:"pt",n:"Português",h:"פורטוגזית"}
 ];
-var I18N_V="11"; /* להעלות בכל עדכון של קבצי המילון, כדי שהדפדפן לא ישתמש בגרסה ישנה */
+var I18N_V=window.__I18N_V="12"; /* להעלות בכל עדכון של קבצי המילון, כדי שהדפדפן לא ישתמש בגרסה ישנה */
 var KEY="tfv_bq_lang";
 function getLang(){ try{ return localStorage.getItem(KEY); }catch(e){ return null; } }
 function langInfo(c){ for(var i=0;i<LANGS.length;i++) if(LANGS[i].c===c) return LANGS[i]; return LANGS[0]; }
@@ -2423,6 +2465,14 @@ html[dir=ltr] body{direction:ltr}
       </div>
     </div>
     <div class="set-row">
+      <span>🌓 ניגודיות גבוהה</span>
+      <div class="set-ctrl"><button id="contrast-toggle" class="set-toggle" aria-pressed="false">כבוי</button></div>
+    </div>
+    <div class="set-row">
+      <span>👆 כפתורים גדולים</span>
+      <div class="set-ctrl"><button id="big-toggle" class="set-toggle" aria-pressed="false">כבוי</button></div>
+    </div>
+    <div class="set-row">
       <span>📚 מצב לימוד (בלי טיימר)</span>
       <div class="set-ctrl"><button id="learn-toggle" class="set-toggle">כבוי</button></div>
     </div>
@@ -2436,6 +2486,7 @@ html[dir=ltr] body{direction:ltr}
     </div>
     <button id="btn-install">📲 הוספה למסך הבית</button>
     <button id="btn-remind">🔔 תזכורת יומית לאתגר</button>
+    <button id="btn-offline">📥 שמירה לשימוש בלי אינטרנט</button>
     <button id="btn-howto">❓ הוראות המשחק</button>
     <button id="btn-reset">🔄 איפוס משחק</button>
     <button class="btn-main" id="btn-close-settings">סגור</button>
@@ -2903,6 +2954,7 @@ html[dir=ltr] body{direction:ltr}
       <div class="q-head"><i></i><span>שאלה <b id="q-num">1</b> מתוך <b id="q-total">10</b></span><i></i></div>
       <div id="q-text"></div>
       <button class="say-btn q-say hidden" id="q-say" title="השמעת המילים בעברית" aria-label="השמעת המילים בעברית">🔊</button>
+      <button class="say-btn q-flag" id="q-flag" title="יש טעות בשאלה?" aria-label="דיווח על טעות בשאלה">🚩</button>
     </div></div>
     <div id="opts"></div>
     <div id="bots-panel" class="hidden">
@@ -3753,13 +3805,17 @@ function loadSettings(){
     if(typeof s.vol==="number") def.vol=Math.max(0,Math.min(10,s.vol));
     if(typeof s.font==="number") def.font=Math.max(80,Math.min(140,s.font));
     if(s.sound===false) def.sound=false;
+    if(s.learn===true) def.learn=true;
+    if(s.hc===true) def.hc=true;
+    if(s.big===true) def.big=true;
   }catch(e){}
   return def;
 }
 var settings=loadSettings();
 function saveSettings(){ try{localStorage.setItem(SET_KEY,JSON.stringify(settings));}catch(e){} }
 
-function applyFont(){ document.body.style.zoom=settings.font+"%"; }
+function applyFont(){ document.body.style.zoom=settings.font+"%"; applyA11y(); }
+function applyA11y(){ document.body.classList.toggle("a11y-hc",!!settings.hc); document.body.classList.toggle("big-ui",!!settings.big); }
 
 /* ══════════ AUDIO ══════════ */
 var actx=null;
@@ -4521,7 +4577,17 @@ function oppMiniResult(m){
    ככה כולם רואים את אותה רשימה בלי שרת. המארח מתחיל כשיש לפחות 5 בכל קבוצה; כולם מקבלים את אותה חפיסה
    (seed משותף) ועונים כל אחד בקצב שלו. מנצחת הקבוצה עם ממוצע הנקודות הגבוה (הוגן גם כשהקבוצות לא שוות). */
 var TEAM_MIN=5, TEAM_MAX=10;
-var TEAM={mode:false, room:null, rooms:{}, iv:null, finalTO:null};
+var TEAM={mode:false, room:null, rooms:{}, iv:null, finalTO:null, botIv:null};
+var TEAM_NQ=[5,10,20], TEAM_TQ=[10,15,20,30], BOT_N=0;
+function teamTqFor(lvIdx){ var t=(LEVELS[lvIdx]||LEVELS[0]).time, best=TEAM_TQ[0]; TEAM_TQ.forEach(function(x){ if(Math.abs(x-t)<Math.abs(best-t)) best=x; }); return best; }
+function teamOkNq(n){ n=+n; return TEAM_NQ.indexOf(n)>=0 ? n : 10; }
+function teamOkTq(n,lv){ n=+n; return TEAM_TQ.indexOf(n)>=0 ? n : teamTqFor(lv); }
+/* שליחה בשם שחקן מחשב (רק המארח מריץ אותם) */
+function teamPubAs(id,name,obj){
+  var r=TEAM.room; if(!r||!ONLINE.client||!ONLINE.connected) return;
+  obj.id=id; obj.name=name;
+  try{ ONLINE.client.publish(teamTopic(r.code), JSON.stringify(obj)); }catch(e){}
+}
 var TEAM_NAMES={b:"🔵 כחולים", r:"🔴 אדומים"};
 function teamTopic(c){ return MQ_ROOT+"/room/"+c; }
 function teamNewCode(){ var A="ABCDEFGHJKMNPQRSTUVWXYZ23456789", s=""; for(var i=0;i<5;i++) s+=A[Math.floor(Math.random()*A.length)]; return s; }
@@ -4545,7 +4611,8 @@ function teamDoneCount(){ var r=TEAM.room, n=0, all=0; if(!r||!r.roster) return 
 /* ── חדר: פתיחה / הצטרפות / יציאה ── */
 function teamEnterRoom(code,host){
   TEAM.room={code:code, host:host, hostId:host?ONLINE.id:null, hostTs:Date.now(), level:ONLINE.selLevel,
-             members:{}, myTeam:host?"b":null, st:"wait", roster:null, joinedAt:Date.now()};
+             members:{}, myTeam:host?"b":null, st:"wait", roster:null, joinedAt:Date.now(),
+             nq:10, tq:teamTqFor(ONLINE.selLevel), bots:{}};
   if(ONLINE.client&&ONLINE.connected) ONLINE.client.subscribe(teamTopic(code));
   if(host) TEAM.room.members[ONLINE.id]={name:ONLINE.name, team:"b", ts:Date.now()};
   if(TEAM.iv) clearInterval(TEAM.iv);
@@ -4570,6 +4637,7 @@ function teamLeave(){
   teamPub({type:"leave"});
   try{ if(ONLINE.client) ONLINE.client.unsubscribe(teamTopic(r.code)); }catch(e){}
   if(TEAM.iv){ clearInterval(TEAM.iv); TEAM.iv=null; }
+  if(TEAM.botIv){ clearInterval(TEAM.botIv); TEAM.botIv=null; }
   if(TEAM.finalTO){ clearTimeout(TEAM.finalTO); TEAM.finalTO=null; }
   TEAM.room=null; publishPresence(); teamRender();
 }
@@ -4594,9 +4662,10 @@ function teamTick(){
     me.name=ONLINE.name; me.team=r.myTeam; me.ts=now;
     var hb={type:"hb", team:r.myTeam, st:r.st};
     if(r.st==="play" && ONLINE.match && ONLINE.match.team){ hb.q=qIdx; hb.score=score; hb.correct=correctCount; hb.done=!!ONLINE.match.myDone; }
-    if(r.host){ hb.isHost=1; hb.lvl=r.level; }
+    if(r.host){ hb.isHost=1; hb.lvl=r.level; hb.nq=r.nq; hb.tq=r.tq; }
     teamPub(hb);
   }
+  if(r.host) teamBotsHb();
   Object.keys(r.members).forEach(function(id){
     if(id===ONLINE.id) return;
     if(now-(r.members[id].ts||0)>12000){
@@ -4612,12 +4681,13 @@ function teamTick(){
 }
 function teamOnRoom(m){
   var r=TEAM.room; if(!r||!m||!m.id||m.id===ONLINE.id) return;
+  if(r.bots && r.bots[m.id]) return;   /* ההד של שחקני המחשב שלי */
   var now=Date.now(), nm=String(m.name||"שחקן").slice(0,20);
   if(m.type==="hb"){
     if(m.team!=="b" && m.team!=="r") return;
     var x=r.members[m.id]=r.members[m.id]||{};
     x.name=nm; x.team=m.team; x.ts=now;
-    if(m.isHost){ if(!r.hostId) r.hostId=m.id; if(r.hostId===m.id){ r.hostTs=now; if(!r.host) r.level=+m.lvl||0; } }
+    if(m.isHost){ if(!r.hostId) r.hostId=m.id; if(r.hostId===m.id){ r.hostTs=now; if(!r.host){ r.level=+m.lvl||0; r.nq=teamOkNq(m.nq); r.tq=teamOkTq(m.tq,r.level); } } }
     if(r.roster && r.roster[m.id] && m.st==="play"){ var y=r.roster[m.id]; y.q=+m.q||0; y.score=+m.score||0; y.correct=+m.correct||0; if(m.done) y.done=true; y.gone=false; teamProgressChanged(); }
     else if(r.st==="wait") teamRender();
   }else if(m.type==="hello"){
@@ -4630,13 +4700,17 @@ function teamOnRoom(m){
       t = (nr<nb || nb>=TEAM_MAX) ? "r" : "b";
     }
     r.members[m.id]={name:nm, team:t, ts:now};
-    teamPub({type:"assign", to:m.id, team:t, lvl:r.level});
+    teamPub({type:"assign", to:m.id, team:t, lvl:r.level, nq:r.nq, tq:r.tq});
+    if(!ex && teamList(t).length>TEAM_MIN){
+      var bid=Object.keys(r.bots||{}).filter(function(id){ return r.bots[id].team===t; })[0];
+      if(bid){ teamPubAs(bid, r.bots[bid].name, {type:"leave"}); delete r.members[bid]; delete r.bots[bid]; }
+    }
     teamRender();
   }else if(m.type==="assign"){
     if(m.to!==ONLINE.id || r.host || r.myTeam) return;
     if(m.full){ teamLeave(); lobbyStatus("החדר מלא",true); return; }
     if(m.team!=="b" && m.team!=="r") return;
-    r.hostId=m.id; r.hostTs=now; r.level=+m.lvl||0; r.myTeam=m.team;
+    r.hostId=m.id; r.hostTs=now; r.level=+m.lvl||0; r.myTeam=m.team; r.nq=teamOkNq(m.nq); r.tq=teamOkTq(m.tq,r.level);
     r.members[ONLINE.id]={name:ONLINE.name, team:m.team, ts:now};
     lobbyStatus("נכנסת לחדר ✓");
     teamTick(); teamRender();
@@ -4650,7 +4724,7 @@ function teamOnRoom(m){
   }else if(m.type==="start"){
     if(r.st!=="wait" || m.id!==r.hostId || !m.roster) return;
     if(!m.roster[ONLINE.id]){ teamLeave(); lobbyStatus("המשחק בחדר התחיל בלעדיך — נסו חדר אחר",true); return; }
-    teamGo(+m.seed, +m.lvl||0, m.roster);
+    teamGo(+m.seed, +m.lvl||0, m.roster, teamOkNq(m.nq), teamOkTq(m.tq,+m.lvl||0));
   }
 }
 function teamOnAnn(m){
@@ -4664,15 +4738,16 @@ function teamStart(){
   var nb=teamList("b").length, nr=teamList("r").length;
   if(nb<TEAM_MIN||nr<TEAM_MIN){ toast("צריך לפחות "+TEAM_MIN+" בכל קבוצה"); return; }
   var roster={}, now=Date.now();
-  Object.keys(r.members).forEach(function(id){ var x=r.members[id]; if(id===ONLINE.id||now-(x.ts||0)<12000) roster[id]={name:x.name, team:x.team}; });
+  Object.keys(r.members).forEach(function(id){ var x=r.members[id]; if(id===ONLINE.id||now-(x.ts||0)<12000) roster[id]={name:x.name, team:x.team, bot:x.bot?1:0}; });
   var seed=Math.floor(Math.random()*1e9);
-  teamPub({type:"start", seed:seed, lvl:r.level, roster:roster});
-  teamGo(seed, r.level, roster);
+  teamPub({type:"start", seed:seed, lvl:r.level, roster:roster, nq:r.nq, tq:r.tq});
+  teamGo(seed, r.level, roster, r.nq, r.tq);
 }
-function teamGo(seed,lvlIdx,roster){
+function teamGo(seed,lvlIdx,roster,nq,tq){
   var r=TEAM.room; if(!r||r.st!=="wait") return;
-  r.st="play"; r.level=lvlIdx; r.roster={};
-  Object.keys(roster).forEach(function(id){ var x=roster[id]; if(x && (x.team==="b"||x.team==="r")) r.roster[id]={name:String(x.name||"שחקן").slice(0,20), team:x.team, q:0, score:0, correct:0, done:false, gone:false}; });
+  nq=teamOkNq(nq); tq=teamOkTq(tq,lvlIdx);
+  r.st="play"; r.level=lvlIdx; r.nq=nq; r.tq=tq; r.roster={};
+  Object.keys(roster).forEach(function(id){ var x=roster[id]; if(x && (x.team==="b"||x.team==="r")) r.roster[id]={name:String(x.name||"שחקן").slice(0,20), team:x.team, bot:x.bot?1:0, q:0, score:0, correct:0, done:false, gone:false}; });
   if(r.roster[ONLINE.id]) r.myTeam=r.roster[ONLINE.id].team;
   teamRender();
   toast("👥 המשחק מתחיל בעוד 3 שניות!");
@@ -4682,12 +4757,72 @@ function teamGo(seed,lvlIdx,roster){
     ONLINE.match={team:true, oppId:null, oppName:"", level:lvlIdx, seed:seed,
                   opp:{score:0,correct:0,q:0,done:false}, myDone:false, oppGone:false};
     publishPresence();
-    var rng=mulberry32(seed);
-    var deck=shuffleSeeded(BANK[lv.key].slice(),rng);
-    deck.forEach(function(q){ q._opts=shuffleSeeded([q.a].concat(q.w),rng); });
-    ONLINE.deck=deck;
-    startLevel(lv);
+    ONLINE.deck=teamBuildDeck(seed,lvlIdx,nq);
+    startLevel(Object.assign({},lv,{time:tq}));
+    if(r.host) teamBotsStart(ONLINE.deck.length,tq);
   },3000);
+}
+/* חפיסה זהה אצל כולם: אותו seed מזין את מחולל השאלות (כמו באתגר היומי) */
+function teamBuildDeck(seed,lvIdx,nq){
+  var lv=LEVELS[lvIdx]||LEVELS[0], rng=mulberry32(seed), orig=Math.random, deck;
+  Math.random=rng;
+  try{ deck=makeQuestions(lv.key,nq); }finally{ Math.random=orig; }
+  return deck.map(function(q){ var c=Object.assign({},q); c._opts=shuffleSeeded([q.a].concat(q.w),rng); return c; });
+}
+/* ── שחקני מחשב: המארח מוסיף ומריץ אותם; לשאר החדר הם נראים כמו כל שחקן ── */
+function teamAddBots(){
+  var r=TEAM.room; if(!r||!r.host||r.st!=="wait") return;
+  var now=Date.now();
+  ["b","r"].forEach(function(t){
+    while(teamList(t).length<TEAM_MIN){
+      var id="bot"+Math.random().toString(36).slice(2,9), name="🤖 מחשב "+(++BOT_N);
+      r.bots[id]={name:name, team:t, skill:0.45+Math.random()*0.35};
+      r.members[id]={name:name, team:t, ts:now, bot:1};
+    }
+  });
+  teamBotsHb(); teamRender();
+}
+function teamRemoveBots(){
+  var r=TEAM.room; if(!r||!r.host||r.st!=="wait") return;
+  Object.keys(r.bots||{}).forEach(function(id){ teamPubAs(id, r.bots[id].name, {type:"leave"}); delete r.members[id]; });
+  r.bots={}; teamRender();
+}
+function teamBotsHb(){
+  var r=TEAM.room; if(!r||!r.host) return;
+  var now=Date.now();
+  Object.keys(r.bots||{}).forEach(function(id){
+    var b=r.bots[id]; if(r.members[id]) r.members[id].ts=now;
+    var hb={type:"hb", team:b.team, st:r.st, bot:1}, ro=r.roster&&r.roster[id];
+    if(ro){ hb.q=ro.q; hb.score=ro.score; hb.correct=ro.correct; hb.done=!!ro.done; }
+    teamPubAs(id,b.name,hb);
+  });
+}
+function teamBotsStart(nq,tq){
+  var r=TEAM.room; if(!r) return;
+  var now=Date.now(), any=false;
+  Object.keys(r.bots||{}).forEach(function(id){
+    var b=r.bots[id]; if(!r.roster[id]) return; any=true;
+    b.q=0; b.score=0; b.correct=0; b.done=false; b.nq=nq; b.tq=tq;
+    b.ta=1.5+Math.random()*tq*0.75; b.next=now+b.ta*1000;
+  });
+  if(TEAM.botIv) clearInterval(TEAM.botIv);
+  TEAM.botIv = any ? setInterval(teamBotStep,400) : null;
+}
+function teamBotStep(){
+  var r=TEAM.room; if(!r||r.st!=="play"){ clearInterval(TEAM.botIv); TEAM.botIv=null; return; }
+  var now=Date.now(), left=false, moved=false;
+  Object.keys(r.bots||{}).forEach(function(id){
+    var b=r.bots[id], ro=r.roster[id]; if(!ro||b.done) return; left=true;
+    if(now<b.next) return;
+    var right=Math.random()<b.skill, pts=right ? 10+Math.round(Math.max(0,b.tq-b.ta)*10) : 0;
+    b.q++; b.score+=pts; if(right) b.correct++;
+    if(b.q>=b.nq) b.done=true;
+    ro.q=b.q; ro.score=b.score; ro.correct=b.correct; if(b.done) ro.done=true;
+    teamPubAs(id,b.name,{type:"prog", q:b.q, score:b.score, correct:b.correct, done:b.done});
+    b.ta=1.5+Math.random()*b.tq*0.75; b.next=now+900+b.ta*1000; moved=true;
+  });
+  if(moved) teamProgressChanged();
+  if(!left){ clearInterval(TEAM.botIv); TEAM.botIv=null; }
 }
 /* שליחה לשאר המשחק — בדו־קרב ליריב, בקבוצות לכל החדר */
 function matchSend(obj){
@@ -4798,6 +4933,13 @@ function teamRender(){
   if(r.st!=="wait"){ inn.innerHTML=h+'<div class="tm-wait">👥 המשחק בחדר מתחיל…</div>'; return; }
   if(!r.myTeam){ inn.innerHTML=h+'<div class="tm-wait">⏳ מצטרפים לחדר…</div><button class="btn-ghost" data-tm="leave">ביטול</button>'; return; }
   h+='<div class="tm-teams">'+col("b")+col("r")+'</div>'+need;
+  if(r.host){
+    h+='<div class="tm-set"><span class="tm-sl">מספר שאלות:</span>'+TEAM_NQ.map(function(n){ return '<button class="lvl-chip'+(n===r.nq?" active":"")+'" data-tmnq="'+n+'">'+n+'</button>'; }).join("")+'</div>';
+    h+='<div class="tm-set"><span class="tm-sl">זמן לשאלה:</span>'+TEAM_TQ.map(function(n){ return '<button class="lvl-chip'+(n===r.tq?" active":"")+'" data-tmtq="'+n+'">'+n+' שנ׳</button>'; }).join("")+'</div>';
+    var hasBots=Object.keys(r.bots||{}).length>0;
+    if(nb||nr) h+='<button class="btn-ghost" data-tm="bots">🤖 השלמה בשחקני מחשב</button>';
+    if(hasBots) h+='<button class="btn-ghost" data-tm="nobots">🤖 הסרת שחקני מחשב</button>';
+  }else h+='<div class="tm-lvl">'+r.nq+' שאלות · '+r.tq+' שניות לשאלה</div>';
   h+='<button class="btn-ghost" data-tm="switch">🔄 מעבר ל'+TEAM_NAMES[teamOther(r.myTeam)]+'</button>';
   h+='<button class="btn-main" data-tm="invite">📲 הזמינו חברים לחדר</button>';
   if(r.host) h+='<button class="btn-main" id="tm-start" data-tm="start"'+((nb||nr)?" disabled":"")+'>▶ התחילו את המשחק</button>';
@@ -4831,9 +4973,16 @@ function teamJoinFromInvite(code){
   if(b=$("tm-code")) b.addEventListener("keydown",function(e){ if(e.key==="Enter") teamJoin(this.value); });
   if(b=$("lobby-team")) b.addEventListener("click",function(e){
     var j=e.target.closest&&e.target.closest("[data-tmjoin]"); if(j){ teamJoin(j.getAttribute("data-tmjoin")); return; }
+    var sq=e.target.closest&&e.target.closest("[data-tmnq],[data-tmtq]");
+    if(sq && TEAM.room && TEAM.room.host && TEAM.room.st==="wait"){
+      if(sq.hasAttribute("data-tmnq")) TEAM.room.nq=teamOkNq(sq.getAttribute("data-tmnq"));
+      else TEAM.room.tq=teamOkTq(sq.getAttribute("data-tmtq"),TEAM.room.level);
+      teamTick(); teamRender(); return;
+    }
     var a=e.target.closest&&e.target.closest("[data-tm]"); if(!a||a.disabled) return;
     var k=a.getAttribute("data-tm");
     if(k==="switch") teamSwitch(); else if(k==="invite") teamShareInvite(); else if(k==="start") teamStart(); else if(k==="leave") teamLeave();
+    else if(k==="bots") teamAddBots(); else if(k==="nobots") teamRemoveBots();
   });
 })();
 
@@ -5986,6 +6135,7 @@ function updateSettingsUI(){
   var fu=$("font-up"); if(fu) fu.disabled=settings.font>=140;
   var st=$("sound-toggle"); if(st){ st.textContent=settings.sound?"מופעל":"כבוי"; st.classList.toggle("off",!settings.sound); }
   var lt=$("learn-toggle"); if(lt){ lt.textContent=settings.learn?"מופעל":"כבוי"; lt.classList.toggle("off",!settings.learn); }
+  [["contrast-toggle","hc"],["big-toggle","big"]].forEach(function(p){ var b=$(p[0]); if(b){ var on=!!settings[p[1]]; b.textContent=on?"מופעל":"כבוי"; b.classList.toggle("off",!on); b.setAttribute("aria-pressed",on?"true":"false"); } });
   var fs=$("fs-toggle"); if(fs){ var on=!!(document.fullscreenElement||document.webkitFullscreenElement); fs.textContent=on?"צא":"הגדל"; fs.classList.toggle("off",on); }
   var fb=$("btn-fs"); if(fb){ var on2=!!(document.fullscreenElement||document.webkitFullscreenElement); fb.classList.toggle("on",on2); fb.title=on2?"יציאה ממסך מלא":"מסך מלא"; fb.setAttribute("aria-label",fb.title); }
 }
@@ -6218,7 +6368,7 @@ function renderAdmin(){
       '<div id="adm-t-status" style="font-size:13px;color:var(--muted);text-align:center;min-height:1.2em"></div>'+
     '</div>'+
     '<div class="pf-hr"></div>';
-  body.innerHTML=head+liveHtml+funnelHtml+adminBugsHTML()+adminQsHTML()+failHtml+emailsHtml+inboxHtml+announce+'<div class="adm-sec-title">👤 שחקנים</div><div id="admin-list"></div>';
+  body.innerHTML=head+liveHtml+funnelHtml+adminBugsHTML()+adminQrepHTML()+adminQsHTML()+failHtml+emailsHtml+inboxHtml+announce+'<div class="adm-sec-title">👤 שחקנים</div><div id="admin-list"></div>';
   /* מציגים את ניסיונות הכניסה השגויים */
   if(failIds.length){
     var fb=$("adm-fails");
@@ -7777,7 +7927,8 @@ function renderEndReview(){
     wr.map(function(r){
       return '<div class="rv-item"><div class="rv-q">'+r.q+'</div>'+
         '<div class="rv-a"><span>\u2713</span> <b>'+r.a+'</b></div>'+
-        (r.exp?'<div class="rv-exp">'+r.exp+'</div>':'')+'</div>';
+        (r.exp?'<div class="rv-exp">'+r.exp+'</div>':'')+
+        '<button class="rv-flag" data-qi="'+RUN_LOG.indexOf(r)+'">\ud83d\udea9 יש טעות בשאלה?</button></div>';
     }).join("")+'</details>';
   el.style.display="";
 }
@@ -8123,6 +8274,85 @@ function openRemind(){
   });
   ov.addEventListener("click",function(e){ if(e.target===ov) ov.remove(); });
 }
+/* ══════════ דיווח על טעות בשאלה ══════════
+   השחקן מסמן שאלה בעייתית (ואפשר להוסיף הערה); השרת אוסף לפי השאלה, והמנהל רואה בפאנל "🚩 דיווחים על שאלות". */
+function qrepKey(t){ var h=0; t=String(t||""); for(var i=0;i<t.length;i++){ h=(h*31+t.charCodeAt(i))|0; } return "q"+(h>>>0).toString(36); }
+function qrepDone(t){ try{ return (JSON.parse(localStorage.getItem("tfv_bq_qrep")||"[]")).indexOf(qrepKey(t))>=0; }catch(e){ return false; } }
+function qrepMark(t){ try{ var l=JSON.parse(localStorage.getItem("tfv_bq_qrep")||"[]"); l.push(qrepKey(t)); localStorage.setItem("tfv_bq_qrep",JSON.stringify(l.slice(-300))); }catch(e){} }
+function qrepOpen(q,onClose){
+  if(!q || !q.q){ if(onClose) onClose(); return; }
+  if(qrepDone(q.q)){ toast("כבר דיווחת על השאלה הזאת — תודה!"); if(onClose) onClose(); return; }
+  if(STORE_OFF){ toast("⚠️ אפשר לדווח רק באתר עצמו"); if(onClose) onClose(); return; }
+  var ov=$("qrep-modal"); if(ov) ov.remove();
+  ov=document.createElement("div"); ov.id="qrep-modal";
+  ov.innerHTML='<div class="rm-box" role="dialog" aria-modal="true" aria-labelledby="qr-title"><div class="rm-ico">\ud83d\udea9</div>'+
+    '<div class="rm-title" id="qr-title">יש טעות בשאלה?</div>'+
+    '<div class="qr-q"></div><div class="qr-a"><span>התשובה שסומנה כנכונה:</span> <b class="qr-ans"></b></div>'+
+    '<textarea id="qrep-note" maxlength="300" placeholder="מה לא נכון? (לא חובה)"></textarea>'+
+    '<button class="btn-main" id="qrep-send">שליחה למנהל</button>'+
+    '<button class="btn-ghost" id="qrep-cancel">ביטול</button>'+
+    '<button class="rm-close" id="qrep-x" aria-label="סגירה">\u2715</button></div>';
+  document.body.appendChild(ov);
+  ov.querySelector(".qr-q").textContent=String(q.q).replace(/<[^>]*>/g,"");
+  ov.querySelector(".qr-ans").textContent=String(q.a||"").replace(/<[^>]*>/g,"");
+  var close=function(){ ov.remove(); if(onClose) onClose(); };
+  $("qrep-cancel").addEventListener("click",close); $("qrep-x").addEventListener("click",close);
+  ov.addEventListener("click",function(e){ if(e.target===ov) close(); });
+  $("qrep-send").addEventListener("click",function(){
+    var lg="he"; try{ lg=localStorage.getItem("tfv_bq_lang")||"he"; }catch(e){}
+    this.disabled=true;
+    storeCall({op:"qrep", t:q.q, a:q.a, note:$("qrep-note").value, lang:lg, name:getPlayerName()||""}).then(function(j){
+      if(j && j.ok){ qrepMark(q.q); toast("✅ תודה! הדיווח נשלח למנהל"); }
+      else toast("⚠️ השליחה לא הצליחה — נסו שוב");
+      close();
+    });
+  });
+  setTimeout(function(){ var n=$("qrep-note"); if(n) n.focus(); },50);
+}
+(function(){
+  var b=$("q-flag"); if(!b) return;
+  b.addEventListener("click",function(){
+    var q=questions[qIdx]; if(!q) return;
+    /* במשחק לבד — עוצרים את השעון בזמן הדיווח */
+    var solo=!ONLINE.match && !duelMode, wasPaused=paused;
+    if(solo && !answered) pauseGame();
+    qrepOpen(q,function(){ if(solo && !wasPaused) resumeGame(); });
+  });
+})();
+document.addEventListener("click",function(e){
+  var f=e.target.closest && e.target.closest(".rv-flag"); if(!f) return;
+  var r=RUN_LOG[+f.getAttribute("data-qi")]; if(r) qrepOpen({q:r.q, a:r.a});
+});
+/* פאנל המנהל */
+var ADM_QR=null;
+function adminQrepHTML(){
+  var h='<div class="pf-hr"></div><div class="adm-sec-title">\ud83d\udea9 דיווחים על שאלות</div>';
+  if(!ADM_QR) return h+'<button class="btn-ghost" id="adm-qr-load">\ud83d\udce5 טעינת הדיווחים</button>';
+  if(ADM_QR.busy) return h+'<div class="adm-when" style="text-align:center">⏳ טוען…</div>';
+  if(ADM_QR.err || !ADM_QR.rows) return h+'<div class="adm-when" style="text-align:center">⚠️ לא הצלחנו לטעון</div>';
+  if(!ADM_QR.rows.length) return h+'<div class="adm-when" style="text-align:center">אין דיווחים פתוחים 👍</div><button class="btn-ghost" id="adm-qr-load">\ud83d\udd04 רענון</button>';
+  return h+'<div class="qr-list">'+ADM_QR.rows.map(function(r){
+      var notes=(r.notes||[]).filter(function(n){ return n.note; }).map(function(n){
+        return '<div class="qr-note">'+esc(n.note)+' <small>— '+esc(n.name||"")+(n.lang&&n.lang!=="he"?" ("+esc(n.lang)+")":"")+'</small></div>'; }).join("");
+      return '<div class="qr-row"><span class="qr-t">'+esc(String(r.t||"").replace(/<[^>]*>/g,""))+'</span>'+
+        '<span class="qr-n">✓ '+esc(String(r.a||"").replace(/<[^>]*>/g,""))+' · <span>'+r.n+' דיווחים</span> · '+agoStr(r.ts)+'</span>'+notes+
+        '<button class="btn-ghost" data-qrdel="'+esc(r.h)+'">✓ טופל — הסרה</button></div>';
+    }).join("")+'</div><button class="btn-ghost" id="adm-qr-load">\ud83d\udd04 רענון</button>';
+}
+document.addEventListener("click",function(e){
+  var t=e.target.closest && e.target.closest("#adm-qr-load,[data-qrdel]"); if(!t) return;
+  if(t.id==="adm-qr-load"){
+    ADM_QR={busy:true}; renderAdmin();
+    storeCall({op:"qreps", code:ADMIN.code||""}).then(function(j){ ADM_QR=(j && j.rows) ? j : {err:1}; renderAdmin(); });
+    return;
+  }
+  var h=t.getAttribute("data-qrdel"); t.disabled=true;
+  storeCall({op:"qrep-del", code:ADMIN.code||"", h:h}).then(function(j){
+    if(j && j.ok && ADM_QR && ADM_QR.rows){ ADM_QR.rows=ADM_QR.rows.filter(function(r){ return r.h!==h; }); }
+    renderAdmin();
+  });
+});
+
 /* ══════════ התראות בטלפון (Web Push) ══════════
    ההרשמה נשמרת ב-/api/bq-store (push-sub); השרת שולח פעם ביום (/api/bq-push, Vercel Cron, בערב)
    רק למי שעוד לא עשה את האתגר היומי, ומיד כשחבר עונה על האתגר שלך. באייפון — רק מתוך האפליקציה שהותקנה במסך הבית. */
@@ -8191,6 +8421,86 @@ function pushSync(){
   });
 }
 setTimeout(pushSync, 4000);
+
+/* ══════════ נגישות ══════════ */
+(function(){
+  [["contrast-toggle","hc","🌓 ניגודיות גבוהה הופעלה","ניגודיות רגילה"],["big-toggle","big","👆 כפתורים גדולים הופעלו","כפתורים בגודל רגיל"]].forEach(function(p){
+    var b=$(p[0]); if(!b) return;
+    b.addEventListener("click",function(){ settings[p[1]]=!settings[p[1]]; saveSettings(); applyA11y(); updateSettingsUI(); toast(settings[p[1]]?p[2]:p[3]); });
+  });
+  /* קורא מסך: השאלה, התוצאה וההודעות נקראות בקול כשהן מתחלפות */
+  var x;
+  if(x=$("q-text")){ x.setAttribute("aria-live","polite"); x.setAttribute("aria-atomic","true"); }
+  if(x=$("exp-verdict")){ x.setAttribute("role","status"); x.setAttribute("aria-live","assertive"); }
+  if(x=$("toast")){ x.setAttribute("role","status"); x.setAttribute("aria-live","polite"); }
+  if(x=$("timer-ring")) x.setAttribute("aria-hidden","true");
+  if(x=$("opts")){ x.setAttribute("role","group"); x.setAttribute("aria-label","תשובות"); }
+  applyA11y();
+})();
+
+/* ══════════ משחק בלי אינטרנט ══════════
+   כל מה שהמשחק לבד צריך (הדף, תמונות, קול, מילון השפה, גופנים) נשמר במכשיר דרך ה-service worker.
+   דו־קרב, לוח שיאים ואתגר חבר עדיין צריכים רשת — הם פשוט יחכו לחיבור. */
+var OFFLINE_FILES=["bereshit-quiz","bq.webmanifest","assets/audio/verse-he.mp3",
+  "assets/badge.png","assets/bg-entry.jpg","assets/bg-game.jpg","assets/celebrate.jpg","assets/chest-open.png","assets/chest.png","assets/coin.png",
+  "assets/daily-tablet.jpg","assets/duel-empty.jpg","assets/flame.png","assets/gate.jpg","assets/hero-city.jpg","assets/hero-scroll.jpg",
+  "assets/hourglass.png","assets/icon-180.png","assets/icon-192.png","assets/icon-32.png","assets/icon-512.png","assets/key.png","assets/levelup.png",
+  "assets/lock.png","assets/logo-firstverse-black.png","assets/map-journey.jpg","assets/meet-hall.jpg","assets/perfect.png","assets/pin.png",
+  "assets/podium.png","assets/ribbon.png","assets/sky-quote.jpg","assets/star.png","assets/stone-tablet.jpg","assets/streak7.png","assets/trophy.png",
+  "assets/vs.png","assets/welcome-gate.jpg","assets/wrong-soft.jpg",
+  "https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&family=Heebo:wght@400;500;700;800;900&family=Roboto+Mono:wght@400;500;700&display=swap",
+  "https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"];
+function offlineUrls(){
+  var l=OFFLINE_FILES.slice(), i, lg="he";
+  for(i=1;i<=5;i++) l.push("assets/world-art-"+i+".jpg");
+  for(i=1;i<=8;i++) l.push("assets/avatar-"+i+".png");
+  try{ lg=localStorage.getItem("tfv_bq_lang")||"he"; }catch(e){}
+  if(lg!=="he") l.push("assets/i18n/"+lg+".json?v="+(window.__I18N_V||""));
+  return l;
+}
+function offlineStamp(){ var lg="he"; try{ lg=localStorage.getItem("tfv_bq_lang")||"he"; }catch(e){} return lg+"@"+(window.__I18N_V||""); }
+function offlineSaved(){ try{ return localStorage.getItem("tfv_bq_offline")===offlineStamp(); }catch(e){ return false; } }
+var OFFLINE_BUSY=false;
+function offlineSave(quiet){
+  if(OFFLINE_BUSY) return;
+  if(!("serviceWorker" in navigator) || location.protocol!=="https:"){ if(!quiet) toast("⚠️ הדפדפן הזה לא תומך בשמירה לשימוש בלי אינטרנט"); return; }
+  if(!navigator.onLine){ if(!quiet) toast("📴 צריך חיבור לאינטרנט כדי לשמור"); return; }
+  OFFLINE_BUSY=true;
+  var b=$("btn-offline");
+  navigator.serviceWorker.register("bq-sw.js",{scope:"./bereshit-quiz"}).then(function(){ return navigator.serviceWorker.ready; }).then(function(reg){
+    var sw=reg.active; if(!sw) throw new Error("sw");
+    var onMsg=function(e){
+      var d=e.data||{}; if(d.type!=="warm-progress") return;
+      var pct=Math.round(d.done/Math.max(1,d.total)*100);
+      if(b) b.textContent="📥 שומר… "+pct+"%";
+      if(d.fin){
+        navigator.serviceWorker.removeEventListener("message",onMsg); OFFLINE_BUSY=false;
+        if(d.failed>3){ if(b) b.textContent="📥 שמירה לשימוש בלי אינטרנט"; if(!quiet) toast("⚠️ חלק מהקבצים לא נשמרו — נסו שוב כשהחיבור טוב יותר"); return; }
+        try{ localStorage.setItem("tfv_bq_offline",offlineStamp()); }catch(e){}
+        updateOfflineBtn();
+        if(!quiet) toast("✅ נשמר! עכשיו אפשר לשחק גם בלי אינטרנט");
+      }
+    };
+    navigator.serviceWorker.addEventListener("message",onMsg);
+    sw.postMessage({type:"warm", urls:offlineUrls()});
+  }).catch(function(){ OFFLINE_BUSY=false; if(!quiet) toast("⚠️ השמירה לא הצליחה — נסו שוב"); });
+}
+function updateOfflineBtn(){
+  var b=$("btn-offline"); if(!b || OFFLINE_BUSY) return;
+  b.textContent = offlineSaved() ? "✅ שמור לשימוש בלי אינטרנט" : "📥 שמירה לשימוש בלי אינטרנט";
+}
+(function(){
+  var b=$("btn-offline");
+  if(b){ updateOfflineBtn(); b.addEventListener("click",function(){ offlineSave(false); }); }
+  /* מי שהתקין את החידון במסך הבית — שומרים אוטומטית (לא בחיבור "חסכוני") */
+  setTimeout(function(){
+    var save=navigator.connection && navigator.connection.saveData;
+    if(isStandalone() && !save && !offlineSaved()) offlineSave(true);
+  },8000);
+  window.addEventListener("offline",function(){ toast("📴 אין חיבור לאינטרנט — אפשר להמשיך לשחק לבד"); });
+  window.addEventListener("online",function(){ toast("📶 החיבור חזר"); });
+  if(navigator.onLine===false) setTimeout(function(){ toast("📴 אין חיבור לאינטרנט — אפשר להמשיך לשחק לבד"); },1500);
+})();
 
 /* ══════════ הוספה למסך הבית (PWA) ══════════ */
 var INSTALL_EVT=null;

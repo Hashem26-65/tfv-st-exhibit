@@ -1,19 +1,68 @@
-/* חידון בראשית — service worker מינימלי: מאפשר "הוספה למסך הבית".
-   תמיד מהרשת (כדי שעדכונים יגיעו מיד); רק אם אין רשת — הגרסה האחרונה של הדף מהמטמון. */
-var CACHE = "bq-shell-v1"; /* v2: push */
+/* חידון בראשית — service worker: "הוספה למסך הבית", משחק בלי אינטרנט, והתראות.
+   הדף עצמו: תמיד מהרשת (עדכונים מגיעים מיד), ואם אין רשת — העותק האחרון ששמרנו.
+   תמונות / קול / מילונים / גופנים / ספריית הרשת: מהמטמון אם יש, אחרת מהרשת ונשמרים לפעם הבאה.
+   "שמירה לשימוש בלי אינטרנט": הדף שולח רשימת קבצים (warm) ואנחנו מורידים את כולם מראש. */
+var CACHE = "bq-shell-v2", ASSETS = "bq-assets-v1";
 self.addEventListener("install", function () { self.skipWaiting(); });
-self.addEventListener("activate", function (e) { e.waitUntil(self.clients.claim()); });
+self.addEventListener("activate", function (e) {
+  e.waitUntil(caches.keys().then(function (ks) {
+    return Promise.all(ks.filter(function (k) { return k === "bq-shell-v1"; }).map(function (k) { return caches.delete(k); }));
+  }).then(function () { return self.clients.claim(); }));
+});
+function pageKey(u) { return u.origin + u.pathname; }   /* ?daily=1 / ?ch=… — אותו דף */
+function isAsset(u) {
+  if (u.origin === self.location.origin) return /\/games\/(assets\/|bq\.webmanifest)/.test(u.pathname) && !/\/api\//.test(u.pathname);
+  return /^(fonts\.googleapis\.com|fonts\.gstatic\.com|cdn\.jsdelivr\.net)$/.test(u.hostname);
+}
+function fromNet(req, key) {
+  return fetch(req).then(function (res) {
+    if (res && (res.ok || res.type === "opaque")) { var copy = res.clone(); caches.open(ASSETS).then(function (c) { c.put(key || req, copy); }).catch(function () {}); }
+    return res;
+  });
+}
 self.addEventListener("fetch", function (e) {
-  if (e.request.mode !== "navigate") return;
-  e.respondWith(
-    fetch(e.request).then(function (res) {
-      var copy = res.clone();
-      caches.open(CACHE).then(function (c) { c.put(e.request, copy); }).catch(function () {});
+  var req = e.request; if (req.method !== "GET") return;
+  var u; try { u = new URL(req.url); } catch (err) { return; }
+  if (req.mode === "navigate") {
+    var key = pageKey(u);
+    e.respondWith(fetch(req).then(function (res) {
+      if (res.ok) { var copy = res.clone(); caches.open(CACHE).then(function (c) { c.put(key, copy); }).catch(function () {}); }
       return res;
     }).catch(function () {
-      return caches.match(e.request).then(function (r) { return r || Response.error(); });
-    })
-  );
+      return caches.match(key).then(function (r) { return r || caches.match(req, { ignoreSearch: true }); }).then(function (r) { return r || Response.error(); });
+    }));
+    return;
+  }
+  if (!isAsset(u)) return;
+  e.respondWith(caches.match(req).then(function (hit) { return hit || fromNet(req); }));
+});
+/* הורדה מראש של כל מה שצריך כדי לשחק בלי אינטרנט */
+self.addEventListener("message", function (e) {
+  var d = e.data || {}; if (d.type !== "warm" || !Array.isArray(d.urls)) return;
+  var src = e.source, urls = d.urls.slice(0, 200), done = 0, failed = 0;
+  var tell = function (fin) { try { src && src.postMessage({ type: "warm-progress", done: done, failed: failed, total: urls.length, fin: !!fin }); } catch (err) {} };
+  var one = function (url) {
+    var u = new URL(url, self.registration.scope);
+    var page = u.origin === self.location.origin && /\/games\/bereshit-quiz$/.test(u.pathname);
+    var cacheName = page ? CACHE : ASSETS, key = page ? pageKey(u) : u.href;
+    return caches.open(cacheName).then(function (c) {
+      return c.match(key).then(function (hit) {
+        if (hit && !page) return;
+        return fetch(u.href, { mode: u.origin === self.location.origin ? "same-origin" : "cors", credentials: "omit" }).then(function (res) {
+          if (!res.ok) throw new Error(res.status);
+          var p = c.put(key, res.clone());
+          /* גיליון הגופנים של גוגל — שומרים גם את קובצי הגופן שהוא מפנה אליהם */
+          if (/fonts\.googleapis\.com/.test(u.hostname)) return res.text().then(function (css) {
+            var fonts = (css.match(/url\((https:\/\/fonts\.gstatic\.com[^)]+)\)/g) || []).map(function (x) { return x.slice(4, -1); });
+            return Promise.all([p].concat(fonts.map(function (f) { return c.match(f).then(function (h) { return h || fetch(f, { mode: "cors" }).then(function (r) { if (r.ok) return c.put(f, r); }); }); })));
+          });
+          return p;
+        });
+      });
+    }).then(function () { done++; tell(); }, function () { failed++; done++; tell(); });
+  };
+  var q = urls.slice(), run = function () { return q.length ? one(q.shift()).then(run) : null; };
+  e.waitUntil(Promise.all([run(), run(), run(), run()]).then(function () { tell(true); }));
 });
 
 /* התראות בטלפון: האתגר היומי, וחבר שענה על האתגר שלך (נשלחות מ-/api/bq-push ומ-/api/bq-store) */
