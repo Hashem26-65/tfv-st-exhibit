@@ -1592,6 +1592,15 @@ body.daily-bg{background:linear-gradient(rgba(235,232,220,.35),rgba(235,232,220,
 #tm-start:disabled{opacity:.45;cursor:default}
 #end-stats .tm-teams{margin:8px auto 4px;max-width:440px;text-align:right}
 .tm-mvp{font-size:14px;color:#46566e;margin-top:4px}
+.tm-emb{width:30px;height:30px;object-fit:contain;vertical-align:middle;margin-inline-end:5px;flex:none}
+.tm-emb.s{width:20px;height:20px;margin:0 2px}
+.tm-col>b{display:flex;align-items:center;justify-content:center;gap:2px}
+.tm-av{width:22px;height:22px;border-radius:50%;object-fit:cover;flex:none;margin-inline-end:6px;border:1px solid rgba(40,55,78,.15)}
+.tm-row{align-items:center}
+.tm-row .tm-n{flex:1;min-width:0}
+.tm-sw{display:flex;align-items:center;justify-content:center;gap:6px}
+#bot-card-0 .bot-name,#bot-card-1 .bot-name{display:flex;align-items:center;gap:4px}
+#hud-score .tm-emb{width:15px;height:15px;margin:0}
 .tm-set{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px}
 .tm-set .tm-sl{font-size:14px;font-weight:700;color:#1e3153;margin-inline-end:4px}
 .tm-set .lvl-chip{padding:4px 12px !important;font-size:14px !important}
@@ -2228,7 +2237,7 @@ var LANGS=[
   {c:"de",n:"Deutsch",h:"גרמנית"},
   {c:"pt",n:"Português",h:"פורטוגזית"}
 ];
-var I18N_V=window.__I18N_V="12"; /* להעלות בכל עדכון של קבצי המילון, כדי שהדפדפן לא ישתמש בגרסה ישנה */
+var I18N_V=window.__I18N_V="13"; /* להעלות בכל עדכון של קבצי המילון, כדי שהדפדפן לא ישתמש בגרסה ישנה */
 var KEY="tfv_bq_lang";
 function getLang(){ try{ return localStorage.getItem(KEY); }catch(e){ return null; } }
 function langInfo(c){ for(var i=0;i<LANGS.length;i++) if(LANGS[i].c===c) return LANGS[i]; return LANGS[0]; }
@@ -4588,7 +4597,11 @@ function teamPubAs(id,name,obj){
   obj.id=id; obj.name=name;
   try{ ONLINE.client.publish(teamTopic(r.code), JSON.stringify(obj)); }catch(e){}
 }
-var TEAM_NAMES={b:"🔵 כחולים", r:"🔴 אדומים"};
+var TEAM_TXT={b:"כחולים", r:"אדומים"}, TEAM_IMG={b:"assets/team-blue.webp", r:"assets/team-red.webp"};
+/* סמל הקבוצה + שם (השם בתוך span נפרד — כך שכבת התרגום מתרגמת אותו) */
+function teamEmb(k,cls){ return '<img class="tm-emb'+(cls?" "+cls:"")+'" src="'+TEAM_IMG[k]+'" alt="">'; }
+function teamLabel(k,txt){ return teamEmb(k)+'<span class="tm-tl">'+txt+'</span>'; }
+function teamAvatar(x){ return '<img class="tm-av" src="'+(x.bot?"assets/avatar-bot.webp":avatarFor(x.id))+'" alt="">'; }
 function teamTopic(c){ return MQ_ROOT+"/room/"+c; }
 function teamNewCode(){ var A="ABCDEFGHJKMNPQRSTUVWXYZ23456789", s=""; for(var i=0;i<5;i++) s+=A[Math.floor(Math.random()*A.length)]; return s; }
 function teamPub(obj){
@@ -4686,7 +4699,7 @@ function teamOnRoom(m){
   if(m.type==="hb"){
     if(m.team!=="b" && m.team!=="r") return;
     var x=r.members[m.id]=r.members[m.id]||{};
-    x.name=nm; x.team=m.team; x.ts=now;
+    x.name=nm; x.team=m.team; x.ts=now; if(m.bot) x.bot=1;
     if(m.isHost){ if(!r.hostId) r.hostId=m.id; if(r.hostId===m.id){ r.hostTs=now; if(!r.host){ r.level=+m.lvl||0; r.nq=teamOkNq(m.nq); r.tq=teamOkTq(m.tq,r.level); } } }
     if(r.roster && r.roster[m.id] && m.st==="play"){ var y=r.roster[m.id]; y.q=+m.q||0; y.score=+m.score||0; y.correct=+m.correct||0; if(m.done) y.done=true; y.gone=false; teamProgressChanged(); }
     else if(r.st==="wait") teamRender();
@@ -4775,7 +4788,7 @@ function teamAddBots(){
   var now=Date.now();
   ["b","r"].forEach(function(t){
     while(teamList(t).length<TEAM_MIN){
-      var id="bot"+Math.random().toString(36).slice(2,9), name="🤖 מחשב "+(++BOT_N);
+      var id="bot"+Math.random().toString(36).slice(2,9), name="מחשב "+(++BOT_N);
       r.bots[id]={name:name, team:t, skill:0.45+Math.random()*0.35};
       r.members[id]={name:name, team:t, ts:now, bot:1};
     }
@@ -4837,15 +4850,15 @@ function matchSend(obj){
 }
 /* ── במשחק: כרטיסי הקבוצות, המונה, והמתנה לסיום ── */
 function teamHudHTML(){
-  var t=(TEAM.room&&TEAM.room.myTeam)||"b", o=teamOther(t), ic={b:"🔵",r:"🔴"};
-  return ic[t]+' <span id="duel-score-0">0</span> : <span id="duel-score-1">0</span> '+ic[o];
+  var t=(TEAM.room&&TEAM.room.myTeam)||"b", o=teamOther(t);
+  return teamEmb(t,"s")+' <span id="duel-score-0">0</span> : <span id="duel-score-1">0</span> '+teamEmb(o,"s");
 }
 function teamCards(){
   var r=TEAM.room; if(!r) return;
   var t=r.myTeam||"b", o=teamOther(t);
   var dn=function(k){ var l=teamList(k), n=0; l.forEach(function(x){ if(x.done||(x.id===ONLINE.id&&ONLINE.match&&ONLINE.match.myDone)) n++; }); return n+"/"+l.length; };
-  document.querySelector("#bot-card-0 .bot-name").textContent=TEAM_NAMES[t]+" (הקבוצה שלך) · ממוצע "+teamAvg(t);
-  document.querySelector("#bot-card-1 .bot-name").textContent=TEAM_NAMES[o]+" · ממוצע "+teamAvg(o);
+  document.querySelector("#bot-card-0 .bot-name").innerHTML=teamLabel(t,TEAM_TXT[t]+" (הקבוצה שלך) · ממוצע "+teamAvg(t));
+  document.querySelector("#bot-card-1 .bot-name").innerHTML=teamLabel(o,TEAM_TXT[o]+" · ממוצע "+teamAvg(o));
   $("bot-card-0").classList.add("turn"); $("bot-card-1").classList.remove("turn");
   $("bot-status-1").innerHTML="סיימו "+dn(o);
 }
@@ -4879,13 +4892,13 @@ function teamShowFinal(partial){
   /* הפרש קטן מנקודה — מציגים ספרה אחרי הנקודה, כדי שלא ייראה כמו תיקו */
   var fm=function(v){ return (Math.round(A)===Math.round(B) && A!==B) ? v.toFixed(1) : String(Math.round(v)); };
   $("end-score").textContent=fm(A)+" : "+fm(B);
-  $("end-art").src="assets/podium.png"; $("end-art").style.display="block";
+  $("end-art").src="assets/team-win.webp"; $("end-art").style.display="block";
   var best=null;
   var col=function(k){
     var l=teamList(k).slice().sort(function(a,b){ return teamScoreOf(b)-teamScoreOf(a); });
-    return '<div class="tm-col tm-'+k+'"><b>'+TEAM_NAMES[k]+' · ממוצע '+teamAvg(k)+'</b>'+l.map(function(x){
+    return '<div class="tm-col tm-'+k+'"><b>'+teamLabel(k,TEAM_TXT[k]+' · ממוצע '+teamAvg(k))+'</b>'+l.map(function(x){
       var sc=teamScoreOf(x); if(!best||sc>best.sc) best={n:x.name, sc:sc};
-      return '<div class="tm-row'+(x.id===ONLINE.id?" me":"")+'"><span class="tm-n">'+esc(x.name)+(x.gone&&!x.done?" ❌":"")+'</span><i class="tm-s">'+sc+'</i></div>';
+      return '<div class="tm-row'+(x.id===ONLINE.id?" me":"")+'">'+teamAvatar(x)+'<span class="tm-n">'+esc(x.name)+(x.gone&&!x.done?" ❌":"")+'</span><i class="tm-s">'+sc+'</i></div>';
     }).join("")+'</div>';
   };
   var html='<div class="tm-teams">'+col(t)+col(o)+'</div>';
@@ -4911,7 +4924,7 @@ function teamRenderRooms(){
   if(!l.length){ w.innerHTML='<div class="tm-empty">אין כרגע חדרים פתוחים — פתחו חדר ושלחו לחברים את הקישור</div>'; return; }
   w.innerHTML=l.map(function(x){
     var lv=LEVELS[x.lvl]||LEVELS[0];
-    return '<div class="player-row"><span>🏠 '+esc(x.host)+' · 🔵'+x.b+' 🔴'+x.r+' · '+lv.icon+'</span><button class="p-invite" data-tmjoin="'+x.code+'">הצטרפות</button></div>';
+    return '<div class="player-row"><span>🏠 '+esc(x.host)+' · '+teamEmb("b","s")+x.b+' '+teamEmb("r","s")+x.r+' · '+lv.icon+'</span><button class="p-invite" data-tmjoin="'+x.code+'">הצטרפות</button></div>';
   }).join("");
 }
 function teamRender(){
@@ -4922,9 +4935,9 @@ function teamRender(){
   if(!r){ teamRenderRooms(); return; }
   var lv=LEVELS[r.level]||LEVELS[0];
   var col=function(k){
-    var l=teamList(k), rows=l.map(function(x){ return '<div class="tm-row'+(x.id===ONLINE.id?" me":"")+'"><span class="tm-n">'+esc(x.name)+(x.id===r.hostId?" 👑":"")+'</span></div>'; });
+    var l=teamList(k), rows=l.map(function(x){ return '<div class="tm-row'+(x.id===ONLINE.id?" me":"")+'">'+teamAvatar(x)+'<span class="tm-n">'+esc(x.name)+(x.id===r.hostId?" 👑":"")+'</span></div>'; });
     for(var i=l.length;i<TEAM_MIN;i++) rows.push('<div class="tm-row ph">·</div>');
-    return '<div class="tm-col tm-'+k+'"><b>'+TEAM_NAMES[k]+' ('+l.length+')</b>'+rows.join("")+'</div>';
+    return '<div class="tm-col tm-'+k+'"><b>'+teamLabel(k,TEAM_TXT[k]+' ('+l.length+')')+'</b>'+rows.join("")+'</div>';
   };
   var nb=Math.max(0,TEAM_MIN-teamList("b").length), nr=Math.max(0,TEAM_MIN-teamList("r").length);
   var need = (!nb&&!nr) ? '<div class="tm-need ok">✅ יש מספיק שחקנים — אפשר להתחיל!</div>'
@@ -4940,7 +4953,8 @@ function teamRender(){
     if(nb||nr) h+='<button class="btn-ghost" data-tm="bots">🤖 השלמה בשחקני מחשב</button>';
     if(hasBots) h+='<button class="btn-ghost" data-tm="nobots">🤖 הסרת שחקני מחשב</button>';
   }else h+='<div class="tm-lvl">'+r.nq+' שאלות · '+r.tq+' שניות לשאלה</div>';
-  h+='<button class="btn-ghost" data-tm="switch">🔄 מעבר ל'+TEAM_NAMES[teamOther(r.myTeam)]+'</button>';
+  var _ot=teamOther(r.myTeam);
+  h+='<button class="btn-ghost tm-sw" data-tm="switch">'+teamEmb(_ot,"s")+'<span class="tm-tl">'+(_ot==="b"?"מעבר לקבוצה הכחולה":"מעבר לקבוצה האדומה")+'</span></button>';
   h+='<button class="btn-main" data-tm="invite">📲 הזמינו חברים לחדר</button>';
   if(r.host) h+='<button class="btn-main" id="tm-start" data-tm="start"'+((nb||nr)?" disabled":"")+'>▶ התחילו את המשחק</button>';
   else h+='<div class="tm-wait">⏳ ממתינים שהמארח יתחיל את המשחק…</div>';
@@ -8448,6 +8462,7 @@ var OFFLINE_FILES=["bereshit-quiz","bq.webmanifest","assets/audio/verse-he.mp3",
   "assets/lock.png","assets/logo-firstverse-black.png","assets/map-journey.jpg","assets/meet-hall.jpg","assets/perfect.png","assets/pin.png",
   "assets/podium.png","assets/ribbon.png","assets/sky-quote.jpg","assets/star.png","assets/stone-tablet.jpg","assets/streak7.png","assets/trophy.png",
   "assets/vs.png","assets/welcome-gate.jpg","assets/wrong-soft.jpg",
+  "assets/team-blue.webp","assets/team-red.webp","assets/team-win.webp","assets/avatar-bot.webp","assets/badge-mono.png",
   "https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&family=Heebo:wght@400;500;700;800;900&family=Roboto+Mono:wght@400;500;700&display=swap",
   "https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"];
 function offlineUrls(){

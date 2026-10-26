@@ -70,7 +70,7 @@ self.addEventListener("push", function (e) {
   var d = {};
   try { d = e.data ? e.data.json() : {}; } catch (err) { d = { title: e.data ? e.data.text() : "" }; }
   e.waitUntil(self.registration.showNotification(d.title || "\u05d7\u05d9\u05d3\u05d5\u05df \u05d1\u05e8\u05d0\u05e9\u05d9\u05ea", {
-    body: d.body || "", icon: "assets/icon-192.png", tag: d.tag || "bq", renotify: false,
+    body: d.body || "", icon: "assets/icon-192.png", badge: "assets/badge-mono.png", tag: d.tag || "bq", renotify: false,
     data: { url: d.url || "bereshit-quiz" }
   }));
 });
