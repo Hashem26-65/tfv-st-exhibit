@@ -119,6 +119,10 @@ input.code{font-family:var(--mono);letter-spacing:.35em;text-align:center;font-s
 /* modal */
 #modal,#admin-modal,#name-modal,#settings-modal{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:16px}
 #modal.hidden,#admin-modal.hidden,#name-modal.hidden,#settings-modal.hidden{display:none}
+body.admin-panel{overflow:hidden}
+body.admin-panel #admin-modal{z-index:300;background:#14030c;align-items:flex-start;overflow:auto;padding:10px}
+body.admin-panel #admin-modal .box{max-width:920px;width:100%;max-height:none}
+body.admin-panel #btn-admin-close{display:none}
 /* popups (modal + toast): TFV bordeaux + gold, the rest of the UI stays Matrix-neon */
 #modal .box,#admin-modal .box,#name-modal .box,#settings-modal .box{background:linear-gradient(180deg,#6a1340,#2c0518);border:2px solid #e6c266;border-radius:22px;padding:24px 26px;max-width:460px;width:100%;text-align:center;
   box-shadow:0 0 40px rgba(230,194,102,.28),0 12px 40px rgba(0,0,0,.7);animation:pop .2s ease-out}
@@ -298,7 +302,6 @@ body.narrow #topbar{padding:6px 8px}
   <div class="set-row"><span class="set-lbl">🔊 צליל</span><button class="btn sm" id="set-sound">פועל</button></div>
   <div class="set-row"><span class="set-lbl">🔍 גודל מסך</span><div class="set-zoom"><button class="btn sm" id="zoom-down" title="הקטן">A−</button><b id="zoom-val">100%</b><button class="btn sm" id="zoom-up" title="הגדל">A+</button></div></div>
   <div class="btns"><button class="btn main" id="btn-settings-close">סגור</button></div>
-  <button id="btn-admin" title="מנהלים" aria-label="מנהלים">🔑</button>
 </div></div>
 <div id="admin-modal" class="hidden"><div class="box"><h2 class="glow">🔑 מנהלים</h2><div id="admin-body"></div><div class="btns"><button class="btn ghost" id="btn-admin-close">סגור</button></div></div></div>
 <div id="name-modal" class="hidden"><div class="box">
@@ -1451,6 +1454,8 @@ addEventListener("beforeunload",function(){ if(M&&M.mode==="online"&&!M.over) se
    can rename (a retained admin/<PID> command reaches the player) or delete. */
 var PID=(function(){ try{ var p=localStorage.getItem("tfv_mx_pid"); if(!p){ p="u"+Math.random().toString(36).slice(2,10); localStorage.setItem("tfv_mx_pid",p); } return p; }catch(e){ return "u"+Math.random().toString(36).slice(2,10); } })();
 var LOG={client:null,connected:false,queue:[]},VISITS={},ADMIN={authed:false};
+/* מסך ניהול: רק כשהדף נטען בתוך דף הניהול המרכזי (/admin) של אותו אתר */
+var MX_PANEL=(function(){ try{ return /[?&]panel=admin\b/.test(location.search) && window.parent!==window && window.parent.location.origin===location.origin; }catch(e){ return false; } })();
 var STATS=(function(){ try{ return JSON.parse(localStorage.getItem("tfv_mx_stats")||"{}"); }catch(e){ return {}; } })();
 function saveStats(){ try{ localStorage.setItem("tfv_mx_stats",JSON.stringify(STATS)); }catch(e){} }
 function displayName(){ return (SET.name||"").trim()||"אנונימי"; }
@@ -1540,6 +1545,7 @@ document.addEventListener("keydown",function(e){ if(e.target && e.target.id==="m
 
 /* bump=true on page load (visit counter +1); otherwise just refresh name/stats */
 function visitPublish(bump){
+  if(MX_PANEL) return;   /* מנהל שצופה לא נספר כשחקן */
   var v; try{ v=JSON.parse(localStorage.getItem("tfv_mx_visit")||"{}"); }catch(e){ v={}; }
   if(bump){ v.count=(v.count||0)+1; v.last=Date.now(); }
   v.first=v.first||Date.now(); v.count=v.count||1; v.last=v.last||Date.now();
@@ -1599,7 +1605,17 @@ function statsText(st){
 }
 function fmtWhen(ts){ if(!ts) return ""; var d=new Date(ts); return d.toLocaleDateString("he-IL")+" "+d.toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit"}); }
 function openAdmin(){ $("admin-modal").classList.remove("hidden"); renderAdmin(); }
-function closeAdmin(){ $("admin-modal").classList.add("hidden"); ADMIN.authed=false; }
+function closeAdmin(){ if(MX_PANEL) return; $("admin-modal").classList.add("hidden"); ADMIN.authed=false; }
+function mxPanelStart(){
+  document.body.classList.add("admin-panel");
+  openAdmin();
+  window.addEventListener("message",function(e){
+    if(e.source!==window.parent || e.origin!==location.origin) return;
+    var d=e.data||{};
+    if(d.type==="tfv-admin-code" && !ADMIN.authed){ var el=$("admin-code"); if(el && d.code){ el.value=String(d.code); tryAdminCode(); } }
+  });
+  try{ window.parent.postMessage({type:"tfv-admin-ready", site:"matrix"}, location.origin); }catch(e){}
+}
 function renderAdmin(){
   if($("admin-modal").classList.contains("hidden")) return;
   var body=$("admin-body");
@@ -1683,7 +1699,7 @@ function tryAdminCode(){
       else { $("admin-err").textContent="קוד שגוי"; el.value=""; el.focus(); SFX.error(); }
     });
 }
-$("btn-admin").addEventListener("click",function(){ SFX.click(); closeSettings(); openAdmin(); });
+/* מסך הניהול נפתח רק מתוך דף הניהול המרכזי (/admin) — ראו mxPanelStart */
 $("btn-admin-close").addEventListener("click",closeAdmin);
 $("admin-modal").addEventListener("click",function(e){ if(e.target===this) closeAdmin(); });
 /* first entry: ask for a name (like the quiz) so the visits log is readable */
@@ -1731,6 +1747,7 @@ $("btn-email-save").addEventListener("click",function(){ finishEmailOnly(true); 
 $("btn-email-skip").addEventListener("click",function(){ finishEmailOnly(false); });
 $("email-only").addEventListener("keydown",function(e){ if(e.key==="Enter") finishEmailOnly(true); });
 function askNameOnce(){
+  if(MX_PANEL) return;
   var asked=false; try{ asked=!!localStorage.getItem("tfv_mx_named"); }catch(e){}
   if(!asked&&!SET.name){ openNameModal(); return; }
   if(!SET.email&&!SET.emailAsked){ openEmailModal(); return; }
@@ -1741,6 +1758,7 @@ function askNameOnce(){
 (function(){
   var q={}; location.search.slice(1).split("&").forEach(function(kv){ var p=kv.split("="); if(p[0]) q[decodeURIComponent(p[0])]=decodeURIComponent(p[1]||""); });
   assetsReady.then(function(){
+    if(MX_PANEL){ mxPanelStart(); return; }
     if(!q.room) askNameOnce(); else visitPublish(true);
     if(q.g&&GAMES[q.g]){ openSetup(q.g); if(q.room){ setMode("online"); setTimeout(function(){ $("room-code").value=q.room; joinRoom(q.room); },600); } }
     /* the deep link is a one-shot entry point: drop it from the URL so a refresh lands on the home screen */

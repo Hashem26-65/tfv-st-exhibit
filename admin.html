@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>ניהול האתרים · TFV</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@700;900&family=Heebo:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="/games/assets/icon-32.png">
+<style>
+:root{--bg:#f4f6fa;--card:#fff;--ink:#1b2a44;--dim:#5b6a80;--line:rgba(27,42,68,.1);--blue:#2f6cc2;--blue2:#4a9fe8;--gold:#c99a2e;--red:#c04a56;--green:#2f8a4f;--shadow:0 6px 22px rgba(27,42,68,.08)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0f1622;--card:#172133;--ink:#e8eef8;--dim:#9fb0c8;--line:rgba(232,238,248,.1);--shadow:0 6px 22px rgba(0,0,0,.35)}}
+:root[data-theme="dark"]{--bg:#0f1622;--card:#172133;--ink:#e8eef8;--dim:#9fb0c8;--line:rgba(232,238,248,.1);--shadow:0 6px 22px rgba(0,0,0,.35)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Heebo,system-ui,sans-serif}
+a{color:var(--blue2)}
+header{display:flex;align-items:center;gap:12px;padding:14px 16px;max-width:1180px;margin:0 auto}
+header h1{font-family:"Frank Ruhl Libre",serif;font-weight:900;font-size:clamp(22px,4vw,30px);margin:0;flex:1}
+header h1 small{display:block;font-family:Heebo;font-weight:500;font-size:13px;color:var(--dim)}
+.logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#1e3153,#2f6cc2);display:grid;place-items:center;font-size:22px;box-shadow:var(--shadow)}
+.btn{border:none;border-radius:12px;padding:10px 16px;font:inherit;font-weight:700;cursor:pointer;background:linear-gradient(180deg,var(--blue2),var(--blue));color:#fff}
+.btn.ghost{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.btn:disabled{opacity:.5;cursor:default}
+main{max-width:1180px;margin:0 auto;padding:0 16px 30px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:18px}
+/* כניסה */
+#login{max-width:400px;margin:8vh auto 0;text-align:center;display:flex;flex-direction:column;gap:12px}
+#login h2{margin:0;font-family:"Frank Ruhl Libre",serif;font-size:24px}
+#login p{margin:0;color:var(--dim);font-size:14px}
+#code{font:inherit;font-size:24px;letter-spacing:.3em;text-align:center;padding:10px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);direction:ltr}
+#err{min-height:1.3em;color:var(--red);font-size:14px}
+/* לשוניות */
+nav{display:flex;gap:6px;overflow-x:auto;padding:4px;background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:14px;scrollbar-width:none}
+nav button{flex:none;border:none;background:none;color:var(--dim);font:inherit;font-weight:700;padding:9px 14px;border-radius:10px;cursor:pointer;white-space:nowrap}
+nav button.on{background:var(--bg);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.tab{display:none}.tab.on{display:block}
+/* סקירה */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:var(--shadow)}
+.stat b{display:block;font-size:28px;font-weight:800;font-variant-numeric:tabular-nums}
+.stat span{color:var(--dim);font-size:13.5px}
+.sec-t{font-weight:800;font-size:17px;margin:18px 2px 10px}
+.sites{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.site{display:flex;flex-direction:column;gap:8px}
+.site h3{margin:0;font-size:17px;display:flex;align-items:center;gap:8px}
+.site h3 img{width:30px;height:30px;border-radius:8px;object-fit:cover}
+.site p{margin:0;color:var(--dim);font-size:13.5px;flex:1}
+.site .row{display:flex;gap:8px;flex-wrap:wrap}
+.site .row .btn{padding:8px 12px;font-size:14px}
+/* מסגרות הניהול */
+.frame-note{color:var(--dim);font-size:13.5px;margin:0 2px 8px}
+iframe.panel{width:100%;height:calc(100vh - 190px);min-height:520px;border:1px solid var(--line);border-radius:16px;background:var(--card);box-shadow:var(--shadow)}
+/* קישורים */
+.links{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.lk{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.lk:last-child{border-bottom:none}
+.lk span{flex:1;min-width:0}
+.lk code{direction:ltr;font-size:12.5px;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:48%}
+.lk button{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:4px 9px;font:inherit;font-size:12.5px;cursor:pointer}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1b2a44;color:#fff;padding:9px 16px;border-radius:12px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+@media (max-width:600px){ iframe.panel{height:calc(100vh - 170px)} header{padding:12px} }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">🔑</div>
+  <h1>ניהול האתרים<small>מקום אחד לכל האתרים והמשחקים של הפסוק הראשון</small></h1>
+  <button class="btn ghost" id="logout" hidden>יציאה</button>
+</header>
+<main>
+  <!-- כניסה -->
+  <section id="login" class="card">
+    <h2>כניסת מנהלים</h2>
+    <p>הקוד נבדק בשרת — הוא לא כתוב בדף.</p>
+    <input id="code" type="password" inputmode="numeric" autocomplete="off" maxlength="12" aria-label="קוד מנהלים">
+    <button class="btn" id="go">כניסה</button>
+    <div id="err" role="status"></div>
+  </section>
+
+  <!-- אחרי כניסה -->
+  <section id="app" hidden>
+    <nav id="tabs">
+      <button data-tab="overview" class="on">📊 סקירה</button>
+      <button data-tab="quiz">📖 חידון בראשית</button>
+      <button data-tab="matrix">♟️ משחקי לוח</button>
+      <button data-tab="basewar">🪖 מלחמת הבסיסים</button>
+      <button data-tab="links">🔗 קישורים</button>
+    </nav>
+
+    <div class="tab on" id="t-overview">
+      <div class="stats" id="stats">
+        <div class="stat"><b id="s-players">—</b><span>שחקנים רשומים בחידון</span></div>
+        <div class="stat"><b id="s-today">—</b><span>נכנסו ב-24 השעות האחרונות</span></div>
+        <div class="stat"><b id="s-week">—</b><span>נכנסו השבוע</span></div>
+        <div class="stat"><b id="s-scores">—</b><span>בטבלת המובילים</span></div>
+        <div class="stat"><b id="s-push">—</b><span>הפעילו התראות בטלפון</span></div>
+        <div class="stat"><b id="s-qrep">—</b><span>דיווחים פתוחים על שאלות</span></div>
+      </div>
+      <div class="sec-t">האתרים</div>
+      <div class="sites">
+        <div class="card site"><h3><img src="/games/assets/icon-192.png" alt="">חידון בראשית</h3><p>שחקנים, הודעות, דיווחים על שאלות, השאלות הקשות, אימיילים מוצפנים.</p>
+          <div class="row"><button class="btn" data-open="quiz">פתח ניהול</button><a class="btn ghost" href="/quiz" target="_blank" rel="noopener">לאתר ↗</a></div></div>
+        <div class="card site"><h3><img src="/games/assets/matrix/chess-g-n.webp" alt="">משחקי לוח</h3><p>שחמט, שש־בש ודמקה — שחקנים, שינוי שמות, אימיילים מוצפנים.</p>
+          <div class="row"><button class="btn" data-open="matrix">פתח ניהול</button><a class="btn ghost" href="/board-games" target="_blank" rel="noopener">לאתר ↗</a></div></div>
+        <div class="card site"><h3><span style="font-size:24px">🪖</span>מלחמת הבסיסים</h3><p>שחקנים מחוברים, שלבים וכסף התחלתי. נכנסים עם הקוד של המשחק הזה.</p>
+          <div class="row"><button class="btn" data-open="basewar">פתח ניהול</button><a class="btn ghost" href="https://base-war-site.vercel.app" target="_blank" rel="noopener">לאתר ↗</a></div></div>
+        <div class="card site"><h3><span style="font-size:24px">🏛️</span>אתר התערוכה</h3><p>דף הבית של הפסוק הראשון ועמוד כל המשחקים.</p>
+          <div class="row"><a class="btn ghost" href="/" target="_blank" rel="noopener">לאתר ↗</a><a class="btn ghost" href="/games" target="_blank" rel="noopener">כל המשחקים ↗</a></div></div>
+        <div class="card site"><h3><span style="font-size:24px">🛒</span>חנות הקרדיטים</h3><p>מחירון מנויים והקדשות (גרסת הדגמה).</p>
+          <div class="row"><a class="btn ghost" href="https://tfv-credit-store.vercel.app" target="_blank" rel="noopener">לאתר ↗</a></div></div>
+        <div class="card site"><h3><span style="font-size:24px">✉️</span>שליחת המיילים של החידון</h3><p>השירות ששולח מיילים לשחקני החידון.</p>
+          <div class="row"><a class="btn ghost" href="https://tfv-quiz-mailer.vercel.app" target="_blank" rel="noopener">לאתר ↗</a></div></div>
+      </div>
+    </div>
+
+    <div class="tab" id="t-quiz"><p class="frame-note">מסך הניהול של חידון בראשית — נכנסים אוטומטית עם הקוד שלך.</p><iframe class="panel" data-src="/games/bereshit-quiz?panel=admin" title="ניהול חידון בראשית"></iframe></div>
+    <div class="tab" id="t-matrix"><p class="frame-note">מסך הניהול של משחקי הלוח — נכנסים אוטומטית עם הקוד שלך.</p><iframe class="panel" data-src="/games/matrix-games?panel=admin" title="ניהול משחקי הלוח"></iframe></div>
+    <div class="tab" id="t-basewar"><p class="frame-note">למלחמת הבסיסים יש קוד מנהלים משלה — הקלידו אותו כאן למטה.</p><iframe class="panel" data-src="https://base-war-site.vercel.app/?panel=admin" title="ניהול מלחמת הבסיסים"></iframe></div>
+
+    <div class="tab" id="t-links">
+      <div class="links">
+        <div class="card"><div class="sec-t" style="margin-top:0">קישורים קצרים — חידון בראשית</div><div id="lk-quiz"></div></div>
+        <div class="card"><div class="sec-t" style="margin-top:0">קישורים קצרים — משחקים</div><div id="lk-games"></div></div>
+        <div class="card"><div class="sec-t" style="margin-top:0">כלים</div>
+          <div class="lk"><span>Vercel — האתר הראשי (העלאות, הגדרות, משתנים)</span><a href="https://vercel.com/daniel-9725s-projects/tfv-st-exhibit" target="_blank" rel="noopener">פתח ↗</a></div>
+          <div class="lk"><span>Vercel — כל הפרויקטים</span><a href="https://vercel.com/daniel-9725s-projects" target="_blank" rel="noopener">פתח ↗</a></div>
+          <div class="lk"><span>GitHub — גיבוי הקוד של האתר</span><a href="https://github.com/Hashem26-65/tfv-st-exhibit" target="_blank" rel="noopener">פתח ↗</a></div>
+          <div class="lk"><span>Upstash — מסד הנתונים</span><a href="https://console.upstash.com/" target="_blank" rel="noopener">פתח ↗</a></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast"></div>
+<script>
+(function(){
+var $=function(id){ return document.getElementById(id); };
+var CODE="", FAILK="tfv_admin_dash_fails";
+var SITE="https://tfv-st-exhibit.vercel.app";
+function toast(t){ var e=$("toast"); e.textContent=t; e.classList.add("show"); clearTimeout(toast._t); toast._t=setTimeout(function(){ e.classList.remove("show"); },2200); }
+function ls(k,v){ try{ if(v===undefined) return localStorage.getItem(k); if(v===null) localStorage.removeItem(k); else localStorage.setItem(k,v); }catch(e){ return null; } }
+function ss(k,v){ try{ if(v===undefined) return sessionStorage.getItem(k); if(v===null) sessionStorage.removeItem(k); else sessionStorage.setItem(k,v); }catch(e){ return null; } }
+function check(code){
+  return fetch("/api/bq-admin",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({code:code})})
+    .then(function(r){ return r.json(); }).then(function(j){ return !!(j && j.ok); }).catch(function(){ return false; });
+}
+/* 5 קודים שגויים — נעילה ל-15 דקות במכשיר הזה (והשרת ממילא מאט כל ניסיון שגוי) */
+function lockedFor(){ var f={}; try{ f=JSON.parse(ls(FAILK)||"{}"); }catch(e){} return Math.max(0,(f.until||0)-Date.now()); }
+function fail(){ var f={}; try{ f=JSON.parse(ls(FAILK)||"{}"); }catch(e){} f.n=(f.n||0)+1; if(f.n>=5){ f.until=Date.now()+15*60000; f.n=0; } ls(FAILK,JSON.stringify(f)); return f; }
+function tryLogin(){
+  var el=$("code"), code=el.value.trim(); if(!code) return;
+  var lk=lockedFor(); if(lk){ $("err").textContent="יותר מדי ניסיונות — נסו שוב בעוד "+Math.ceil(lk/60000)+" דקות"; return; }
+  $("go").disabled=true; $("err").textContent="⏳ בודק…";
+  check(code).then(function(ok){
+    $("go").disabled=false;
+    if(ok){ ls(FAILK,null); enter(code); return; }
+    var f=fail(); el.value=""; el.focus();
+    $("err").textContent = f.until ? "5 קודים שגויים — נעול ל-15 דקות" : "קוד שגוי";
+  });
+}
+function enter(code){
+  CODE=code; ss("tfv_admin_dash",code);
+  $("login").hidden=true; $("app").hidden=false; $("logout").hidden=false;
+  loadStats();
+}
+function logout(){
+  CODE=""; ss("tfv_admin_dash",null);
+  document.querySelectorAll("iframe.panel").forEach(function(f){ f.removeAttribute("src"); f._loaded=false; });
+  $("app").hidden=true; $("login").hidden=false; $("logout").hidden=true; $("code").value=""; $("err").textContent="";
+  setTimeout(function(){ $("code").focus(); },50);
+}
+function loadStats(){
+  fetch("/api/bq-store",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({op:"admin-stats",code:CODE})})
+    .then(function(r){ return r.json(); }).then(function(j){
+      if(!j || j.error) return;
+      [["s-players","players"],["s-today","today"],["s-week","week"],["s-scores","scores"],["s-push","push"],["s-qrep","qreports"]].forEach(function(p){
+        var v=j[p[1]]; $(p[0]).textContent = (typeof v==="number") ? v.toLocaleString("he-IL") : "—"; });
+    }).catch(function(){});
+}
+/* לשוניות; מסך ניהול נטען רק כשפותחים אותו */
+function show(tab){
+  document.querySelectorAll("#tabs button").forEach(function(b){ b.classList.toggle("on", b.getAttribute("data-tab")===tab); });
+  document.querySelectorAll(".tab").forEach(function(t){ t.classList.toggle("on", t.id==="t-"+tab); });
+  var f=document.querySelector("#t-"+tab+" iframe.panel");
+  if(f && !f._loaded){ f._loaded=true; f.src=f.getAttribute("data-src"); }
+  if(tab==="overview") loadStats();
+  try{ history.replaceState(null,"","#"+tab); }catch(e){}
+}
+/* המשחק בתוך המסגרת מודיע שהוא מוכן — שולחים לו את הקוד (רק למסגרות מהאתר הזה) */
+window.addEventListener("message",function(e){
+  var d=e.data||{}; if(d.type!=="tfv-admin-ready" || e.origin!==location.origin || !CODE) return;
+  var ok=[].some.call(document.querySelectorAll("iframe.panel"),function(f){ return f.contentWindow===e.source; });
+  if(ok) e.source.postMessage({type:"tfv-admin-code", code:CODE}, location.origin);
+});
+/* קישורים קצרים */
+var QL=[["דו־קרב","duel"],["קבוצות (5 נגד 5)","teams"],["דו־קרב נגד המחשב","computer"],["האתגר היומי","daily"],["מסע בראשית","journey"],["אתגר חבר","challenge"],["טבלת מובילים","leaderboard"],["פגישות","meet"],["הוראות המשחק","howto"],["הגדרות","settings"],["תזכורת והתראות","remind"],["החידון","quiz"]];
+var GL=[["כל המשחקים","games"],["שחמט","chess"],["שש־בש","backgammon"],["דמקה","checkers"],["משחקי לוח","board-games"],["הגנת התיבה","ark"],["זיכרון גימטרי","memory"],["מרוץ הפסוקים","race"],["נחש הגימטריה","snake"],["בלוני הגימטריה","balloons"],["תפוס את הנכון","catch"],["מגן הפסוקים","verse-defender"],["מטווח הגימטריה","gematria-range"],["מסוק הפסוקים","helicopter"],["חבר זוגות","pairs"],["חידון בזק","blitz"],["סדר עולה","sort"],["מגדל האלפים","tower"],["בנה את הפסוק","verse-builder"],["הכה את הערך","whack"]];
+function renderLinks(list,id){
+  $(id).innerHTML=list.map(function(x){ var u=SITE+"/"+x[1];
+    return '<div class="lk"><span>'+x[0]+'</span><code>/'+x[1]+'</code><button data-copy="'+u+'">העתק</button><a href="'+u+'" target="_blank" rel="noopener">↗</a></div>'; }).join("");
+}
+renderLinks(QL,"lk-quiz"); renderLinks(GL,"lk-games");
+document.addEventListener("click",function(e){
+  var c=e.target.closest("[data-copy]"); if(c){ var u=c.getAttribute("data-copy");
+    (navigator.clipboard ? navigator.clipboard.writeText(u) : Promise.reject()).then(function(){ toast("✅ הקישור הועתק"); },function(){ prompt("העתיקו את הקישור:",u); }); return; }
+  var t=e.target.closest("#tabs button"); if(t){ show(t.getAttribute("data-tab")); return; }
+  var o=e.target.closest("[data-open]"); if(o){ show(o.getAttribute("data-open")); window.scrollTo(0,0); }
+});
+$("go").addEventListener("click",tryLogin);
+$("code").addEventListener("keydown",function(e){ if(e.key==="Enter") tryLogin(); });
+$("logout").addEventListener("click",logout);
+/* רענון באותה לשונית — הקוד נשמר רק לחלון הזה, ונבדק שוב בשרת */
+var saved=ss("tfv_admin_dash");
+if(saved){ check(saved).then(function(ok){ if(ok){ enter(saved); var h=(location.hash||"").slice(1); if(/^(overview|quiz|matrix|basewar|links)$/.test(h)) show(h); } else { ss("tfv_admin_dash",null); $("code").focus(); } }); }
+else setTimeout(function(){ $("code").focus(); },50);
+})();
+</script>
+</body>
+</html>

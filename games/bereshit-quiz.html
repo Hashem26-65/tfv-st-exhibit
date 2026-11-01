@@ -1601,6 +1601,10 @@ body.daily-bg{background:linear-gradient(rgba(235,232,220,.35),rgba(235,232,220,
 .bd-btn img{width:46px;height:46px;border-radius:50%}
 .bd-btn b{font-size:15px}
 .bd-btn:hover{border-color:#4a9fe8;background:#eef5fd}
+body.admin-panel{overflow:hidden}
+body.admin-panel #admin-modal{position:fixed;inset:0;z-index:300;background:#f4f7fb !important;backdrop-filter:none !important;display:block !important;overflow:auto;padding:10px}
+body.admin-panel #admin-modal .settings-box{width:100% !important;max-width:920px;margin:0 auto;max-height:none !important;box-shadow:none}
+body.admin-panel #btn-admin-close{display:none !important}
 .tm-emb{width:30px;height:30px;object-fit:contain;vertical-align:middle;margin-inline-end:5px;flex:none}
 .tm-emb.s{width:20px;height:20px;margin:0 2px}
 .tm-col>b{display:flex;align-items:center;justify-content:center;gap:2px}
@@ -2415,7 +2419,7 @@ function boot(){
   applyDir();
   var sb=document.getElementById("lang-set-btn");
   if(sb){ sb.textContent=langInfo(LANG||"he").n; sb.setAttribute("data-i18n-skip",""); sb.addEventListener("click",function(){ openPicker(false); }); }
-  if(!LANG && !COLLECT) openPicker(true);
+  if(!LANG && !COLLECT && !/[?&]panel=admin\b/.test(location.search)) openPicker(true);
 }
 if(ACTIVE || COLLECT){
   document.documentElement.classList.add("i18n-wait");
@@ -2509,7 +2513,6 @@ html[dir=ltr] body{direction:ltr}
     <button id="btn-howto">❓ הוראות המשחק</button>
     <button id="btn-reset">🔄 איפוס משחק</button>
     <button class="btn-main" id="btn-close-settings">סגור</button>
-    <button id="btn-admin" title="מנהלים" aria-label="מנהלים">🔑</button>
   </div>
 </div>
 
@@ -3838,6 +3841,8 @@ function loadSettings(){
   return def;
 }
 var settings=loadSettings();
+/* מסך ניהול: הדף נטען בתוך דף הניהול המרכזי (/admin) עם ?panel=admin. מחוץ למסגרת של אותו אתר — אין מצב ניהול. */
+var ADMIN_PANEL=(function(){ try{ return /[?&]panel=admin\b/.test(location.search) && window.parent!==window && window.parent.location.origin===location.origin; }catch(e){ return false; } })();
 function saveSettings(){ try{localStorage.setItem(SET_KEY,JSON.stringify(settings));}catch(e){} }
 
 function applyFont(){ document.body.style.zoom=settings.font+"%"; applyA11y(); }
@@ -5113,6 +5118,7 @@ function lbWhen(cb){
 
 /* רישום כניסה למשחק. bump=true בטעינת דף (מונה +1); אחרת רק רענון שלב/פרטים */
 function visitPublish(bump){
+  if(ADMIN_PANEL) return;
   if(isPending()) return; /* עוד אין שם — לא מפרסמים */
   if(!getPlayerName()) return;
   var prof=activeProf(); if(!prof) return;
@@ -5351,6 +5357,7 @@ function loginToAccount(acc, accKey, pass){
 /* ── פעילות חיה: מה כל יוזר עושה עכשיו (למנהלים) ── */
 var CUR_ACT={act:"menu",detail:"בתפריט"};
 function publishActivity(){
+  if(ADMIN_PANEL) return;
   if(isPending()) return;
   if(!getPlayerName()) return;
   lbWhen(function(){ try{
@@ -6723,6 +6730,19 @@ function adminSetStage(v,newStage){
 }
 /* קוד שחרור־על — עובד תמיד (גם כשהמכשיר חסום) ומסיר את החסימה */
 function clearAdminBan(){ try{ localStorage.removeItem("tfv_bq_adminban"); localStorage.removeItem("tfv_bq_adminfails"); }catch(e){} }
+/* מסך ניהול בתוך דף הניהול המרכזי: מקבלים את הקוד מהדף שמעלינו (רק מאותו אתר) */
+function adminPanelStart(){
+  document.body.classList.add("admin-panel");
+  ["screen-landing","intro-modal","name-modal","settings-modal"].forEach(function(id){ var e=$(id); if(e) e.classList.add("hidden"); });
+  $("admin-modal").classList.remove("hidden");
+  renderAdmin();
+  window.addEventListener("message",function(e){
+    if(e.source!==window.parent || e.origin!==location.origin) return;
+    var d=e.data||{};
+    if(d.type==="tfv-admin-code" && !ADMIN.authed){ var el=$("admin-code"); if(el && d.code){ el.value=String(d.code); tryAdminCode(); } }
+  });
+  try{ window.parent.postMessage({type:"tfv-admin-ready", site:"quiz"}, location.origin); }catch(e){}
+}
 function tryAdminCode(){
   var el=$("admin-code"); var code=el.value.trim(); if(!code) return;
   var err=$("admin-err"); err.textContent="⏳ בודק…"; el.disabled=true;
@@ -7558,12 +7578,9 @@ $("btn-lb-close").addEventListener("click",function(){ $("lb-modal").classList.a
 $("lb-modal").addEventListener("click",function(e){ if(e.target===this) this.classList.add("hidden"); });
 
 /* ── מנהלים ── */
-$("btn-admin").addEventListener("click",function(){
-  $("settings-modal").classList.add("hidden");
-  $("admin-modal").classList.remove("hidden");
-  renderAdmin();
-});
+/* מסך הניהול נפתח רק מתוך דף הניהול המרכזי (/admin) — ראו adminPanelStart */
 function closeAdmin(){
+  if(ADMIN_PANEL) return;   /* במסך הניהול המרכזי אין "סגור" */
   $("admin-modal").classList.add("hidden");
   ADMIN.authed=false; /* יציאה = צריך קוד שוב בכניסה הבאה */
   unsubscribeInbox();
@@ -8094,6 +8111,7 @@ function tutDemoAnswer(btn){
 function openTutorial(){ TUT_I=0; tutRender(); $("intro-modal").classList.remove("hidden"); }
 function introSeenDevice(){ try{ return localStorage.getItem("tfv_bq_intro_seen")==="1"; }catch(e){ return false; } }
 function maybeShowIntro(){
+  if(ADMIN_PANEL) return;
   if(window.__chInvite) return; /* הגיעו מקישור אתגר — מתחילים ישר באתגר, בלי הדרכה */
   if(window.__goInvite){ var _go=window.__goInvite; window.__goInvite=null; setTimeout(function(){ goSection(_go); },300); return; }
   if(window.__teamInvite){ var _tc=window.__teamInvite; window.__teamInvite=null; setTimeout(function(){ teamJoinFromInvite(_tc); },300); return; }
@@ -8478,6 +8496,7 @@ function pushDisable(){
 }
 /* עדכון השרת: מתי עשיתי את האתגר היומי (כדי שלא נקבל תזכורת סתם), שפה ואזור זמן */
 function pushSync(){
+  if(ADMIN_PANEL) return;
   var id=pushId(); if(!id || STORE_OFF) return;
   storeCall(Object.assign({op:"push-upd", id:id}, pushInfo())).then(function(j){
     if(j && j.gone){   /* המנוי נמחק בשרת — נרשמים מחדש בשקט אם ההרשאה עדיין קיימת */
@@ -9196,7 +9215,8 @@ var TEAM_INV=(function(){ try{ var c=new URLSearchParams(location.search).get("t
   history.replaceState(null,"",location.pathname); c=c.toUpperCase().replace(/[^A-Z0-9]/g,""); return /^[A-Z2-9]{5}$/.test(c)?c:null; }catch(e){ return null; } })();
 if(TEAM_INV && activeProf() && !isPending()){ setTimeout(function(){ teamJoinFromInvite(TEAM_INV); },900); }
 else if(TEAM_INV && !activeProf()){ window.__teamInvite=TEAM_INV; }
-if(!activeProf() && (DUEL_INV || TEAM_INV || window.__goInvite)){
+if(ADMIN_PANEL){ adminPanelStart(); }
+else if(!activeProf() && (DUEL_INV || TEAM_INV || window.__goInvite)){
   /* מוזמן חדש: רק שם — ואז ישר ללובי */
   if(DUEL_INV) window.__duelInvite=DUEL_INV;
   openNameModal(false);

@@ -185,6 +185,14 @@ module.exports = async (req, res) => {
       await redis(["HSET", "bq:qrep", h, JSON.stringify(rec)]);
       res.status(200).json({ db: true, ok: true }); return;
     }
+    /* ── דף הניהול המרכזי (/admin): מספרים לסקירה ── */
+    if (op === "admin-stats") {
+      if (!isAdmin(b.code)) { await new Promise(r => setTimeout(r, 900)); res.status(403).json({ error: "code" }); return; }
+      const [visits, scores, push, qrep, qs] = await pipe([["HGETALL", "bq:visits"], ["HLEN", "bq:scores"], ["HLEN", "bq:push"], ["HLEN", "bq:qrep"], ["HLEN", "bq:qs:n"]]);
+      const now = Date.now(), V = hashToObj(visits); let today = 0, week = 0, total = 0;
+      Object.keys(V).forEach(id => { const v = V[id] || {}; total++; const d = now - (v.last || 0); if (d < 864e5) today++; if (d < 7 * 864e5) week++; });
+      res.status(200).json({ db: true, players: total, today, week, scores, push, qreports: qrep, questions: qs }); return;
+    }
     if (op === "qreps" || op === "qrep-del") {
       if (!isAdmin(b.code)) { await new Promise(r => setTimeout(r, 900)); res.status(403).json({ error: "code" }); return; }
       if (op === "qrep-del") {
