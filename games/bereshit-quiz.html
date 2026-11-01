@@ -1592,6 +1592,13 @@ body.daily-bg{background:linear-gradient(rgba(235,232,220,.35),rgba(235,232,220,
 #tm-start:disabled{opacity:.45;cursor:default}
 #end-stats .tm-teams{margin:8px auto 4px;max-width:440px;text-align:right}
 .tm-mvp{font-size:14px;color:#46566e;margin-top:4px}
+.bd-note{font-size:13.5px;color:#5b6a80;text-align:center;margin-top:-4px}
+.bd-row{display:flex;gap:8px}
+.bd-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 6px;border-radius:14px;cursor:pointer;
+  background:#f6f8fc;border:1.5px solid rgba(40,55,78,.14);font:inherit;color:#1e3153}
+.bd-btn img{width:46px;height:46px;border-radius:50%}
+.bd-btn b{font-size:15px}
+.bd-btn:hover{border-color:#4a9fe8;background:#eef5fd}
 .tm-emb{width:30px;height:30px;object-fit:contain;vertical-align:middle;margin-inline-end:5px;flex:none}
 .tm-emb.s{width:20px;height:20px;margin:0 2px}
 .tm-col>b{display:flex;align-items:center;justify-content:center;gap:2px}
@@ -1601,6 +1608,7 @@ body.daily-bg{background:linear-gradient(rgba(235,232,220,.35),rgba(235,232,220,
 .tm-sw{display:flex;align-items:center;justify-content:center;gap:6px}
 #bot-card-0 .bot-name,#bot-card-1 .bot-name{display:flex;align-items:center;gap:4px}
 #hud-score .tm-emb{width:15px;height:15px;margin:0}
+#hud-score.duo{flex-direction:row;align-items:center;gap:4px;white-space:nowrap;font-weight:800;font-size:clamp(14px,1.9vw,19px)}
 .tm-set{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px}
 .tm-set .tm-sl{font-size:14px;font-weight:700;color:#1e3153;margin-inline-end:4px}
 .tm-set .lvl-chip{padding:4px 12px !important;font-size:14px !important}
@@ -2237,7 +2245,7 @@ var LANGS=[
   {c:"de",n:"Deutsch",h:"גרמנית"},
   {c:"pt",n:"Português",h:"פורטוגזית"}
 ];
-var I18N_V=window.__I18N_V="13"; /* להעלות בכל עדכון של קבצי המילון, כדי שהדפדפן לא ישתמש בגרסה ישנה */
+var I18N_V=window.__I18N_V="15"; /* להעלות בכל עדכון של קבצי המילון, כדי שהדפדפן לא ישתמש בגרסה ישנה */
 var KEY="tfv_bq_lang";
 function getLang(){ try{ return localStorage.getItem(KEY); }catch(e){ return null; } }
 function langInfo(c){ for(var i=0;i<LANGS.length;i++) if(LANGS[i].c===c) return LANGS[i]; return LANGS[0]; }
@@ -2682,6 +2690,13 @@ html[dir=ltr] body{direction:ltr}
     <div id="lobby-list"></div>
     <button class="btn-main" id="lobby-invite">📲 הזמינו חבר לדו־קרב</button>
     <div class="lobby-invite-note">החבר מקבל קישור, נכנס — ומופיע כאן ברשימה. השאירו את המסך הזה פתוח.</div>
+    <div class="lobby-title">🤖 דו־קרב נגד המחשב</div>
+    <div class="bd-note">אין עם מי לשחק? שחקו מול המחשב — אותן שאלות, אותו מסך. עובד גם בלי אינטרנט.</div>
+    <div class="bd-row">
+      <button class="bd-btn" data-botduel="0"><img src="assets/avatar-bot.webp" alt=""><b>קל</b></button>
+      <button class="bd-btn" data-botduel="1"><img src="assets/avatar-bot.webp" alt=""><b>בינוני</b></button>
+      <button class="bd-btn" data-botduel="2"><img src="assets/avatar-bot.webp" alt=""><b>קשה</b></button>
+    </div>
     </div>
     <div id="lobby-team" class="hidden">
       <div id="tm-out">
@@ -4118,6 +4133,7 @@ function startLevel(lv){
   updateHud();
   $("q-total").textContent=questions.length;
   if(ONLINE.match){
+    $("hud-score").classList.add("duo");
     $("hud-score").innerHTML= ONLINE.match.team ? teamHudHTML() : '🔵 <span id="duel-score-0">0</span> : <span id="duel-score-1">0</span> 🔴';
     $("bots-panel").classList.remove("hidden");
     game.classList.add("duel");
@@ -4128,10 +4144,12 @@ function startLevel(lv){
     curPlayer=0;
     document.querySelector("#bot-card-0 .bot-name").textContent="🔵 שחקן 1";
     document.querySelector("#bot-card-1 .bot-name").textContent="🔴 שחקן 2";
+    $("hud-score").classList.add("duo");
     $("hud-score").innerHTML='🔵 <span id="duel-score-0">0</span> : <span id="duel-score-1">0</span> 🔴';
     $("bots-panel").classList.remove("hidden");
     game.classList.add("duel");
   }else{
+    $("hud-score").classList.remove("duo");
     $("hud-score").innerHTML='<b id="score-val">0</b><i>נקודות</i>';
     $("bots-panel").classList.add("hidden");
     game.classList.remove("duel");
@@ -4210,7 +4228,7 @@ function loadQuestion(){
     var qp="שאלה "+(qIdx+1)+"/"+questions.length;
     if(curLevel._daily) setActivity("daily","🌟 שאלת היום · "+qp);
     else setActivity("play","🎮 שלב "+(curLevel.stage+1)+" · "+qp);
-  }else if(ONLINE.match){ setActivity("duel",(ONLINE.match.team?"👥 משחק קבוצות":"🌐 משחק מקוון")+" · שאלה "+(qIdx+1)); }
+  }else if(ONLINE.match){ setActivity("duel",(ONLINE.match.team?"👥 משחק קבוצות":ONLINE.match.bot?"🤖 דו־קרב נגד המחשב":"🌐 משחק מקוון")+" · שאלה "+(qIdx+1)); }
   else if(duelMode){ setActivity("duel","👥 חבר נגד חבר"); }
 }
 
@@ -4263,7 +4281,7 @@ function onlineEnter(){
   renderLobbyLevels();
   renderLobbyList();
   if(typeof mqtt==="undefined"){
-    lobbyStatus("שגיאה: ספריית הרשת לא נטענה — בדקו חיבור אינטרנט ורעננו",true);
+    lobbyStatus("📴 אין חיבור לערוץ — אפשר לשחק נגד המחשב",true);
     return;
   }
   connectMq();
@@ -4305,7 +4323,7 @@ function connectMq(){
   lobbyStatus("מתחבר לערוץ…");
   lbConnect();
   var c=LB.client;
-  if(!c){ lobbyStatus("שגיאת חיבור",true); return; }
+  if(!c){ lobbyStatus("📴 אין חיבור לערוץ — אפשר לשחק נגד המחשב",true); return; }
   ONLINE.client=c;
   if(!ONLINE_LISTEN){
     ONLINE_LISTEN=true;
@@ -4507,12 +4525,46 @@ function startOnlineMatch(oppId,oppName,levelIdx,seed){
   ONLINE.deck=deck;
   startLevel(lv);
 }
+/* ── דו־קרב נגד המחשב ── */
+var BOT_DUEL=[{n:"קל",p:0.5,t0:0.45,t1:0.9},{n:"בינוני",p:0.68,t0:0.3,t1:0.7},{n:"קשה",p:0.86,t0:0.15,t1:0.5}];
+function startBotDuel(d){
+  var cfg=BOT_DUEL[d]||BOT_DUEL[1];
+  if(ONLINE.match || ONLINE.pend || TEAM.room) return;
+  if(!ONLINE.name) ONLINE.name=getPlayerName()||"אני";
+  var seed=Math.floor(Math.random()*1e9);
+  startOnlineMatch("bot","מחשב",ONLINE.selLevel,seed);
+  var m=ONLINE.match; m.bot=true; m.botLvl=d;
+  refreshOnlineCards();
+  var n=ONLINE.deck.length, qi=0;
+  var feed=function(msg){ if(ONLINE.match!==m) return false; msg.from="bot"; onDirect(msg); return true; };
+  /* כל שאלה: המחשב "מתחיל" אותה, חושב, עונה — ואז 0.9 שניות לשאלה הבאה (כמו שחקן אמיתי) */
+  var step=function(){
+    if(ONLINE.match!==m) return;
+    if(qi>=n){ feed({type:"done", score:m.opp.score, correct:m.opp.correct}); return; }
+    var T=(curLevel&&curLevel.time)||20, ta=T*(cfg.t0+Math.random()*(cfg.t1-cfg.t0)), q=ONLINE.deck[qi], my=qi;
+    feed({type:"qstart", q:my});
+    setTimeout(function(){
+      if(ONLINE.match!==m) return;
+      var right=Math.random()<cfg.p, wrong=(q._opts||q.w||[]).filter(function(o){ return o!==q.a; });
+      var pts=right ? 10+Math.round(Math.max(0,T-ta)*10) : 0;
+      feed({type:"result", q:my, pts:pts, right:right, choice:right?q.a:wrong[Math.floor(Math.random()*wrong.length)]});
+      qi++; setTimeout(step,900);
+    }, ta*1000);
+  };
+  setTimeout(step,600);
+  setActivity("duel","🤖 דו־קרב נגד המחשב");
+}
+document.addEventListener("click",function(e){
+  var b=e.target.closest && e.target.closest("[data-botduel]"); if(!b) return;
+  startBotDuel(+b.getAttribute("data-botduel"));
+});
 function refreshOnlineCards(){
   if(!ONLINE.match) return;
   if(ONLINE.match.team){ teamCards(); return; }
   var m=ONLINE.match;
   document.querySelector("#bot-card-0 .bot-name").textContent="🔵 "+ONLINE.name+" (אני)";
-  document.querySelector("#bot-card-1 .bot-name").textContent="🔴 "+m.oppName;
+  if(m.bot) document.querySelector("#bot-card-1 .bot-name").innerHTML='<img class="tm-av" src="assets/avatar-bot.webp" alt=""><span class="tm-tl">'+"מחשב — "+BOT_DUEL[m.botLvl].n+'</span>';
+  else document.querySelector("#bot-card-1 .bot-name").textContent="🔴 "+m.oppName;
   $("bot-card-0").classList.add("turn");
   $("bot-card-1").classList.remove("turn");
   var st1=$("bot-status-1");
@@ -4840,6 +4892,7 @@ function teamBotStep(){
 /* שליחה לשאר המשחק — בדו־קרב ליריב, בקבוצות לכל החדר */
 function matchSend(obj){
   var m=ONLINE.match; if(!m) return;
+  if(m.bot) return;   /* דו־קרב נגד המחשב — הכול מקומי */
   if(!m.team){ sendTo(m.oppId,obj); return; }
   if(obj.type==="result"||obj.type==="done"){
     var r=TEAM.room, me=r&&r.roster&&r.roster[ONLINE.id];
