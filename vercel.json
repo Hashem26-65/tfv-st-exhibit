@@ -27,5 +27,167 @@
       "path": "/api/bq-push",
       "schedule": "0 16 * * *"
     }
+  ],
+  "redirects": [
+    {
+      "source": "/quiz",
+      "destination": "/games/bereshit-quiz",
+      "permanent": false
+    },
+    {
+      "source": "/daily",
+      "destination": "/games/bereshit-quiz?go=daily",
+      "permanent": false
+    },
+    {
+      "source": "/journey",
+      "destination": "/games/bereshit-quiz?go=journey",
+      "permanent": false
+    },
+    {
+      "source": "/map",
+      "destination": "/games/bereshit-quiz?go=journey",
+      "permanent": false
+    },
+    {
+      "source": "/duel",
+      "destination": "/games/bereshit-quiz?go=duel",
+      "permanent": false
+    },
+    {
+      "source": "/teams",
+      "destination": "/games/bereshit-quiz?go=teams",
+      "permanent": false
+    },
+    {
+      "source": "/computer",
+      "destination": "/games/bereshit-quiz?go=computer",
+      "permanent": false
+    },
+    {
+      "source": "/challenge",
+      "destination": "/games/bereshit-quiz?go=challenge",
+      "permanent": false
+    },
+    {
+      "source": "/leaderboard",
+      "destination": "/games/bereshit-quiz?go=leaderboard",
+      "permanent": false
+    },
+    {
+      "source": "/meet",
+      "destination": "/games/bereshit-quiz?go=meet",
+      "permanent": false
+    },
+    {
+      "source": "/howto",
+      "destination": "/games/bereshit-quiz?go=howto",
+      "permanent": false
+    },
+    {
+      "source": "/settings",
+      "destination": "/games/bereshit-quiz?go=settings",
+      "permanent": false
+    },
+    {
+      "source": "/remind",
+      "destination": "/games/bereshit-quiz?go=remind",
+      "permanent": false
+    },
+    {
+      "source": "/chess",
+      "destination": "/games/matrix-games?g=chess",
+      "permanent": false
+    },
+    {
+      "source": "/backgammon",
+      "destination": "/games/matrix-games?g=backgammon",
+      "permanent": false
+    },
+    {
+      "source": "/checkers",
+      "destination": "/games/matrix-games?g=draughts",
+      "permanent": false
+    },
+    {
+      "source": "/board-games",
+      "destination": "/games/matrix-games",
+      "permanent": false
+    },
+    {
+      "source": "/ark",
+      "destination": "/games/ark-defense",
+      "permanent": false
+    },
+    {
+      "source": "/memory",
+      "destination": "/games/memory",
+      "permanent": false
+    },
+    {
+      "source": "/balloons",
+      "destination": "/games/balloons",
+      "permanent": false
+    },
+    {
+      "source": "/catch",
+      "destination": "/games/catch",
+      "permanent": false
+    },
+    {
+      "source": "/verse-defender",
+      "destination": "/games/defense",
+      "permanent": false
+    },
+    {
+      "source": "/gematria-range",
+      "destination": "/games/gematria-range",
+      "permanent": false
+    },
+    {
+      "source": "/helicopter",
+      "destination": "/games/helicopter",
+      "permanent": false
+    },
+    {
+      "source": "/pairs",
+      "destination": "/games/match-pairs",
+      "permanent": false
+    },
+    {
+      "source": "/blitz",
+      "destination": "/games/quiz-blitz",
+      "permanent": false
+    },
+    {
+      "source": "/snake",
+      "destination": "/games/snake",
+      "permanent": false
+    },
+    {
+      "source": "/sort",
+      "destination": "/games/sort",
+      "permanent": false
+    },
+    {
+      "source": "/race",
+      "destination": "/games/torah-race",
+      "permanent": false
+    },
+    {
+      "source": "/tower",
+      "destination": "/games/tower",
+      "permanent": false
+    },
+    {
+      "source": "/verse-builder",
+      "destination": "/games/verse-builder",
+      "permanent": false
+    },
+    {
+      "source": "/whack",
+      "destination": "/games/whack",
+      "permanent": false
+    }
   ]
 }

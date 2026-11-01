@@ -1593,7 +1593,9 @@ body.daily-bg{background:linear-gradient(rgba(235,232,220,.35),rgba(235,232,220,
 #end-stats .tm-teams{margin:8px auto 4px;max-width:440px;text-align:right}
 .tm-mvp{font-size:14px;color:#46566e;margin-top:4px}
 .bd-note{font-size:13.5px;color:#5b6a80;text-align:center;margin-top:-4px}
-.bd-row{display:flex;gap:8px}
+.bd-row{display:flex;gap:8px;border-radius:16px}
+.bd-row.flash{animation:bdFlash 1.6s ease 2}
+@keyframes bdFlash{0%,100%{box-shadow:0 0 0 0 rgba(74,159,232,0)}50%{box-shadow:0 0 0 6px rgba(74,159,232,.45)}}
 .bd-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 6px;border-radius:14px;cursor:pointer;
   background:#f6f8fc;border:1.5px solid rgba(40,55,78,.14);font:inherit;color:#1e3153}
 .bd-btn img{width:46px;height:46px;border-radius:50%}
@@ -8093,6 +8095,7 @@ function openTutorial(){ TUT_I=0; tutRender(); $("intro-modal").classList.remove
 function introSeenDevice(){ try{ return localStorage.getItem("tfv_bq_intro_seen")==="1"; }catch(e){ return false; } }
 function maybeShowIntro(){
   if(window.__chInvite) return; /* הגיעו מקישור אתגר — מתחילים ישר באתגר, בלי הדרכה */
+  if(window.__goInvite){ var _go=window.__goInvite; window.__goInvite=null; setTimeout(function(){ goSection(_go); },300); return; }
   if(window.__teamInvite){ var _tc=window.__teamInvite; window.__teamInvite=null; setTimeout(function(){ teamJoinFromInvite(_tc); },300); return; }
   if(window.__duelInvite){ var _inv=window.__duelInvite; window.__duelInvite=null; setTimeout(function(){ openDuelFromInvite(_inv); },300); return; }
   var p=activeProf();
@@ -9151,6 +9154,35 @@ var DUEL_INV_EXISTING=null;
 /* אתגר חבר דרך קישור ?ch=<מזהה> */
 var CH_INV=(function(){ try{ var c=new URLSearchParams(location.search).get("ch"); return c ? c.replace(/[^A-Za-z0-9]/g,"").slice(0,16) : null; }catch(e){ return null; } })();
 if(CH_INV){ window.__chInvite=CH_INV; setTimeout(function(){ chOpen(CH_INV); },900); }
+/* קישור ישיר לחלק במשחק: ?go=<חלק> */
+var GO_NEED_NAME={duel:1,teams:1,computer:1,daily:1,journey:1,challenge:1,meet:1};
+var GO_ALIAS={map:"journey",board:"leaderboard",bot:"computer",team:"teams"};
+function goSection(g){
+  var ld=$("screen-landing");
+  if(g!=="leaderboard" && g!=="howto" && g!=="settings" && ld && !ld.classList.contains("hidden")){ ld.classList.add("hidden"); $("btn-settings").classList.remove("hidden"); }
+  if(g==="home") navGo("home");
+  else if(g==="daily") navGo("daily");
+  else if(g==="journey") navGo("map");
+  else if(g==="meet") navGo("meet");
+  else if(g==="leaderboard") navGo("board");
+  else if(g==="duel"||g==="teams"||g==="computer"){
+    navGo("duel"); teamSetMode(g==="teams");
+    if(g==="computer") setTimeout(function(){
+      var row=document.querySelector(".bd-row"); if(!row) return;
+      try{ row.scrollIntoView({block:"center",behavior:"smooth"}); }catch(e){}
+      row.classList.remove("flash"); void row.offsetWidth; row.classList.add("flash");
+    },500);
+  }
+  else if(g==="challenge"){ navGo("home"); startChallenge(); }
+  else if(g==="howto") openTutorial();
+  else if(g==="settings"){ var sb=$("btn-settings"); if(sb) sb.click(); }
+  else if(g==="remind") openRemind();
+}
+var GO_INV=(function(){ try{ var g=new URLSearchParams(location.search).get("go"); if(!g) return null;
+  history.replaceState(null,"",location.pathname); g=String(g).toLowerCase().replace(/[^a-z]/g,""); g=GO_ALIAS[g]||g;
+  return /^(home|daily|journey|duel|teams|computer|challenge|leaderboard|meet|howto|settings|remind)$/.test(g) ? g : null; }catch(e){ return null; } })();
+if(GO_INV && (activeProf() && !isPending() || !GO_NEED_NAME[GO_INV])) setTimeout(function(){ goSection(GO_INV); },900);
+else if(GO_INV) window.__goInvite=GO_INV;   /* שחקן חדש — קודם שם, ואז ממשיכים ישר לשם */
 var DAILY_INV=(function(){ try{ if(!new URLSearchParams(location.search).get("daily")) return false; history.replaceState(null,"",location.pathname); return true; }catch(e){ return false; } })();
 if(DAILY_INV){ var _dp=activeProf();
   if(_dp && !isPending() && profileList().length<2 && (_dp.email || _dp.emailAsked)) setTimeout(function(){ var ld=$("screen-landing"); if(ld) ld.classList.add("hidden"); startDaily(); },900); }
@@ -9164,12 +9196,12 @@ var TEAM_INV=(function(){ try{ var c=new URLSearchParams(location.search).get("t
   history.replaceState(null,"",location.pathname); c=c.toUpperCase().replace(/[^A-Z0-9]/g,""); return /^[A-Z2-9]{5}$/.test(c)?c:null; }catch(e){ return null; } })();
 if(TEAM_INV && activeProf() && !isPending()){ setTimeout(function(){ teamJoinFromInvite(TEAM_INV); },900); }
 else if(TEAM_INV && !activeProf()){ window.__teamInvite=TEAM_INV; }
-if(!activeProf() && (DUEL_INV || TEAM_INV)){
+if(!activeProf() && (DUEL_INV || TEAM_INV || window.__goInvite)){
   /* מוזמן חדש: רק שם — ואז ישר ללובי */
   if(DUEL_INV) window.__duelInvite=DUEL_INV;
   openNameModal(false);
   var _pn=$("name-pending-note");
-  if(_pn){ _pn.textContent= TEAM_INV ? "👥 הוזמנת למשחק קבוצות! ספרו לנו מי אתם — ונכנסים לחדר." : "\u2694\ufe0f "+(DUEL_INV.from||"חבר")+" הזמין אותך לדו־קרב! ספרו לנו מי אתם — ונכנסים ללובי."; _pn.style.display=""; }
+  if(_pn){ _pn.textContent= (window.__goInvite && !DUEL_INV && !TEAM_INV) ? "✨ ספרו לנו מי אתם — וממשיכים ישר לשם." : TEAM_INV ? "👥 הוזמנת למשחק קבוצות! ספרו לנו מי אתם — ונכנסים לחדר." : "\u2694\ufe0f "+(DUEL_INV.from||"חבר")+" הזמין אותך לדו־קרב! ספרו לנו מי אתם — ונכנסים ללובי."; _pn.style.display=""; }
 }else if(!activeProf()){
   openLanding();
   setTimeout(maybeShowIntro,350); /* ההוראות מופיעות מיד בכניסה הראשונה */
