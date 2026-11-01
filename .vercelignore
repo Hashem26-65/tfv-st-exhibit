@@ -6,3 +6,9 @@ games/assets/matrix/raw
 .env
 .env.*
 הוראות-לקולגה-הגדרת-Vercel.html
+
+# המצגת "סכומי אלפים" הורדה מהאתר (2026-11) — הקבצים נשמרים בתיקייה וב-GitHub
+/index.html
+/assets
+/audio-en
+/audio-he

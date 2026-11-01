@@ -30,6 +30,11 @@
   ],
   "redirects": [
     {
+      "source": "/",
+      "destination": "/games",
+      "permanent": false
+    },
+    {
       "source": "/quiz",
       "destination": "/games/bereshit-quiz",
       "permanent": false
