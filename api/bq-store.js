@@ -7,6 +7,7 @@
 //   push-sub / push-upd / push-del : מנוי להתראות בטלפון (bq:push), ההתראה היומית נשלחת מ-bq-push
 const crypto = require("crypto");
 const wp = require("./_webpush");
+const guard = require("./_guard");
 
 const URL_ = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || "";
 const TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || "";
@@ -26,6 +27,12 @@ function isAdmin(code) {
   code = String(code || "").trim();
   const a = process.env.BQ_ADMIN_CODE || "", u = process.env.BQ_UNLOCK_CODE || "";
   return !!code && ((a && same(code, a)) || (u && same(code, u)));
+}
+/* פעולת מנהל: חסימה בשרת אחרי ניחושים (_guard), השהיה בכישלון */
+async function adminOk(req, res, code) {
+  if (await guard.blocked(req)) { await new Promise(r => setTimeout(r, 900)); res.status(429).json({ error: "blocked" }); return false; }
+  if (isAdmin(code)) return true;
+  await guard.fail(req); await new Promise(r => setTimeout(r, 900)); res.status(403).json({ error: "code" }); return false;
 }
 function hashToObj(arr) { const o = {}; for (let i = 0; arr && i < arr.length; i += 2) { try { o[arr[i]] = JSON.parse(arr[i + 1]); } catch (e) {} } return o; }
 function hashRaw(arr) { const o = {}; for (let i = 0; arr && i < arr.length; i += 2) o[arr[i]] = arr[i + 1]; return o; }
@@ -98,7 +105,7 @@ module.exports = async (req, res) => {
     if (op === "visits") { res.status(200).json({ db: true, visits: hashToObj(await redis(["HGETALL", "bq:visits"])) }); return; }
     if (op === "scores") { res.status(200).json({ db: true, scores: hashToObj(await redis(["HGETALL", "bq:scores"])) }); return; }
     if (op === "visit-del") {
-      if (!isAdmin(b.code)) { await new Promise(r => setTimeout(r, 900)); res.status(403).json({ error: "code" }); return; }
+      if (!(await adminOk(req, res, b.code))) return;
       const id = String(b.id || "");
       if (!/^u[a-z0-9]{4,14}$/.test(id)) { res.status(400).json({ error: "id" }); return; }
       await redis(["HDEL", "bq:visits", id]); await redis(["HDEL", "bq:scores", id]);
@@ -187,14 +194,15 @@ module.exports = async (req, res) => {
     }
     /* ── דף הניהול המרכזי (/admin): מספרים לסקירה ── */
     if (op === "admin-stats") {
-      if (!isAdmin(b.code)) { await new Promise(r => setTimeout(r, 900)); res.status(403).json({ error: "code" }); return; }
+      if (!(await adminOk(req, res, b.code))) return;
       const [visits, scores, push, qrep, qs] = await pipe([["HGETALL", "bq:visits"], ["HLEN", "bq:scores"], ["HLEN", "bq:push"], ["HLEN", "bq:qrep"], ["HLEN", "bq:qs:n"]]);
       const now = Date.now(), V = hashToObj(visits); let today = 0, week = 0, total = 0;
       Object.keys(V).forEach(id => { const v = V[id] || {}; total++; const d = now - (v.last || 0); if (d < 864e5) today++; if (d < 7 * 864e5) week++; });
-      res.status(200).json({ db: true, players: total, today, week, scores, push, qreports: qrep, questions: qs }); return;
+      const af = await guard.stats();
+      res.status(200).json({ db: true, players: total, today, week, scores, push, qreports: qrep, questions: qs, afailToday: af.today, afailWeek: af.week }); return;
     }
     if (op === "qreps" || op === "qrep-del") {
-      if (!isAdmin(b.code)) { await new Promise(r => setTimeout(r, 900)); res.status(403).json({ error: "code" }); return; }
+      if (!(await adminOk(req, res, b.code))) return;
       if (op === "qrep-del") {
         const h = String(b.h || "");
         if (!/^[a-f0-9]{12}$/.test(h)) { res.status(400).json({ error: "h" }); return; }
@@ -221,7 +229,7 @@ module.exports = async (req, res) => {
       res.status(200).json({ db: true, ok: true }); return;
     }
     if (op === "qstats") {
-      if (!isAdmin(b.code)) { await new Promise(r => setTimeout(r, 900)); res.status(403).json({ error: "code" }); return; }
+      if (!(await adminOk(req, res, b.code))) return;
       const [n, ok] = await pipe([["HGETALL", "bq:qs:n"], ["HGETALL", "bq:qs:ok"]]);
       const N = hashRaw(n), OK = hashRaw(ok);
       let rows = Object.keys(N).map(h => ({ h, n: +N[h], ok: +(OK[h] || 0) })).filter(r => r.n >= 3);

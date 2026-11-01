@@ -41,6 +41,7 @@ nav button.on{background:var(--bg);color:var(--ink);box-shadow:inset 0 0 0 1px v
 .stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:var(--shadow)}
 .stat b{display:block;font-size:28px;font-weight:800;font-variant-numeric:tabular-nums}
 .stat span{color:var(--dim);font-size:13.5px}
+.stat i{font-style:normal}.stat.warn{border-color:#c0392b}.stat.warn b{color:#c0392b}
 .sec-t{font-weight:800;font-size:17px;margin:18px 2px 10px}
 .sites{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
 .site{display:flex;flex-direction:column;gap:8px}
@@ -98,6 +99,7 @@ iframe.panel{width:100%;height:calc(100vh - 190px);min-height:520px;border:1px s
         <div class="stat"><b id="s-scores">—</b><span>בטבלת המובילים</span></div>
         <div class="stat"><b id="s-push">—</b><span>הפעילו התראות בטלפון</span></div>
         <div class="stat"><b id="s-qrep">—</b><span>דיווחים פתוחים על שאלות</span></div>
+        <div class="stat" id="st-afail"><b id="s-afail">—</b><span>קודי מנהל שגויים היום · <i id="s-afailw">—</i> השבוע</span></div>
       </div>
       <div class="sec-t">האתרים</div>
       <div class="sites">
@@ -145,18 +147,20 @@ function ls(k,v){ try{ if(v===undefined) return localStorage.getItem(k); if(v===
 function ss(k,v){ try{ if(v===undefined) return sessionStorage.getItem(k); if(v===null) sessionStorage.removeItem(k); else sessionStorage.setItem(k,v); }catch(e){ return null; } }
 function check(code){
   return fetch("/api/bq-admin",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({code:code})})
-    .then(function(r){ return r.json(); }).then(function(j){ return !!(j && j.ok); }).catch(function(){ return false; });
+    .then(function(r){ return r.json(); }).then(function(j){ return j && j.ok ? "ok" : (j && j.blocked ? "blocked" : "bad"); }).catch(function(){ return "net"; });
 }
-/* 5 קודים שגויים — נעילה ל-15 דקות במכשיר הזה (והשרת ממילא מאט כל ניסיון שגוי) */
+/* 5 קודים שגויים — נעילה ל-15 דקות במכשיר הזה. השרת חוסם בנפרד כל כתובת אחרי 8 טעויות (api/_guard.js) */
 function lockedFor(){ var f={}; try{ f=JSON.parse(ls(FAILK)||"{}"); }catch(e){} return Math.max(0,(f.until||0)-Date.now()); }
 function fail(){ var f={}; try{ f=JSON.parse(ls(FAILK)||"{}"); }catch(e){} f.n=(f.n||0)+1; if(f.n>=5){ f.until=Date.now()+15*60000; f.n=0; } ls(FAILK,JSON.stringify(f)); return f; }
 function tryLogin(){
   var el=$("code"), code=el.value.trim(); if(!code) return;
   var lk=lockedFor(); if(lk){ $("err").textContent="יותר מדי ניסיונות — נסו שוב בעוד "+Math.ceil(lk/60000)+" דקות"; return; }
   $("go").disabled=true; $("err").textContent="⏳ בודק…";
-  check(code).then(function(ok){
+  check(code).then(function(st){
     $("go").disabled=false;
-    if(ok){ ls(FAILK,null); $("err").textContent=""; enter(code); return; }
+    if(st==="ok"){ ls(FAILK,null); $("err").textContent=""; enter(code); return; }
+    if(st==="blocked"){ $("err").textContent="השרת חסם את הכתובת הזו אחרי הרבה ניסיונות שגויים — נסו שוב בעוד 15 דקות"; return; }
+    if(st==="net"){ $("err").textContent="אין חיבור לשרת — נסו שוב"; return; }
     var f=fail(); el.value=""; el.focus();
     $("err").textContent = f.until ? "5 קודים שגויים — נעול ל-15 דקות" : "קוד שגוי";
   });
@@ -178,6 +182,7 @@ function loadStats(){
       if(!j || j.error) return;
       [["s-players","players"],["s-today","today"],["s-week","week"],["s-scores","scores"],["s-push","push"],["s-qrep","qreports"]].forEach(function(p){
         var v=j[p[1]]; $(p[0]).textContent = (typeof v==="number") ? v.toLocaleString("he-IL") : "—"; });
+      if(typeof j.afailToday==="number"){ $("s-afail").textContent=j.afailToday; $("s-afailw").textContent=j.afailWeek; $("st-afail").classList.toggle("warn", j.afailToday>=10); }
     }).catch(function(){});
 }
 /* לשוניות; מסך ניהול נטען רק כשפותחים אותו */

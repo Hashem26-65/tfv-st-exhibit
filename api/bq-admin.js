@@ -4,6 +4,7 @@
 //    הדפדפנים של השחקנים מקבלים הודעות מנהל (הודעה לכולם, טיימר, הודעה אישית, פקודה לשחקן) רק עם חתימה תקינה.
 // BQ_ADMIN_CODE / BQ_UNLOCK_CODE / BQ_SIGN_KEY — משתני סביבה ב-Vercel.
 const crypto = require("crypto");
+const guard = require("./_guard");
 
 function same(a, b) {
   const x = crypto.createHash("sha256").update(String(a)).digest();
@@ -20,12 +21,14 @@ module.exports = async (req, res) => {
   let body = req.body;
   if (typeof body === "string") { try { body = JSON.parse(body); } catch (e) { body = null; } }
   const code = String((body && body.code) || "").trim().slice(0, 40);
+  if (await guard.blocked(req)) { await new Promise(r => setTimeout(r, 900)); res.status(429).json({ ok: false, kind: null, blocked: true }); return; }
   const admin = process.env.BQ_ADMIN_CODE || "", unlock = process.env.BQ_UNLOCK_CODE || "";
   let kind = null;
   if (code && admin && same(code, admin)) kind = "admin";
   else if (code && unlock && same(code, unlock)) kind = "unlock";
-  if (!kind) { await new Promise(r => setTimeout(r, 900)); res.status(200).json({ ok: false, kind: null }); return; } // השהיה רק בכישלון — מאט ניחוש
+  if (!kind) { await guard.fail(req); await new Promise(r => setTimeout(r, 900)); res.status(200).json({ ok: false, kind: null }); return; } // השהיה רק בכישלון — מאט ניחוש
 
+  if (!(body && body.sign)) await guard.clear(req);
   const sg = body && body.sign;
   if (!sg) { res.status(200).json({ ok: true, kind }); return; }
   const topic = String(sg.topic || ""), msg = String(sg.msg || "");
