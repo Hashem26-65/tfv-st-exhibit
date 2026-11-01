@@ -13,6 +13,7 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0f1622;--card:#172133;--ink:#e8eef8;--dim:#9fb0c8;--line:rgba(232,238,248,.1);--shadow:0 6px 22px rgba(0,0,0,.35)}}
 :root[data-theme="dark"]{--bg:#0f1622;--card:#172133;--ink:#e8eef8;--dim:#9fb0c8;--line:rgba(232,238,248,.1);--shadow:0 6px 22px rgba(0,0,0,.35)}
 *{box-sizing:border-box}
+[hidden]{display:none !important}
 html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Heebo,system-ui,sans-serif}
 a{color:var(--blue2)}
 header{display:flex;align-items:center;gap:12px;padding:14px 16px;max-width:1180px;margin:0 auto}
@@ -85,7 +86,7 @@ iframe.panel{width:100%;height:calc(100vh - 190px);min-height:520px;border:1px s
       <button data-tab="overview" class="on">📊 סקירה</button>
       <button data-tab="quiz">📖 חידון בראשית</button>
       <button data-tab="matrix">♟️ משחקי לוח</button>
-      <button data-tab="basewar">🪖 מלחמת הבסיסים</button>
+      <button data-tab="basewar">🛡️ מלחמת הבסיסים</button>
       <button data-tab="links">🔗 קישורים</button>
     </nav>
 
@@ -104,7 +105,7 @@ iframe.panel{width:100%;height:calc(100vh - 190px);min-height:520px;border:1px s
           <div class="row"><button class="btn" data-open="quiz">פתח ניהול</button><a class="btn ghost" href="/quiz" target="_blank" rel="noopener">לאתר ↗</a></div></div>
         <div class="card site"><h3><img src="/games/assets/matrix/chess-g-n.webp" alt="">משחקי לוח</h3><p>שחמט, שש־בש ודמקה — שחקנים, שינוי שמות, אימיילים מוצפנים.</p>
           <div class="row"><button class="btn" data-open="matrix">פתח ניהול</button><a class="btn ghost" href="/board-games" target="_blank" rel="noopener">לאתר ↗</a></div></div>
-        <div class="card site"><h3><span style="font-size:24px">🪖</span>מלחמת הבסיסים</h3><p>שחקנים מחוברים, שלבים וכסף התחלתי. נכנסים עם הקוד של המשחק הזה.</p>
+        <div class="card site"><h3><span style="font-size:24px">🛡️</span>מלחמת הבסיסים</h3><p>שחקנים מחוברים, שלבים וכסף התחלתי. נכנסים עם הקוד של המשחק הזה.</p>
           <div class="row"><button class="btn" data-open="basewar">פתח ניהול</button><a class="btn ghost" href="https://base-war-site.vercel.app" target="_blank" rel="noopener">לאתר ↗</a></div></div>
         <div class="card site"><h3><span style="font-size:24px">🏛️</span>אתר התערוכה</h3><p>דף הבית של הפסוק הראשון ועמוד כל המשחקים.</p>
           <div class="row"><a class="btn ghost" href="/" target="_blank" rel="noopener">לאתר ↗</a><a class="btn ghost" href="/games" target="_blank" rel="noopener">כל המשחקים ↗</a></div></div>
@@ -155,7 +156,7 @@ function tryLogin(){
   $("go").disabled=true; $("err").textContent="⏳ בודק…";
   check(code).then(function(ok){
     $("go").disabled=false;
-    if(ok){ ls(FAILK,null); enter(code); return; }
+    if(ok){ ls(FAILK,null); $("err").textContent=""; enter(code); return; }
     var f=fail(); el.value=""; el.focus();
     $("err").textContent = f.until ? "5 קודים שגויים — נעול ל-15 דקות" : "קוד שגוי";
   });
